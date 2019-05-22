@@ -97,11 +97,50 @@ QSize MIconEngine::actualSize(const QSize &size, QIcon::Mode mode, QIcon::State 
       }
 
 //---------------------------------------------------------
+//   replaceIconFillColor
+//    helper function for swapping the foreground color
+//    in the icon SVG file for the highlight / disabled
+//    color etc.
+//---------------------------------------------------------
+
+// #3B3F45 is the color required for creating MuseScore icons - anything
+// that in the icon SGV that is not this color won't be modifed when the
+//button is pressed / disabled etc.
+#define _ICON_FILL_VARIANT_1 "#3b3f45"
+#define _ICON_FILL_VARIANT_2 "#3B3F45"
+#define _ICON_FILL_VARIANT_3 "rgb(59,63,69)"
+
+void replaceIconFillColor(QByteArray &byteArray, QColor color) {
+      const char* highlightColor = color.name().toLocal8Bit().data();
+      byteArray.replace(_ICON_FILL_VARIANT_1, highlightColor).replace(_ICON_FILL_VARIANT_2, highlightColor).replace(_ICON_FILL_VARIANT_3, highlightColor);
+}
+//---------------------------------------------------------
 //   loadDataForModeAndState
 //---------------------------------------------------------
 
 void MIconEnginePrivate::loadDataForModeAndState(QSvgRenderer* renderer, QIcon::Mode mode, QIcon::State state)
       {
+
+      QColor enabledOn;
+      QColor enabledOff;
+      QColor disabledOn;
+      QColor disabledOff;
+
+      // preserve hard-coded number for now
+      //  with a view to replacing them with calls to the Palette
+      if (Ms::preferences.isThemeDark()) {
+            enabledOn = QColor("#78afe6");
+            enabledOff = QColor("#eff0f1");
+            disabledOn = QColor("#4171a2");
+            disabledOff = QColor("#a0a0a0");
+            }
+      else {
+            enabledOn = QColor("#4171a2");
+            enabledOff = QColor("#3b3f45");
+            disabledOn = QColor("#8daac7");
+            disabledOff = QColor("#a0a0a0");
+            }
+
       QByteArray buf;
       if (svgBuffers) {
             buf = svgBuffers->value(hashKey(mode, state));
@@ -120,32 +159,12 @@ void MIconEnginePrivate::loadDataForModeAndState(QSvgRenderer* renderer, QIcon::
                   QFile f(svgFile);
                   f.open(QIODevice::ReadOnly);
                   QByteArray ba = f.readAll();
-                  if (mode == QIcon::Disabled) {
-                        if (Ms::preferences.isThemeDark()) {
-                              if (state == QIcon::On)
-                                    ba.replace("#3b3f45", "#4171a2").replace("#3B3F45", "#4171a2").replace("rgb(59,63,69)", "#4171a2");
-                              else
-                                    ba.replace("#3b3f45", "#a0a0a0").replace("#3B3F45", "#a0a0a0").replace("rgb(59,63,69)", "#a0a0a0");
-                              }
-                        else {
-                              if (state == QIcon::On)
-                                    ba.replace("#3b3f45", "#8daac7").replace("#3B3F45", "#8daac7").replace("rgb(59,63,69)", "#8daac7");
-                              else
-                                    ba.replace("#3b3f45", "#a0a0a0").replace("#3B3F45", "#a0a0a0").replace("rgb(59,63,69)", "#a0a0a0");
-                              }
-                        }
-                  else {
-                        if (Ms::preferences.isThemeDark()) {
-                              if (state == QIcon::On)
-                                    ba.replace("#3b3f45", "#78afe6").replace("#3B3F45", "#78afe6").replace("rgb(59,63,69)", "#78afe6");
-			            else
-                                    ba.replace("#3b3f45", "#eff0f1").replace("#3B3F45", "#eff0f1").replace("rgb(59,63,69)", "#eff0f1");
-                              }
-                        else {
-                              if (state == QIcon::On)
-                                    ba.replace("#3b3f45", "#4171a2").replace("#3B3F45", "#4171a2").replace("rgb(59,63,69)", "#4171a2");
-                              }
-                        }
+
+                  if (mode == QIcon::Disabled)
+                        replaceIconFillColor(ba, (state == QIcon::On) ? disabledOn : disabledOff);
+                  else
+                        replaceIconFillColor(ba, (state == QIcon::On) ? enabledOn : enabledOff);
+
                   renderer->load(ba);
                   }
             }
