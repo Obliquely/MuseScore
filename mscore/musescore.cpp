@@ -6983,8 +6983,6 @@ void MuseScore::experimentalUpdateUiStyleAndTheme()
       {
       QApplication::setStyle(QStyleFactory::create("Fusion"));
 
-      //QString wd = QString("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).arg(QCoreApplication::applicationName());
-
       QString paletteFilename = preferences.isThemeDark() ? "ex_palette_dark_fusion.json" : "ex_palette_light_fusion.json";;
       QFile paletteFile(QString(":/themes/%1").arg(paletteFilename));
 
