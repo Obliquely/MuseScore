@@ -859,7 +859,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       void setPlayPartOnly(bool val);
 
       static void updateUiStyleAndTheme();
-      void experimentalUpdateUiStyleAndTheme();
+      static void experimentalUpdateUiStyleAndTheme();
 
 
       void showError();

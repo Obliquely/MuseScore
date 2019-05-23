@@ -2340,6 +2340,7 @@ void ScoreView::cmd(const char* s)
                   _score->cmdConcertPitchChanged(a->isChecked(), true);
                   _score->endCmd();
                   }
+            MuseScore::experimentalUpdateUiStyleAndTheme();
             }
       else {
             editData.view = this;
