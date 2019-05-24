@@ -135,10 +135,15 @@ void MIconEnginePrivate::loadDataForModeAndState(QSvgRenderer* renderer, QIcon::
             disabledOff = QColor("#a0a0a0");
             }
       else {
-            enabledOn = QColor("#4171a2");
-            enabledOff = QColor("#3b3f45");
-            disabledOn = QColor("#8daac7");
-            disabledOff = QColor("#a0a0a0");
+//            enabledOn = QColor("#4171a2");
+//            enabledOff = QColor("#3b3f45");
+//            disabledOn = QColor("#8daac7");
+//            disabledOff = QColor("#a0a0a0");
+            QPalette palette = QPalette(QApplication::palette());
+            enabledOn = palette.color(QPalette::Active, QPalette::Highlight);
+            enabledOff = palette.color(QPalette::Active, QPalette::ButtonText);
+            disabledOn = palette.color(QPalette::Disabled, QPalette::Highlight);
+            disabledOff = palette.color(QPalette::Disabled, QPalette::ButtonText);
             }
 
       QByteArray buf;
