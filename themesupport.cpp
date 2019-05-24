@@ -28,8 +28,8 @@ void logPalette()
       QPalette palette = QPalette(QApplication::palette());
 
       logPaletteItem(palette, QPalette::Button);
+      logPaletteItem(palette, QPalette::ButtonText);
       logPaletteItem(palette, QPalette::Highlight);
-      logPaletteItem(palette, QPalette::HighlightedText);
       qDebug(); // blank line
 }
 
@@ -40,19 +40,51 @@ void MuseScore::experimentalUpdateUiStyleAndTheme()
       qDebug()<<"Before any theme work at all, i.e. defaults, the palette is:";
       logPalette();
 
-      QString paletteFilename = preferences.isThemeDark() ? "ex_palette_dark_fusion.json" : "ex_palette_light_fusion.json";;
+      QString userCustomizingFilesPath = QString("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).arg(QCoreApplication::applicationName());
+
+      QString paletteFilename = preferences.isThemeDark() ? "palette_fresh_fusion.json" : "palette_fresh_fusion.json";
+      qDebug()<<"paletteFilename"<<QString(":/themes/%1").arg(paletteFilename);
       QFile paletteFile(QString(":/themes/%1").arg(paletteFilename));
+
+      if (QFile::exists(QString("%1/%2").arg(userCustomizingFilesPath, "palette_fresh_fusion.json")))
+                  paletteFile.setFileName(QString("%1/%2").arg(userCustomizingFilesPath, "palette_fresh_fusion.json"));
 
       QPalette palette = QPalette(QApplication::palette());
 
       if (paletteFile.open(QFile::ReadOnly | QFile::Text)) {
-            QJsonDocument d = QJsonDocument::fromJson(paletteFile.readAll());
-            QJsonObject o = d.object();
-            QMetaEnum metaEnum = QMetaEnum::fromType<QPalette::ColorRole>();
-            for (int i = 0; i < metaEnum.keyCount(); ++i) {
-                  QJsonValue v = o.value(metaEnum.valueToKey(i));
-                  if (!v.isUndefined())
-                        palette.setColor(static_cast<QPalette::ColorRole>(metaEnum.value(i)), QColor(v.toString()));
+            QJsonDocument themeDocument = QJsonDocument::fromJson(paletteFile.readAll());
+
+            // the top level of the (new format) palette settings is s set of
+            // color group keys
+            QJsonObject colorGroupSettings = themeDocument.object();
+
+            QMetaEnum colorGroups = QMetaEnum::fromType<QPalette::ColorGroup>();
+
+            // iterate through all the available color group keys and whenever
+            // there is a match, get the colorRoles object and add to palette
+            for (int colorGroup = 0; colorGroup < colorGroups.keyCount(); ++colorGroup) {
+                  QJsonValue value = colorGroupSettings.value(colorGroups.valueToKey(colorGroup));
+                  if (value.isUndefined())
+                        continue;
+                  qDebug()<<"Found colorGroup: "<<colorGroups.valueToKey(colorGroup)<<" - "<<value;
+
+                  QJsonObject colorRoleSettings = value.toObject(); //NOT SURE about this line - it's a guess
+                  QMetaEnum colorRoles = QMetaEnum::fromType<QPalette::ColorRole>();
+
+                  for (int colorRole = 0; colorRole < colorRoles.keyCount(); ++colorRole) {
+                        QJsonValue value = colorRoleSettings.value(colorRoles.valueToKey(colorRole));
+                        if (value.isUndefined())
+                              continue;
+
+                        QString colorRoleFormatted = colorRoles.valueToKey(colorRole);
+                        QString colorGroupFormatted = colorGroups.valueToKey(colorGroup);
+                        colorRoleFormatted = QString(colorRoleFormatted.rightJustified(16, ' '));
+                        colorGroupFormatted = colorGroupFormatted.rightJustified(8, ' ');
+
+                        qDebug()<<"Setting "<<colorRoleFormatted<<" ("<<colorGroupFormatted<<") to "<<value;
+
+                        palette.setColor(static_cast<QPalette::ColorGroup>(colorGroups.value(colorGroup)), static_cast<QPalette::ColorRole>(colorRoles.value(colorRole)), QColor(value.toString()));
+                        }
             }
       }
       QApplication::setPalette(palette);
