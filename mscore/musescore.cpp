@@ -6980,46 +6980,105 @@ bool MuseScore::saveMp3(Score* score, QIODevice* device, bool& wasCanceled)
 #endif
       }
 
+void setColorGroup(QPalette::ColorGroup colorGroup, QPalette &palette, QJsonDocument themeDocument)
+      {
+      QJsonObject colorGroupSettings = themeDocument.object();
+      QStringList keys = colorGroupSettings.keys();
+
+      QMetaEnum colorGroups = QMetaEnum::fromType<QPalette::ColorGroup>();
+      QString key = colorGroups.valueToKey(colorGroup);
+
+      if (!keys.contains(key)) {
+            qDebug()<<"Theme file does not have the key: "<<key;
+            return;
+            }
+
+      QJsonValue value = colorGroupSettings.value(colorGroups.valueToKey(colorGroup));
+
+      if (value.isUndefined()) {
+            qDebug()<<"Theme file does not have a value for the key:"<<key;
+            return;
+            }
+
+      qDebug()<<"Theme file extracting colors for key: "<<key;
+
+      QJsonObject colorRoleSettings = value.toObject();
+      QMetaEnum colorRoles = QMetaEnum::fromType<QPalette::ColorRole>();
+
+      for (int colorRole = 0; colorRole < colorRoles.keyCount(); ++colorRole) {
+            QJsonValue value = colorRoleSettings.value(colorRoles.valueToKey(colorRole));
+            if (value.isUndefined())
+                  continue;
+
+            QString colorRoleFormatted = colorRoles.valueToKey(colorRole);
+            QString colorGroupFormatted = colorGroups.valueToKey(colorGroup);
+            colorRoleFormatted = QString(colorRoleFormatted.rightJustified(16, ' '));
+            colorGroupFormatted = colorGroupFormatted.rightJustified(8, ' ');
+
+            qDebug()<<"Setting "<<colorRoleFormatted<<" ("<<colorGroupFormatted<<") to "<<value;
+
+            palette.setColor(static_cast<QPalette::ColorGroup>(colorGroups.value(colorGroup)), static_cast<QPalette::ColorRole>(colorRoles.value(colorRole)), QColor(value.toString()));
+            }
+      }
+
+
+void setPaletteFromFile(QString paletteFilePath)
+      {
+      if (!QFile::exists(paletteFilePath)) {
+            qDebug()<<"Palette file '"<<paletteFilePath<<"' not present.";
+            return;
+            }
+      qDebug()<<"Detected and applying palette from: '"<<paletteFilePath<<"'";
+
+      QFile paletteFile(paletteFilePath);
+
+      if (!paletteFile.open(QFile::ReadOnly | QFile::Text)) {
+            qDebug()<<"Could not open the palette file.";
+            return;
+      }
+
+      QJsonDocument themeDocument = QJsonDocument::fromJson(paletteFile.readAll());
+
+      // the top level of the palette settings is a set of color group keys
+      QJsonObject colorGroupSettings = themeDocument.object();
+
+      QPalette palette = QPalette(QApplication::palette());
+
+      setColorGroup(QPalette::All, palette, themeDocument);
+      setColorGroup(QPalette::Disabled, palette, themeDocument);
+      setColorGroup(QPalette::Inactive, palette, themeDocument);
+
+      QApplication::setPalette(palette);
+      }
+
 void MuseScore::updateUiStyleAndTheme()
       {
-
-//      experimentalUpdateUiStyleAndTheme();
-//      return;
-            
-      // set UI Theme
+      // get the default from QT
       QApplication::setStyle(QStyleFactory::create("Fusion"));
 
-      QString wd      = QString("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).arg(QCoreApplication::applicationName());
-      // set UI Color Palette
-      QPalette p(QApplication::palette());
-      QString jsonPaletteFilename = preferences.isThemeDark() ? "palette_dark_fusion.json" : "palette_light_fusion.json";;
-      QFile jsonPalette(QString(":/themes/%1").arg(jsonPaletteFilename));
-      // read from Documents TODO: remove this
-      if (QFile::exists(QString("%1/%2").arg(wd, "ms_palette.json")))
-            jsonPalette.setFileName(QString("%1/%2").arg(wd, "ms_palette.json"));
-      if (jsonPalette.open(QFile::ReadOnly | QFile::Text)) {
-            QJsonDocument d = QJsonDocument::fromJson(jsonPalette.readAll());
-            QJsonObject o = d.object();
-            QMetaEnum metaEnum = QMetaEnum::fromType<QPalette::ColorRole>();
-            for (int i = 0; i < metaEnum.keyCount(); ++i) {
-                  QJsonValue v = o.value(metaEnum.valueToKey(i));
-                  if (!v.isUndefined())
-                        p.setColor(static_cast<QPalette::ColorRole>(metaEnum.value(i)), QColor(v.toString()));
-                  }
-            }
-      QApplication::setPalette(p);
+      bool dark = preferences.isThemeDark();
 
-      // set UI Style
+      // always apply the built-in palette for the theme. This means the user
+      // palette settings only need to include the setting they want to override
+      QString paletteFilePath = QString(":/themes/%1"). arg(dark ? "palette_dark_fusion.json" : "palette_light_fusion.json");
+      setPaletteFromFile(paletteFilePath);
+
+      // if present, use the user-provided palette
+      // TODO: add a check for legacy ms_palette.json and show user a warning/ some options
+      QString userSettingsPath = QString("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).arg(QCoreApplication::applicationName());
+      QString userPaletteFilePath = QString("%1/%2").arg(userSettingsPath, dark ? "ms_dark_palette.json" : "ms_light_palette.json");
+
+      // will no-op if the user file is not present
+      setPaletteFromFile(userPaletteFilePath);
+
       QString css;
-      QString styleFilename = preferences.isThemeDark() ? "style_dark_fusion.css" : "style_light_fusion.css";
+      QString styleFilename = dark ? "style_dark_fusion.css" : "style_light_fusion.css";
       QFile fstyle(QString(":/themes/%1").arg(styleFilename));
-      // read from Documents TODO: remove this
-      if (QFile::exists(QString("%1/%2").arg(wd, "ms_style.css")))
-            fstyle.setFileName(QString("%1/%2").arg(wd, "ms_style.css"));
+
       if (fstyle.open(QFile::ReadOnly | QFile::Text)) {
-            QTextStream in(&fstyle);
-            css = in.readAll();
-            }
+          QTextStream in(&fstyle);
+          css = in.readAll();
+      }
 
       css.replace("$voice1-bgcolor", MScore::selectColor[0].name(QColor::HexRgb));
       css.replace("$voice2-bgcolor", MScore::selectColor[1].name(QColor::HexRgb));
@@ -7028,8 +7087,8 @@ void MuseScore::updateUiStyleAndTheme()
       qApp->setStyleSheet(css);
 
       QString style = QString("*, QSpinBox { font: %1pt \"%2\" } ")
-                  .arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY))
-                  + qApp->styleSheet();
+      .arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY))
+      + qApp->styleSheet();
       qApp->setStyleSheet(style);
 
       genIcons();

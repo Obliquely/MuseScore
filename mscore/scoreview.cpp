@@ -2340,7 +2340,7 @@ void ScoreView::cmd(const char* s)
                   _score->cmdConcertPitchChanged(a->isChecked(), true);
                   _score->endCmd();
                   }
-            MuseScore::experimentalUpdateUiStyleAndTheme();
+            MuseScore::updateUiStyleAndTheme();  // testing hack
             }
       else {
             editData.view = this;

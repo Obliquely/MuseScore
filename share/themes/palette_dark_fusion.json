@@ -1,15 +1,22 @@
 {
-"Window":        "#525252",
-"WindowText":    "#FFFFFF",
-"Base":          "#424242",
-"AlternateBase": "#626262",
-"Text":          "#FFFFFF",
-"Button":        "#525252",
-"ButtonText":    "#eff0f1",
-"BrightText":    "#000000",
-"Highlight":     "#88bff6",
-"Link":          "#00ffff",
-"LinkVisited":   "#00ffff",
-"ToolTipBase":   "#808080",
-"ToolTipText":   "#000000"
+      "All":   {
+            "Window":        "#525252",
+            "WindowText":    "#FFFFFF",
+            "Base":          "#424242",
+            "AlternateBase": "#626262",
+            "Text":          "#FFFFFF",
+            "Button":        "#525252",
+            "ButtonText":    "#eff0f1",
+            "BrightText":    "#78afe6",
+            "Highlight":     "#88bff6",
+            "Link":          "#00ffff",
+            "LinkVisited":   "#00ffff",
+            "ToolTipBase":   "#808080",
+            "ToolTipText":   "#000000"
+      },
+
+      "Disabled": {
+            "ButtonText":    "#a0a0a0",
+            "BrightText":    "#4171a2"
+      }
 }

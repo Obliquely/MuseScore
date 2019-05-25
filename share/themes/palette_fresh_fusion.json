@@ -1,8 +1,0 @@
-{
-      "Active":   { "ButtonText":    "#3b3f45", "Highlight":     "#0000CC" },
-
-      "Disabled": { "ButtonText":    "#a0a0a0", "Highlight":     "#2F2F8F"},
-
-      "Inactive": { "Window":        "#e3e3e3", "ButtonText":    "#000022"}
-
-}
