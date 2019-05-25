@@ -41,12 +41,6 @@ QToolButton[voice4="true"]:checked, QToolButton[voice4="true"]:pressed { color: 
 /* Toolbar voice selector */
 QToolButton#voice:checked, QToolButton#voice:pressed { color: white; }
 
-/* ToolbarButton text to match ToolbarButton icons */
-QToolButton[iconic-text="true"] { color: #3b3f45; }
-QToolButton[iconic-text="true"]:enabled:checked { color: #4171a2; }
-QToolButton[iconic-text="true"]:disabled { color: #a0a0a0; }
-QToolButton[iconic-text="true"]:disabled:checked { color: #8daac7; }
-
 /* Mainly in midi import */
 QTableView { border: none; }
 
@@ -60,4 +54,3 @@ QMainWindow::separator {
 QMainWindow::separator:hover {
     background: gray;
 }
-

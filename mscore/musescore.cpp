@@ -7044,7 +7044,10 @@ void setPaletteFromFile(QString paletteFilePath)
 
       QPalette palette = QPalette(QApplication::palette());
 
+      // set the "All" group first, other groups can then
+      // provide overrides where necessary
       setColorGroup(QPalette::All, palette, themeDocument);
+      setColorGroup(QPalette::Active, palette, themeDocument);
       setColorGroup(QPalette::Disabled, palette, themeDocument);
       setColorGroup(QPalette::Inactive, palette, themeDocument);
 
@@ -7071,25 +7074,62 @@ void MuseScore::updateUiStyleAndTheme()
       // will no-op if the user file is not present
       setPaletteFromFile(userPaletteFilePath);
 
-      QString css;
       QString styleFilename = dark ? "style_dark_fusion.css" : "style_light_fusion.css";
       QFile fstyle(QString(":/themes/%1").arg(styleFilename));
 
-      if (fstyle.open(QFile::ReadOnly | QFile::Text)) {
-          QTextStream in(&fstyle);
-          css = in.readAll();
+      QString userStyleFilePath = QString("%1/%2").arg(userSettingsPath, styleFilename);
+
+      qDebug()<<"Check for existence of user style file at: "<<userStyleFilePath;
+      if (QFile::exists(userStyleFilePath)) {
+            qDebug()<<"User style file will override built-in default'";
+            fstyle.setFileName(userStyleFilePath);
       }
 
-      css.replace("$voice1-bgcolor", MScore::selectColor[0].name(QColor::HexRgb));
-      css.replace("$voice2-bgcolor", MScore::selectColor[1].name(QColor::HexRgb));
-      css.replace("$voice3-bgcolor", MScore::selectColor[2].name(QColor::HexRgb));
-      css.replace("$voice4-bgcolor", MScore::selectColor[3].name(QColor::HexRgb));
-      qApp->setStyleSheet(css);
 
-      QString style = QString("*, QSpinBox { font: %1pt \"%2\" } ")
-      .arg(QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE)), preferences.getString(PREF_UI_THEME_FONTFAMILY))
-      + qApp->styleSheet();
-      qApp->setStyleSheet(style);
+      QString importedStyleSheet;
+      if (fstyle.open(QFile::ReadOnly | QFile::Text)) {
+          QTextStream in(&fstyle);
+          importedStyleSheet = in.readAll();
+      }
+
+      // modify style sheet with to use voice colors based on prefs
+      importedStyleSheet.replace("$voice1-bgcolor", MScore::selectColor[0].name(QColor::HexRgb));
+      importedStyleSheet.replace("$voice2-bgcolor", MScore::selectColor[1].name(QColor::HexRgb));
+      importedStyleSheet.replace("$voice3-bgcolor", MScore::selectColor[2].name(QColor::HexRgb));
+      importedStyleSheet.replace("$voice4-bgcolor", MScore::selectColor[3].name(QColor::HexRgb));
+
+      QPalette palette = QPalette(QApplication::palette());
+
+      // ToolbarButton text to match ToolbarButton icons
+      QString iconTextStyleFragment = QString("QToolButton[iconic-text=\"true\"]");
+
+      QString buttonColor;
+      buttonColor= palette.color(QPalette::Active, QPalette::ButtonText).name();
+      importedStyleSheet.append(QString("%1 { color: %2; }").arg(iconTextStyleFragment).arg(buttonColor));
+      buttonColor = palette.color(QPalette::Active, QPalette::BrightText).name();
+      importedStyleSheet.append(QString("%1:enabled:checked { color: %2; }").arg(iconTextStyleFragment).arg(buttonColor));
+      buttonColor = palette.color(QPalette::Disabled, QPalette::ButtonText).name();
+      importedStyleSheet.append(QString("%1:disabled { color: %2; }").arg(iconTextStyleFragment).arg(buttonColor));
+      buttonColor = palette.color(QPalette::Disabled, QPalette::BrightText).name();
+      importedStyleSheet.append(QString("%1:disabled:checked { color: %2; }").arg(iconTextStyleFragment).arg(buttonColor));
+
+      // modify style sheet with to use voice colors based on prefs
+      importedStyleSheet.replace("$voice1-bgcolor", MScore::selectColor[0].name(QColor::HexRgb));
+      importedStyleSheet.replace("$voice2-bgcolor", MScore::selectColor[1].name(QColor::HexRgb));
+      importedStyleSheet.replace("$voice3-bgcolor", MScore::selectColor[2].name(QColor::HexRgb));
+      importedStyleSheet.replace("$voice4-bgcolor", MScore::selectColor[3].name(QColor::HexRgb));
+
+      // additional style sheet for SpinBox font setting based on prefs
+      QString fontSize = QString::number(preferences.getInt(PREF_UI_THEME_FONTSIZE));
+      QString fontFamily = preferences.getString(PREF_UI_THEME_FONTFAMILY);
+      QString style = QString("*, QSpinBox { font: %1pt \"%2\" } ").arg(fontSize, fontFamily);
+
+      qApp->setStyleSheet(style + importedStyleSheet);
+
+            qDebug();
+            qDebug()<<"Style file:";
+            qDebug()<<style + importedStyleSheet;
+            qDebug();
 
       genIcons();
       Shortcut::refreshIcons();
