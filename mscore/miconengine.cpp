@@ -120,31 +120,12 @@ void replaceIconFillColor(QByteArray &byteArray, QColor color) {
 
 void MIconEnginePrivate::loadDataForModeAndState(QSvgRenderer* renderer, QIcon::Mode mode, QIcon::State state)
       {
+      QPalette palette = QPalette(QApplication::palette());
 
-      QColor enabledOn;
-      QColor enabledOff;
-      QColor disabledOn;
-      QColor disabledOff;
-
-      // preserve hard-coded number for now
-      //  with a view to replacing them with calls to the Palette
-      if (Ms::preferences.isThemeDark()) {
-            enabledOn = QColor("#78afe6");
-            enabledOff = QColor("#eff0f1");
-            disabledOn = QColor("#4171a2");
-            disabledOff = QColor("#a0a0a0");
-            }
-      else {
-//            enabledOn = QColor("#4171a2");
-//            enabledOff = QColor("#3b3f45");
-//            disabledOn = QColor("#8daac7");
-//            disabledOff = QColor("#a0a0a0");
-            QPalette palette = QPalette(QApplication::palette());
-            enabledOn = palette.color(QPalette::Active, QPalette::Highlight);
-            enabledOff = palette.color(QPalette::Active, QPalette::ButtonText);
-            disabledOn = palette.color(QPalette::Disabled, QPalette::Highlight);
-            disabledOff = palette.color(QPalette::Disabled, QPalette::ButtonText);
-            }
+      QColor enabledOn = palette.color(QPalette::Active, QPalette::BrightText);
+      QColor enabledOff = palette.color(QPalette::Active, QPalette::ButtonText);
+      QColor disabledOn = palette.color(QPalette::Disabled, QPalette::BrightText);
+      QColor disabledOff = palette.color(QPalette::Disabled, QPalette::ButtonText);
 
       QByteArray buf;
       if (svgBuffers) {
