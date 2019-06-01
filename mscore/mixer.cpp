@@ -38,7 +38,268 @@
 #include "mixertrackpart.h"
 #include "mixertrackitem.h"
 
+#include <QStringList>
+
+#include <QList>
+#include <QVariant>
+
+class TreeItem
+{
+public:
+      explicit TreeItem(const QList<QVariant> &data, TreeItem *parentItem = 0);
+      ~TreeItem();
+
+      void appendChild(TreeItem *child);
+
+      TreeItem *child(int row);
+      int childCount() const;
+      int columnCount() const;
+      QVariant data(int column) const;
+      int row() const;
+      TreeItem *parentItem();
+
+private:
+      QList<TreeItem*> m_childItems;
+      QList<QVariant> m_itemData;
+      TreeItem *m_parentItem;
+};
+
+TreeItem::TreeItem(const QList<QVariant> &data, TreeItem *parent)
+{
+      m_parentItem = parent;
+      m_itemData = data;
+}
+
+TreeItem::~TreeItem()
+{
+      qDeleteAll(m_childItems);
+}
+
+void TreeItem::appendChild(TreeItem *item)
+{
+      m_childItems.append(item);
+}
+
+TreeItem *TreeItem::child(int row)
+{
+      return m_childItems.value(row);
+}
+
+int TreeItem::childCount() const
+{
+      return m_childItems.count();
+}
+
+int TreeItem::columnCount() const
+{
+      return m_itemData.count();
+}
+
+QVariant TreeItem::data(int column) const
+{
+      return m_itemData.value(column);
+}
+
+TreeItem *TreeItem::parentItem()
+{
+      return m_parentItem;
+}
+
+int TreeItem::row() const
+{
+      if (m_parentItem)
+            return m_parentItem->m_childItems.indexOf(const_cast<TreeItem*>(this));
+
+      return 0;
+}
+
+
+#include <QAbstractItemModel>
+#include <QModelIndex>
+#include <QVariant>
+
+class TreeItem;
+
+class TreeModel : public QAbstractItemModel
+{
+//      Q_OBJECT
+
+public:
+      explicit TreeModel(const QString &data, QObject *parent = 0);
+      ~TreeModel();
+
+      QVariant data(const QModelIndex &index, int role) const override;
+      Qt::ItemFlags flags(const QModelIndex &index) const override;
+      QVariant headerData(int section, Qt::Orientation orientation,
+                          int role = Qt::DisplayRole) const override;
+      QModelIndex index(int row, int column,
+                        const QModelIndex &parent = QModelIndex()) const override;
+      QModelIndex parent(const QModelIndex &index) const override;
+      int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+      int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
+private:
+      void setupModelData(const QStringList &lines, TreeItem *parent);
+
+      TreeItem *rootItem;
+};
+
+
+TreeModel::TreeModel(const QString &data, QObject *parent)
+: QAbstractItemModel(parent)
+{
+      QList<QVariant> rootData;
+      rootData << "Title" << "Summary";
+      rootItem = new TreeItem(rootData);
+      setupModelData(data.split(QString("\n")), rootItem);
+}
+
+TreeModel::~TreeModel()
+{
+      delete rootItem;
+}
+
+int TreeModel::columnCount(const QModelIndex &parent) const
+{
+      if (parent.isValid())
+            return static_cast<TreeItem*>(parent.internalPointer())->columnCount();
+      else
+            return rootItem->columnCount();
+}
+
+QVariant TreeModel::data(const QModelIndex &index, int role) const
+{
+      if (!index.isValid())
+            return QVariant();
+
+      if (role != Qt::DisplayRole)
+            return QVariant();
+
+      TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
+
+      return item->data(index.column());
+}
+
+Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
+{
+      if (!index.isValid())
+            return 0;
+
+      return QAbstractItemModel::flags(index);
+}
+
+QVariant TreeModel::headerData(int section, Qt::Orientation orientation,
+                               int role) const
+{
+      if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
+            return rootItem->data(section);
+
+      return QVariant();
+}
+
+QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent)
+const
+{
+      if (!hasIndex(row, column, parent))
+            return QModelIndex();
+
+      TreeItem *parentItem;
+
+      if (!parent.isValid())
+            parentItem = rootItem;
+      else
+            parentItem = static_cast<TreeItem*>(parent.internalPointer());
+
+      TreeItem *childItem = parentItem->child(row);
+      if (childItem)
+            return createIndex(row, column, childItem);
+      else
+            return QModelIndex();
+}
+
+QModelIndex TreeModel::parent(const QModelIndex &index) const
+{
+      if (!index.isValid())
+            return QModelIndex();
+
+      TreeItem *childItem = static_cast<TreeItem*>(index.internalPointer());
+      TreeItem *parentItem = childItem->parentItem();
+
+      if (parentItem == rootItem)
+            return QModelIndex();
+
+      return createIndex(parentItem->row(), 0, parentItem);
+}
+
+int TreeModel::rowCount(const QModelIndex &parent) const
+{
+      TreeItem *parentItem;
+      if (parent.column() > 0)
+            return 0;
+
+      if (!parent.isValid())
+            parentItem = rootItem;
+      else
+            parentItem = static_cast<TreeItem*>(parent.internalPointer());
+
+      return parentItem->childCount();
+}
+
+void TreeModel::setupModelData(const QStringList &lines, TreeItem *parent)
+{
+      QList<TreeItem*> parents;
+      QList<int> indentations;
+      parents << parent;
+      indentations << 0;
+
+      int number = 0;
+
+      while (number < lines.count()) {
+            int position = 0;
+            while (position < lines[number].length()) {
+                  if (lines[number].at(position) != ' ')
+                        break;
+                  position++;
+            }
+
+            QString lineData = lines[number].mid(position).trimmed();
+
+            if (!lineData.isEmpty()) {
+                  // Read the column data from the rest of the line.
+                  QStringList columnStrings = lineData.split("\t", QString::SkipEmptyParts);
+                  QList<QVariant> columnData;
+                  for (int column = 0; column < columnStrings.count(); ++column)
+                        columnData << columnStrings[column];
+
+                  if (position > indentations.last()) {
+                        // The last child of the current parent is now the new parent
+                        // unless the current parent has no children.
+
+                        if (parents.last()->childCount() > 0) {
+                              parents << parents.last()->child(parents.last()->childCount()-1);
+                              indentations << position;
+                        }
+                  } else {
+                        while (position < indentations.last() && parents.count() > 0) {
+                              parents.pop_back();
+                              indentations.pop_back();
+                        }
+                  }
+
+                  // Append a new item to the current parent's list of children.
+                  parents.last()->appendChild(new TreeItem(columnData, parents.last()));
+            }
+
+            ++number;
+      }
+}
+
 namespace Ms {
+
+
+
+
+
 
 #define _setValue(__x, __y) \
       __x->blockSignals(true); \
@@ -85,40 +346,25 @@ Mixer::Mixer(QWidget* parent)
       trackAreaLayout = new QHBoxLayout;
       trackAreaLayout->setMargin(0);
       trackAreaLayout->setSpacing(0);
-      trackArea->setLayout(trackAreaLayout);
+      //trackArea->setLayout(trackAreaLayout);
 
-      mixerDetails = new MixerDetails(this);
-      detailsLayout = new QGridLayout(this);
+//      mixerDetails = new MixerDetails(this);
+//      detailsLayout = new QGridLayout(this);
 
-      detailsLayout->addWidget(mixerDetails);
-      detailsLayout->setContentsMargins(0, 0, 0, 0);
-      detailsArea->setLayout(detailsLayout);
-
-      //Range in decibels
-      masterSlider->setMaxValue(0);
-      masterSlider->setMinValue(minDecibels);
-      masterSlider->setNumMinorTicks(4);
-      masterSlider->setNumMajorTicks(3);
-      masterSlider->setHilightColor(QColor(51, 153, 255));
-      float decibels = qBound(minDecibels, log10(synti->gain()), 0.0f);
-      masterSlider->setValue(decibels);
-
-      masterSpin->setMaximum(0);
-      masterSpin->setMinimum(minDecibels);
-      masterSpin->setSingleStep(.1);
-      masterSpin->setValue(decibels);
+      // detailsLayout->addWidget(mixerDetails);
+      // detailsLayout->setContentsMargins(0, 0, 0, 0);
+      //detailsArea->setLayout(detailsLayout);
 
 
-      QIcon iconSliderHead;
-      iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
-      masterSlider->setSliderHeadIcon(iconSliderHead);
+      masterGainSpin->setMaximum(0);
+      masterGainSpin->setMinimum(minDecibels);
+      masterGainSpin->setSingleStep(.1);
 
-      connect(toggleDetailsButton, &QPushButton::toggled, this, &Mixer::showDetailsToggled);
-      connect(masterSlider, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
-      connect(masterSpin, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
+      connect(masterGainSlider, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
+      connect(masterGainSpin, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
       connect(synti, SIGNAL(gainChanged(float)), SLOT(synthGainChanged(float)));
-      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(rangeChanged(int, int)), SLOT(adjustScrollPosition(int, int)));
-      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(valueChanged(int)), SLOT(checkKeptScrollValue(int)));
+//      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(rangeChanged(int, int)), SLOT(adjustScrollPosition(int, int)));
+//      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(valueChanged(int)), SLOT(checkKeptScrollValue(int)));
 
       enablePlay = new EnablePlayForWidget(this);
       readSettings();
@@ -131,11 +377,12 @@ Mixer::Mixer(QWidget* parent)
 
 void Mixer::showDetailsToggled(bool shown)
       {
-      showDetails = shown;
-      if (showDetails)
-            detailsLayout->addWidget(mixerDetails);
-      else
-            detailsLayout->removeWidget(mixerDetails);
+      qDebug()<<"showDetails is NOOP";
+            //      showDetails = shown;
+//      if (showDetails)
+//            detailsLayout->addWidget(mixerDetails);
+//      else
+//            detailsLayout->removeWidget(mixerDetails);
       }
 
 //---------------------------------------------------------
@@ -146,25 +393,25 @@ void Mixer::synthGainChanged(float)
       {
       float decibels = qBound(minDecibels, log10f(synti->gain()), 0.0f);
 
-      masterSlider->blockSignals(true);
-      masterSlider->setValue(decibels);
-      masterSlider->blockSignals(false);
+      masterGainSlider->blockSignals(true);
+      masterGainSlider->setValue(decibels);
+      masterGainSlider->blockSignals(false);
 
-      masterSpin->blockSignals(true);
-      masterSpin->setValue(decibels);
-      masterSpin->blockSignals(false);
+      masterGainSpin->blockSignals(true);
+      masterGainSpin->setValue(decibels);
+      masterGainSpin->blockSignals(false);
       }
 
 void Mixer::adjustScrollPosition(int, int)
       {
       if (_needToKeepScrollPosition)
-            tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
+            qDebug();          //tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
       }
 
 void Mixer::checkKeptScrollValue(int scrollPos)
       {
       if (_needToKeepScrollPosition) {
-            tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
+            //tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
             if (_scrollPosition == scrollPos)
                   _needToKeepScrollPosition = false;
             }
@@ -172,7 +419,7 @@ void Mixer::checkKeptScrollValue(int scrollPos)
 
 void Mixer::keepScrollPosition()
       {
-      _scrollPosition = tracks_scrollArea->horizontalScrollBar()->sliderPosition();
+      //_scrollPosition = tracks_scrollArea->horizontalScrollBar()->sliderPosition();
       _needToKeepScrollPosition = true;
       }
 
@@ -185,13 +432,13 @@ void Mixer::masterVolumeChanged(double decibels)
       float gain = qBound(0.0f, powf(10, (float)decibels), 1.0f);
       synti->setGain(gain);
 
-      masterSlider->blockSignals(true);
-      masterSlider->setValue(decibels);
-      masterSlider->blockSignals(false);
+      masterGainSlider->blockSignals(true);
+      masterGainSlider->setValue(decibels);
+      masterGainSlider->blockSignals(false);
 
-      masterSpin->blockSignals(true);
-      masterSpin->setValue(decibels);
-      masterSpin->blockSignals(false);
+      masterGainSpin->blockSignals(true);
+      masterGainSpin->setValue(decibels);
+      masterGainSpin->blockSignals(false);
       }
 
 //---------------------------------------------------------
@@ -302,7 +549,7 @@ void Mixer::setPlaybackScore(Score* score)
       {
       if (_score != score) {
             _score = score;
-            mixerDetails->setTrack(0);
+            //mixerDetails->setTrack(0);
             }
       updateTracks();
       }
@@ -328,10 +575,10 @@ void Mixer::setScore(Score* score)
 
 void Mixer::updateTracks()
       {
-      MixerTrackItem* oldSel = mixerDetails->track().get();
+      //MixerTrackItem* oldSel = mixerDetails->track().get();
 
-      Part* selPart = oldSel ? oldSel->part() : 0;
-      Channel* selChan = oldSel ? oldSel->chan() : 0;
+      Part* selPart = 0; //oldSel ? oldSel->part() : 0;
+      Channel* selChan = 0; //oldSel ? oldSel->chan() : 0;
 
       if (_score && !selPart) {
             //If nothing selected, select first available track
@@ -351,7 +598,7 @@ void Mixer::updateTracks()
             }
 
       trackList.clear();
-      mixerDetails->setTrack(0);
+      //mixerDetails->setTrack(0);
 
 
       if (!_score)
@@ -363,13 +610,23 @@ void Mixer::updateTracks()
       holderLayout->setSpacing(0);
       trackHolder->setLayout(holderLayout);
 
-      trackAreaLayout->addWidget(trackHolder);
+      //trackAreaLayout->addWidget(trackHolder);
+
+      // this is where the LIST would be built, I think
+
+      TreeModel model("Something\tSomething description\nNextthing\tNextThing description\n\  Subthing\tSubthing description");
+
+      qDebug()<<"Model rows: "<<model.rowCount();
+      instrumentList->setModel(&model);
 
       for (Part* localPart : _score->parts()) {
             Part* part = localPart->masterPart();
             //Add per part tracks
+
+            // THIS would be disclosure triangle
             bool expanded = expandedParts.contains(part);
             const InstrumentList* il = part->instruments();
+
             Instrument* proxyInstr = nullptr;
             Channel* proxyChan = nullptr;
             if (!il->empty()) {
@@ -378,18 +635,19 @@ void Mixer::updateTracks()
                   proxyChan = proxyInstr->playbackChannel(0, _score->masterScore());
                   }
 
-            MixerTrackItemPtr mti = std::make_shared<MixerTrackItem>(
-                              MixerTrackItem::TrackType::PART, part, proxyInstr, proxyChan);
+            //model->addAnimal(part->partName(), "Medium");
 
-            MixerTrackPart* track = new MixerTrackPart(this, mti, expanded);
-            track->setGroup(this);
-            trackList.append(track);
-            holderLayout->addWidget(track);
+            //MixerTrackItemPtr mti = std::make_shared<MixerTrackItem>(MixerTrackItem::TrackType::PART, part, proxyInstr, proxyChan);
+
+            //MixerTrackPart* track = new MixerTrackPart(this, mti, expanded);
+            //track->setGroup(this);
+            //trackList.append(track);
+            // holderLayout->addWidget(track);
 
             if (selPart == part &&
                 (selChan == 0 || !expanded)) {
-                  track->setSelected(true);
-                  mixerDetails->setTrack(mti);
+                  //track->setSelected(true);
+                  //mixerDetails->setTrack(mti);
                   }
 
             if (expanded) {
@@ -399,26 +657,25 @@ void Mixer::updateTracks()
                         Instrument* instr = it->second;
                         for (int i = 0; i < instr->channel().size(); ++i) {
                               Channel* chan = instr->playbackChannel(i, _score->masterScore());
-                              MixerTrackItemPtr mti1 = std::make_shared<MixerTrackItem>(
-                                                MixerTrackItem::TrackType::CHANNEL, part, instr, chan);
-//                              MixerTrackItemPtr mti = new MixerTrackItem(
-//                                                MixerTrackItem::TrackType::CHANNEL, part, instr, chan);
-                              MixerTrackChannel* track1 = new MixerTrackChannel(this, mti1);
-                              track1->setGroup(this);
-                              trackList.append(track1);
-                              holderLayout->addWidget(track1);
 
-                              if (selPart == part &&
-                                  selChan == chan) {
-                                    track1->setSelected(true);
-                                    mixerDetails->setTrack(mti1);
-                                    }
+                              //instrumentList->addItem(chan->name());
+//                              MixerTrackItemPtr mti1 = std::make_shared<MixerTrackItem>(MixerTrackItem::TrackType::CHANNEL, part, instr, chan);
+//                              MixerTrackItemPtr mti = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instr, chan);
+//                              MixerTrackChannel* track1 = new MixerTrackChannel(this, mti1);
+//                              track1->setGroup(this);
+//                              trackList.append(track1);
+                              // holderLayout->addWidget(track1);
+
+//                              if (selPart == part && selChan == chan) {
+//                                    track1->setSelected(true);
+//                                    mixerDetails->setTrack(mti1);
+//                                    }
                               }
                         }
                   }
             }
 
-      holderLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding, QSizePolicy::Fixed));
+      //holderLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding, QSizePolicy::Fixed));
       keepScrollPosition();
       }
 
@@ -458,7 +715,7 @@ void Mixer::notifyTrackSelected(MixerTrack* track)
                   mt->setSelected(false);
                   }
             }
-      mixerDetails->setTrack(track->mti());
+      //mixerDetails->setTrack(track->mti());
       }
 
 
