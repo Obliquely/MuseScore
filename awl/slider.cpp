@@ -140,14 +140,12 @@ void Slider::setSliderSize(const QSize& s)
 void Slider::mousePressEvent(QMouseEvent* ev)
       {
       startDrag = ev->pos();
-//      if (points->boundingRect().toRect().contains(startDrag)) {
             emit sliderPressed(__id);
             dragMode = true;
             int pixel = (orient == Qt::Vertical) ? height() - _sliderSize.height() : width() - _sliderSize.width();
             dragppos = int(pixel * (_value - minValue()) / (maxValue() - minValue()));
             if (_invert)
                   dragppos = pixel - dragppos;
-//            }
       }
 
 //---------------------------------------------------------
@@ -172,8 +170,6 @@ void Slider::mouseMoveEvent(QMouseEvent* ev)
             return;
       int delta = orient == Qt::Horizontal ? (startDrag.x() - ev->x()) : (startDrag.y() - ev->y());
 
-//      if (_invert)
-//            delta = -delta;
       if (orient == Qt::Horizontal)
             delta = -delta;
       int ppos = dragppos + delta;
@@ -205,14 +201,20 @@ void Slider::paintEvent(QPaintEvent* /*ev*/)
       if ((orient == Qt::Vertical && _invert) || (orient == Qt::Horizontal && !_invert))
             ppos = pixel - ppos;
 
-#if 0 // yet(?) unused
-      QRect rr(ev->rect());
-#endif
-      QPainter p(this);
+      qDebug()<<"height = "<<height()<<" (_sliderSize.height = "<<kh;
+      qDebug()<<"width = "<<width()<<" (_sliderSize.width = "<<kh;
 
-      QColor sc(isEnabled() ? _scaleColor : Qt::gray);
-      QColor svc(isEnabled() ? _scaleValueColor : Qt::gray);
-      p.setBrush(svc);
+      qDebug()<<"ppos = "<<ppos;
+
+      QPainter painter(this);
+
+      painter.setRenderHint(QPainter::Antialiasing, true);
+
+      _scaleColor = QApplication::palette().color(QPalette::AlternateBase);
+
+      QColor scaleBackgroundColor(isEnabled() ? _scaleColor : Qt::gray);
+      QColor scaleValueColor(isEnabled() ? _scaleValueColor : Qt::gray);
+      painter.setBrush(scaleValueColor);
 
       int kh2 = kh/2;
 
@@ -221,31 +223,69 @@ void Slider::paintEvent(QPaintEvent* /*ev*/)
       //---------------------------------------------------
 
       if (orient == Qt::Vertical) {
-            int xm = (w - _scaleWidth - _sliderSize.height()) / 2;
-      	int y1 = kh2;
-      	int y2 = h - (ppos + y1);
-      	int y3 = h - y1;
-            p.fillRect(xm, y1, _scaleWidth, y2-y1, _invert ? svc : sc);
-            p.fillRect(xm, y2, _scaleWidth, y3-y2, _invert ? sc : svc);
-      	p.translate(QPointF(xm + _scaleWidth/2, y2));
-            }
+            int xMid = (w - _scaleWidth - _sliderSize.height()) / 2;
+            int y1 = kh2;
+            int y2 = h - (ppos + y1);
+            int y3 = h - y1;
+
+            int roundedness = 5;
+            int grooveWidth = 5; // or _scaleWidth
+
+            // Draw the un-filled part of the slider
+            QPen outlinePen = QPen(QColor(Qt::gray).darker()); // get this from palette too?
+            outlinePen.setWidth(0);
+            painter.setPen(outlinePen);
+
+            painter.setBrush(QBrush(Qt::gray));
+            painter.drawRoundRect(xMid, y1, grooveWidth, y2-y1, roundedness, roundedness);
+
+            // Draw the filled part of the slider
+
+            // Get the HIGHLIGHT colour from the palette. This ensure that the fill color
+            // of this hand-crafted control matches those of the QT supplied ones. And
+            // ensures color changes when theme changes.
+
+            QColor scaleValueFillColor = QApplication::palette().color(QPalette::Highlight);
+
+            // the default QSlider is related to Highlight but not in a very obvious
+            // way. Setting the highlight to, say, HARD RED gives close to HARD RED
+            // THe default highlight varies in some subtle ways. There is also a gradient
+            // on the slider that makes it non-obvious what's going on.
+            //
+            // An investigative strategy would be to:
+            // - make the default slider WIDER (with a stylesheet)
+            // - put in HARD RED, HARD BLUE, HARD GREEN
+            // - see how they were softened
+            // - try and figure out the function that is applied
+            // - is it TO DO with a diff between the HIGHLIGHT color and some
+            // - other palette color? Could test that by changing other palette
+            // - values and seeing if the SHIFT was different.
+
+            outlinePen = QPen(scaleValueFillColor.darker());
+            outlinePen.setWidth(1);
+            painter.setPen(outlinePen);
+            painter.setBrush(scaleValueFillColor.darker(130));
+
+            painter.drawRoundRect(xMid, y2, grooveWidth, y3-y2, roundedness, roundedness);
+
+            painter.translate(QPointF(xMid + _scaleWidth/2, y2));
+      }
       else {
+            // horizontal case (not revised!)
             int ym = (h - _scaleWidth - _sliderSize.height()) / 2;
-      	int x1 = kh2;
-      	int x2 = w - (ppos + x1);
-      	int x3 = w - x1;
-            p.fillRect(x1, ym, x2-x1, _scaleWidth, _invert ? sc : svc);
-            p.fillRect(x2, ym, x3-x2, _scaleWidth, _invert ? svc : sc);
-      	p.translate(QPointF(x2, ym + _scaleWidth/2));
+            int x1 = kh2;
+            int x2 = w - (ppos + x1);
+            int x3 = w - x1;
+            painter.fillRect(x1, ym, x2-x1, _scaleWidth, _invert ? scaleBackgroundColor : scaleValueColor);
+            painter.fillRect(x2, ym, x3-x2, _scaleWidth, _invert ? scaleValueColor : scaleBackgroundColor);
+            painter.translate(QPointF(x2, ym + _scaleWidth/2));
             }
 
       //---------------------------------------------------
       //    draw slider
       //---------------------------------------------------
-
-  	p.setRenderHint(QPainter::Antialiasing, true);
-	p.setPen(QPen(svc, 0));
-     	p.drawPath(*points);
+      painter.setBrush(QBrush(QApplication::palette().color(QPalette::BrightText).darker()));
+      painter.drawPath(*points);
       }
 }
 
