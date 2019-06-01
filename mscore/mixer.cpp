@@ -94,12 +94,6 @@ Mixer::Mixer(QWidget* parent)
       //detailsArea->setLayout(detailsLayout);
 
 
-      masterGainSpin->setMaximum(0);
-      masterGainSpin->setMinimum(minDecibels);
-      masterGainSpin->setSingleStep(.1);
-
-      connect(masterGainSlider, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
-      connect(masterGainSpin, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
       connect(synti, SIGNAL(gainChanged(float)), SLOT(synthGainChanged(float)));
 //      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(rangeChanged(int, int)), SLOT(adjustScrollPosition(int, int)));
 //      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(valueChanged(int)), SLOT(checkKeptScrollValue(int)));
@@ -131,13 +125,7 @@ void Mixer::synthGainChanged(float)
       {
       float decibels = qBound(minDecibels, log10f(synti->gain()), 0.0f);
 
-      masterGainSlider->blockSignals(true);
-      masterGainSlider->setValue(decibels);
-      masterGainSlider->blockSignals(false);
 
-      masterGainSpin->blockSignals(true);
-      masterGainSpin->setValue(decibels);
-      masterGainSpin->blockSignals(false);
       }
 
 void Mixer::adjustScrollPosition(int, int)
@@ -170,13 +158,6 @@ void Mixer::masterVolumeChanged(double decibels)
       float gain = qBound(0.0f, powf(10, (float)decibels), 1.0f);
       synti->setGain(gain);
 
-      masterGainSlider->blockSignals(true);
-      masterGainSlider->setValue(decibels);
-      masterGainSlider->blockSignals(false);
-
-      masterGainSpin->blockSignals(true);
-      masterGainSpin->setValue(decibels);
-      masterGainSpin->blockSignals(false);
       }
 
 //---------------------------------------------------------
@@ -316,17 +297,18 @@ QWidget* mixerRowWidget(QString name)
       slider->setValue(50);
 
       QHBoxLayout* sliderLayout = new QHBoxLayout();
-      sliderLayout->setContentsMargins(0, 30, 10, 0);
+      sliderLayout->setContentsMargins(0, 0, 10, 0);
       sliderLayout->addWidget(slider);
 
       QWidget* itemWidget = new QWidget();
 
       QVBoxLayout *layout = new QVBoxLayout;
-      layout->setAlignment(Qt::AlignTop);
+      layout->setAlignment(Qt::AlignVCenter);
       //layout->addWidget(labelWidget);
       layout->addLayout(sliderLayout);
       layout->setMargin(0);
       itemWidget->setLayout(layout);
+      itemWidget->setMinimumHeight(25);
       return itemWidget;
       }
 
@@ -357,24 +339,28 @@ void Mixer::updateTracks()
             return;
 
       mixerTreeWidget->setAlternatingRowColors(true);
-      mixerTreeWidget->headerItem()->setHidden(true);
+      //mixerTreeWidget->headerItem()->setHidden(true);
+      mixerTreeWidget->setColumnCount(2);
+      mixerTreeWidget->setHeaderLabels({"Part", "Volume"});
 
       for (Part* localPart : _score->parts()) {
             Part* part = localPart->masterPart();
 
-            const InstrumentList* instrumenList = part->instruments();
+  //          const InstrumentList* instrumenList = part->instruments();
 
-            Instrument* proxyInstr = nullptr;
-            Channel* proxyChan = nullptr;
-            if (!instrumenList->empty()) {
-                  instrumenList->begin();
-                  proxyInstr = instrumenList->begin()->second;
-                  proxyChan = proxyInstr->playbackChannel(0, _score->masterScore());
-                  }
+//            Instrument* proxyInstr = nullptr;
+//            Channel* proxyChan = nullptr;
+//            if (!instrumenList->empty()) {
+//                  instrumenList->begin();
+//                  proxyInstr = instrumenList->begin()->second;
+//                  proxyChan = proxyInstr->playbackChannel(1, _score->masterScore());
+//                  }
 
-            QTreeWidgetItem* item = new QTreeWidgetItem((QTreeWidget*)0, QStringList(part->partName()));
+            QStringList columns = QStringList(part->partName());
+            columns.append("");
+            QTreeWidgetItem* item = new QTreeWidgetItem((QTreeWidget*)0, columns);
             mixerTreeWidget->addTopLevelItem(item);
-            mixerTreeWidget->setItemWidget(item, 0, mixerRowWidget(part->partName()));
+            mixerTreeWidget->setItemWidget(item, 1, mixerRowWidget(part->partName()));
 
             //Add per channel tracks
             const InstrumentList* il1 = part->instruments();
@@ -387,9 +373,11 @@ void Mixer::updateTracks()
                   for (int i = 0; i < instr->channel().size(); ++i) {
                         Channel* chan = instr->playbackChannel(i, _score->masterScore());
 
-                        QTreeWidgetItem* child = new QTreeWidgetItem((QTreeWidget*)0, QStringList(chan->name()));
+                        QStringList columns = QStringList(chan->name());
+                        columns.append("");
+                        QTreeWidgetItem* child = new QTreeWidgetItem((QTreeWidget*)0, columns);
                         item->addChild(child);
-                        mixerTreeWidget->setItemWidget(child, 0, mixerRowWidget(chan->name()));
+                        mixerTreeWidget->setItemWidget(child, 1, mixerRowWidget(chan->name()));
 
                         }
                   }

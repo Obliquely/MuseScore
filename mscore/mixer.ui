@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>553</width>
-    <height>231</height>
+    <width>798</width>
+    <height>252</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -28,74 +28,196 @@
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
-     <layout class="QGridLayout" name="mainGrid" columnstretch="2,3,1">
-      <item row="1" column="2">
-       <layout class="QGridLayout" name="controlsGrid">
-        <item row="1" column="1">
-         <widget class="QLabel" name="masterGainTag">
+     <layout class="QGridLayout" name="mainGrid" columnstretch="2,1,1">
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="gridLayout_4">
+        <property name="spacing">
+         <number>11</number>
+        </property>
+        <item row="3" column="0" rowspan="2">
+         <widget class="QLabel" name="labelPatch">
+          <property name="text">
+           <string>Patch:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0" rowspan="2">
+         <widget class="QLabel" name="labelVolume">
+          <property name="text">
+           <string>Volume:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="labelChannel">
+          <property name="text">
+           <string>Channel:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1" rowspan="2">
+         <widget class="QSlider" name="volumeSlider">
+          <property name="minimumSize">
+           <size>
+            <width>75</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Volume</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>127</number>
+          </property>
+          <property name="pageStep">
+           <number>16</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::TicksBelow</enum>
+          </property>
+          <property name="tickInterval">
+           <number>16</number>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QSlider" name="panSlider">
+          <property name="minimumSize">
+           <size>
+            <width>75</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Pan</string>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>127</number>
+          </property>
+          <property name="pageStep">
+           <number>16</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::TicksBelow</enum>
+          </property>
+          <property name="tickInterval">
+           <number>16</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1" rowspan="2" colspan="2">
+         <widget class="QComboBox" name="patchCombo">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Patch voice</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" colspan="2">
+         <widget class="QLineEdit" name="partNameLineEdit">
+          <property name="toolTip">
+           <string>Part name</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="labelName">
           <property name="text">
-           <string>Master Gain</string>
+           <string>Name:</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="masterGainSpin">
-          <property name="suffix">
-           <string extracomment="decibel">dB</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" alignment="Qt::AlignHCenter">
-         <widget class="QSlider" name="masterGainSlider">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="1">
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="2" column="0">
-         <widget class="QPushButton" name="pushButton">
+        <item row="7" column="0">
+         <widget class="QLabel" name="labelPan">
           <property name="text">
-           <string>A</string>
+           <string>Pan:</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
-         <widget class="QPushButton" name="pushButton_3">
-          <property name="text">
-           <string>C</string>
+        <item row="7" column="2">
+         <widget class="QDoubleSpinBox" name="panSpinBox">
+          <property name="toolTip">
+           <string>Pan</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>127.000000000000000</double>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
-         <widget class="QPushButton" name="pushButton_7">
-          <property name="text">
-           <string>H</string>
+        <item row="5" column="2" rowspan="2">
+         <widget class="QDoubleSpinBox" name="volumeSpinBox">
+          <property name="toolTip">
+           <string>Volume</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <double>127.000000000000000</double>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QPushButton" name="pushButton_4">
-          <property name="text">
-           <string>D</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QPushButton" name="pushButton_5">
-          <property name="text">
-           <string>E</string>
-          </property>
-         </widget>
+        <item row="2" column="1" colspan="2">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QLabel" name="channelLabel">
+            <property name="toolTip">
+             <string>Channel name</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="drumkitCheck">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::RightToLeft</enum>
+            </property>
+            <property name="text">
+             <string>Drumset</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item row="0" column="0">
          <widget class="QCheckBox" name="partOnlyCheckBox">
@@ -104,43 +226,257 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="pushButton_2">
-          <property name="text">
-           <string>B</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QPushButton" name="pushButton_6">
-          <property name="text">
-           <string>F</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0" alignment="Qt::AlignLeft">
-         <widget class="QSlider" name="horizontalSlider">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QPushButton" name="pushButton_8">
-          <property name="text">
-           <string>G</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </item>
       <item row="1" column="0">
-       <widget class="QTreeWidget" name="instrumentList">
+       <widget class="QTreeWidget" name="mixerTreeWidget">
         <column>
          <property name="text">
           <string notr="true">1</string>
          </property>
         </column>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="toolTip">
+         <string>MIDI OUT controllers</string>
+        </property>
+        <property name="title">
+         <string notr="true">MIDI</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="2" column="0">
+            <widget class="QLabel" name="labelChorus">
+             <property name="text">
+              <string>Chorus:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSlider" name="reverbSlider">
+             <property name="minimumSize">
+              <size>
+               <width>75</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>MIDI OUT reverb</string>
+             </property>
+             <property name="maximum">
+              <number>127</number>
+             </property>
+             <property name="pageStep">
+              <number>16</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSlider" name="chorusSlider">
+             <property name="minimumSize">
+              <size>
+               <width>75</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>MIDI OUT chorus</string>
+             </property>
+             <property name="maximum">
+              <number>127</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>16</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="3">
+            <layout class="QGridLayout" name="gridLayout_3">
+             <item row="0" column="5">
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="portSpinBox">
+               <property name="toolTip">
+                <string>MIDI port number</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>16</number>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QLabel" name="labelChannel_2">
+               <property name="text">
+                <string>Channel:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <widget class="QSpinBox" name="channelSpinBox">
+               <property name="toolTip">
+                <string>MIDI channel number</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>16</number>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="labelPort">
+               <property name="text">
+                <string>Port:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="labelReverb">
+             <property name="text">
+              <string>Reverb:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QDoubleSpinBox" name="reverbSpinBox">
+             <property name="toolTip">
+              <string>MIDI OUT reverb</string>
+             </property>
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <double>127.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QDoubleSpinBox" name="chorusSpinBox">
+             <property name="toolTip">
+              <string>MIDI OUT chorus</string>
+             </property>
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <double>127.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="mutePerVoiceBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Mute Voice</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <layout class="QVBoxLayout" name="mutePerVoiceArea">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>11</number>
+                </property>
+                <property name="topMargin">
+                 <number>11</number>
+                </property>
+                <property name="rightMargin">
+                 <number>11</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>11</number>
+                </property>
+               </layout>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
