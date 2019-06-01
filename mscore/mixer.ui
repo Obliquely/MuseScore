@@ -135,7 +135,13 @@
        </layout>
       </item>
       <item row="1" column="0">
-       <widget class="QTreeView" name="instrumentList"/>
+       <widget class="QTreeWidget" name="instrumentList">
+        <column>
+         <property name="text">
+          <string notr="true">1</string>
+         </property>
+        </column>
+       </widget>
       </item>
      </layout>
     </item>
