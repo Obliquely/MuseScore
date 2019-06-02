@@ -568,7 +568,22 @@ void ScoreView::mouseDoubleClickEvent(QMouseEvent* me)
             Element* e = elementNear(p);
             if (e && e->isEditable())
                   startEditMode(e);
+            return;
             }
+
+      if (state != ViewState::EDIT)
+            return;
+
+      if (!editData.element->isTextBase())
+            return;
+
+      TextBase* textBase = static_cast<TextBase*>(editData.element);
+      textBase->mouseSelectAll(editData);
+      mscore->textTools()->updateTools(editData);
+      TextBase* text = toTextBase(editData.element);
+      text->endHexState(editData);
+      me->accept();
+      update();
       }
 
 //---------------------------------------------------------

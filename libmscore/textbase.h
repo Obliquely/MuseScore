@@ -288,6 +288,7 @@ class TextBase : public Element {
       bool deleteSelectedText(EditData&);
 
       void selectAll(TextCursor*);
+      void mouseSelectAll(EditData&);
 
       virtual void write(XmlWriter& xml) const override;
       virtual void read(XmlReader&) override;
