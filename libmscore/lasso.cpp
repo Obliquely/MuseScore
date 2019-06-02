@@ -33,10 +33,10 @@ Lasso::Lasso(Score* s)
 
 void Lasso::draw(QPainter* painter) const
       {
-      painter->setBrush(QBrush(QColor(0, 0, 50, 50)));
+      painter->setBrush(QBrush(QColor(250, 0, 50, 50))); // screen grab fill color
       // always 2 pixel width
       qreal w = 2.0 / painter->transform().m11();
-      painter->setPen(QPen(MScore::selectColor[0], w));
+            painter->setPen(QPen(QColor(Qt::green) /* MScore::selectColor[0] */ , w)); // are you going with VOICE-1 color??
       painter->drawRect(bbox());
       }
 

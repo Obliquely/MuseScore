@@ -168,7 +168,7 @@ void Preferences::init(bool storeInMemoryOnly)
             {PREF_UI_SCORE_NOTE_DROPCOLOR,                         new ColorPreference(QColor("#1778db"))},
             {PREF_UI_SCORE_DEFAULTCOLOR,                           new ColorPreference(QColor("#000000"))},
             {PREF_UI_SCORE_FRAMEMARGINCOLOR,                       new ColorPreference(QColor("#5999db"))},
-            {PREF_UI_SCORE_LAYOUTBREAKCOLOR,                       new ColorPreference(QColor("#5999db"))},
+            {PREF_UI_SCORE_LAYOUTBREAKCOLOR,                       new ColorPreference(QColor("#00C000"))}, // #5999db
             {PREF_UI_SCORE_VOICE1_COLOR,                           new ColorPreference(QColor("#1259d0"))},    // blue
             {PREF_UI_SCORE_VOICE2_COLOR,                           new ColorPreference(QColor("#009234"))},    // green
             {PREF_UI_SCORE_VOICE3_COLOR,                           new ColorPreference(QColor("#c04400"))},    // orange
