@@ -247,6 +247,15 @@ void Slider::paintEvent(QPaintEvent* /*ev*/)
 
             QColor scaleValueFillColor = QApplication::palette().color(QPalette::Highlight);
 
+            int red = scaleValueFillColor.red();
+            int green = scaleValueFillColor.blue();
+            int blue = scaleValueFillColor.green();
+
+            red = red / 2;
+            green = green / 2;
+            scaleValueFillColor = QColor(red, green, blue);
+
+
             // the default QSlider is related to Highlight but not in a very obvious
             // way. Setting the highlight to, say, HARD RED gives close to HARD RED
             // THe default highlight varies in some subtle ways. There is also a gradient
@@ -264,7 +273,7 @@ void Slider::paintEvent(QPaintEvent* /*ev*/)
             outlinePen = QPen(scaleValueFillColor.darker());
             outlinePen.setWidth(1);
             painter.setPen(outlinePen);
-            painter.setBrush(scaleValueFillColor.darker(130));
+            painter.setBrush(scaleValueFillColor);
 
             painter.drawRoundRect(xMid, y2, grooveWidth, y3-y2, roundedness, roundedness);
 
