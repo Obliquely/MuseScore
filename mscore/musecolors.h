@@ -25,18 +25,14 @@
 
 namespace Ms {
       
-enum class ColorRole : char {
-            CUSTOM1, CUSTOM2, CUSTOM3
-      };
-      
-class MuseColor {
-            
-      public:
-            QColor color(Qt::ColorGroup, Qt::ColorRole);    // access Qt Palette
-            QColor color(Qt::ColorGroup, Ms::ColorRole);    // access non-Qt palette colors
-            QColor color(Qt::ColorRole role) { return QColor(Qt::Active, role ); }
-            QColor color(Qt::ColorRole role) { return QColor(Qt::Active, role ); }
-      };
+enum class ColorRole;
 
-}
+class MuseColors {
+   public:
+      QColor color(QPalette::ColorGroup, QPalette::ColorRole);    // access Qt Palette
+      QColor color(QPalette::ColorGroup, Ms::ColorRole);          // access non-Qt palette colors
+      QColor color(QPalette::ColorRole role);
+      QColor color(Ms::ColorRole);
+      };
+} // namespace Ms
 #endif /* __MUSECOLORS_H__ */
