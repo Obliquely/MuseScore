@@ -14,7 +14,7 @@
 
 #include "miconengine.h"
 #include "preferences.h"
-
+#include "musecolors.h"
 //---------------------------------------------------------
 //   MIconEnginePrivate
 //---------------------------------------------------------
@@ -127,6 +127,8 @@ void MIconEnginePrivate::loadDataForModeAndState(QSvgRenderer* renderer, QIcon::
       QColor disabledOn = palette.color(QPalette::Disabled, QPalette::BrightText);
       QColor disabledOff = palette.color(QPalette::Disabled, QPalette::ButtonText);
 
+      // QColor unsued = 
+      
       QByteArray buf;
       if (svgBuffers) {
             buf = svgBuffers->value(hashKey(mode, state));
