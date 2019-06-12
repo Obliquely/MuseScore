@@ -21,6 +21,7 @@
 #include "libmscore/style.h"
 #include "libmscore/score.h"
 #include "instrdialog.h"
+#include "musecolors.h"
 #include "preferences.h"
 #include "prefsdialog.h"
 #include "icons.h"
