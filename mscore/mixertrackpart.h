@@ -61,7 +61,6 @@ public slots:
       void setSelected(bool) override;
       void volumeChanged(double);
       void panChanged(double);
-      void expandToggled(bool);
       void controlSelected();
       void applyStyle();
 

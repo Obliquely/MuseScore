@@ -33,8 +33,8 @@ class MixerTrackGroup
       {
 public:
       virtual ~MixerTrackGroup() {}
-      virtual void expandToggled(Part* part, bool expanded) = 0;
-      virtual void notifyTrackSelected(MixerTrack* track) = 0;
+      //virtual void expandToggled(Part* part, bool expanded) = 0;
+      //virtual void notifyTrackSelected(MixerTrack* track) = 0;
       };
 
 }

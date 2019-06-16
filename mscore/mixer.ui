@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>770</width>
+    <width>795</width>
     <height>468</height>
    </rect>
   </property>
@@ -62,7 +62,7 @@
          <number>100</number>
         </attribute>
         <attribute name="headerStretchLastSection">
-         <bool>false</bool>
+         <bool>true</bool>
         </attribute>
         <column>
          <property name="text">
@@ -197,7 +197,7 @@
          <widget class="QSlider" name="panSlider">
           <property name="minimumSize">
            <size>
-            <width>75</width>
+            <width>100</width>
             <height>0</height>
            </size>
           </property>
@@ -228,7 +228,7 @@
          <widget class="QSlider" name="volumeSlider">
           <property name="minimumSize">
            <size>
-            <width>75</width>
+            <width>100</width>
             <height>0</height>
            </size>
           </property>

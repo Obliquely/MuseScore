@@ -117,9 +117,6 @@ MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItemPtr mti) :
       applyStyle();
       }
 
-//---------------------------------------------------------
-//   expandToggled
-//---------------------------------------------------------
 
 void MixerTrackChannel::applyStyle()
       {
@@ -334,8 +331,8 @@ void MixerTrackChannel::setSelected(bool sel)
 
       emit(selectedChanged(sel));
 
-      if (_selected && _group)
-            _group->notifyTrackSelected(this);
+//      if (_selected && _group)
+//            _group->notifyTrackSelected(this);
 
       applyStyle();
       }

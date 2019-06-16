@@ -4374,8 +4374,6 @@ void MuseScore::writeSettings()
       if (synthControl)
             synthControl->writeSettings();
       settings.setValue("synthControlVisible", synthControl && synthControl->isVisible());
-      if (mixer)
-            mixer->writeSettings();
       settings.setValue("mixerVisible", mixer && mixer->isVisible());
       if (seq) {
             seq->exit();

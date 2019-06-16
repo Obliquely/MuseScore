@@ -94,8 +94,6 @@ MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItemPtr mti, bool expa
       expandBn->setEnabled(numChannels > 1);
       expandBn->setChecked(expanded);
 
-      connect(expandBn, SIGNAL(toggled(bool)), SLOT(expandToggled(bool)));
-
       connect(soloBn, SIGNAL(toggled(bool)), SLOT(updateSolo(bool)));
       connect(muteBn, SIGNAL(toggled(bool)), SLOT(updateMute(bool)));
 
@@ -132,9 +130,6 @@ MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItemPtr mti, bool expa
       connect(panSlider,    SIGNAL(sliderPressed(int)), SLOT(controlSelected()));
       }
 
-//---------------------------------------------------------
-//   expandToggled
-//---------------------------------------------------------
 
 void MixerTrackPart::applyStyle()
       {
@@ -151,14 +146,7 @@ void MixerTrackPart::applyStyle()
       setStyleSheet(style);
       }
 
-//---------------------------------------------------------
-//   expandToggled
-//---------------------------------------------------------
 
-void MixerTrackPart::expandToggled(bool expanded)
-      {
-      _group->expandToggled(_mti->part(), expanded);
-      }
 
 //---------------------------------------------------------
 //   updateNameLabel
@@ -331,8 +319,8 @@ void MixerTrackPart::setSelected(bool sel)
 
       emit(selectedChanged(sel));
 
-      if (_selected && _group)
-            _group->notifyTrackSelected(this);
+//      if (_selected && _group)
+//            _group->notifyTrackSelected(this);
 
       applyStyle();
       }

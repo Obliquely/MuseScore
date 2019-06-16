@@ -81,42 +81,14 @@ Mixer::Mixer(QWidget* parent)
       setWindowFlags(Qt::Tool);
       setWindowFlags(this->windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-      trackAreaLayout = new QHBoxLayout;
-      trackAreaLayout->setMargin(0);
-      trackAreaLayout->setSpacing(0);
-      //trackArea->setLayout(trackAreaLayout);
-
-//      mixerDetails = new MixerDetails(this);
-//      detailsLayout = new QGridLayout(this);
-
-      // detailsLayout->addWidget(mixerDetails);
-      // detailsLayout->setContentsMargins(0, 0, 0, 0);
-      //detailsArea->setLayout(detailsLayout);
-
-
       connect(mixerTreeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), SLOT(currentItemChanged()));
       connect(synti, SIGNAL(gainChanged(float)), SLOT(synthGainChanged(float)));
-//      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(rangeChanged(int, int)), SLOT(adjustScrollPosition(int, int)));
-//      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(valueChanged(int)), SLOT(checkKeptScrollValue(int)));
 
       enablePlay = new EnablePlayForWidget(this);
-      readSettings();
       retranslate(true);
       }
 
-//---------------------------------------------------------
-//   showDetailsToggled
-//---------------------------------------------------------
 
-void Mixer::showDetailsToggled(bool shown)
-      {
-      qDebug()<<"showDetails is NOOP";
-            //      showDetails = shown;
-//      if (showDetails)
-//            detailsLayout->addWidget(mixerDetails);
-//      else
-//            detailsLayout->removeWidget(mixerDetails);
-      }
 
 //---------------------------------------------------------
 //   synthGainChanged
@@ -125,30 +97,11 @@ void Mixer::showDetailsToggled(bool shown)
 void Mixer::synthGainChanged(float)
       {
       float decibels = qBound(minDecibels, log10f(synti->gain()), 0.0f);
-
-
+      qDebug()<<"Used to update master slider with value: "<<decibels;
       }
 
-void Mixer::adjustScrollPosition(int, int)
-      {
-      if (_needToKeepScrollPosition)
-            qDebug();          //tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
-      }
 
-void Mixer::checkKeptScrollValue(int scrollPos)
-      {
-      if (_needToKeepScrollPosition) {
-            //tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
-            if (_scrollPosition == scrollPos)
-                  _needToKeepScrollPosition = false;
-            }
-      }
 
-void Mixer::keepScrollPosition()
-      {
-      //_scrollPosition = tracks_scrollArea->horizontalScrollBar()->sliderPosition();
-      _needToKeepScrollPosition = true;
-      }
 
 //---------------------------------------------------------
 //   masterVolumeChanged
@@ -289,7 +242,7 @@ void Mixer::setScore(Score* score)
       partOnlyCheckBox->setEnabled(_activeScore && !_activeScore->isMaster());
       }
 
-
+      //TODO: obq-note - pull this out in to a class! 
 QWidget* mixerRowWidget(QString name)
       {
       //QLabel* labelWidget = new QLabel(name);
@@ -347,7 +300,7 @@ void Mixer::updateTracks()
       for (Part* localPart : _score->parts()) {
             Part* part = localPart->masterPart();
 
-  //          const InstrumentList* instrumenList = part->instruments();
+            const InstrumentList* instrumenList = part->instruments();
 
 //            Instrument* proxyInstr = nullptr;
 //            Channel* proxyChan = nullptr;
@@ -356,6 +309,20 @@ void Mixer::updateTracks()
 //                  proxyInstr = instrumenList->begin()->second;
 //                  proxyChan = proxyInstr->playbackChannel(1, _score->masterScore());
 //                  }
+//
+//            MixerTrackItem mixerTrackItem = MixerTrackItem(MixerTrackItem::TrackType::PART, part, proxyInstr, proxyChan);
+            // we want to use the ITEM to set up the itemWidget
+            // at time of writing this comment, the itemWidget is hand-rolled in a function
+            // need to refactor it into a class AND think about the model...
+            // AND the key details are, where, in  _score->parts()->mastetPart->instruments ??
+            // the MixerTrackItem keeps a track of all this, so it is a good (good-ish) MODEL object
+            // where do I want to KEEP the mixerTrackItem - could have it as an ivar on
+            // the itemWidget in the tree view... OR maintain a LIST of them in the mixer class?
+            // IS this updateTracks method called a lot? Does it have any particular overhead?
+
+            //int volumne = mixerTrackItem->getVolume();
+            // there is no getVolume - how, on current setup, does the mixer control get the current value
+            // need to dig into the code more to find out...
 
             QStringList columns = QStringList(part->partName());
             columns.append("");
@@ -363,9 +330,10 @@ void Mixer::updateTracks()
             mixerTreeWidget->addTopLevelItem(item);
             mixerTreeWidget->setItemWidget(item, 1, mixerRowWidget(part->partName()));
 
+
             //Add per channel tracks
             const InstrumentList* il1 = part->instruments();
-            for (auto it = il1->begin(); it != il1->end(); ++it) {
+            for (auto it = instrumenList->begin(); it != il1->end(); ++it) {
                   Instrument* instr = it->second;
 
                   if (instr->channel().size() <= 1)
@@ -382,12 +350,8 @@ void Mixer::updateTracks()
 
                         }
                   }
-
-
             }
 
-      //holderLayout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding, QSizePolicy::Fixed));
-      keepScrollPosition();
       }
 
 //---------------------------------------------------------
@@ -399,25 +363,13 @@ void Mixer::midiPrefsChanged(bool)
       updateTracks();
       }
 
-//---------------------------------------------------------
-//   notifyTrackSelected
-//---------------------------------------------------------
 
-void Mixer::expandToggled(Part* part, bool expanded)
-      {
-      if (expanded)
-            expandedParts.insert(part);
-      else
-            expandedParts.remove(part);
-
-      updateTracks();
-      }
 
 //---------------------------------------------------------
 //   notifyTrackSelected
 //---------------------------------------------------------
 
-void Mixer::notifyTrackSelected(MixerTrack* track)
+/*void Mixer::notifyTrackSelected(MixerTrack* track)
       {
       for (MixerTrack *mt: trackList) {
             if (!(mt->mti()->part() == track->mti()->part() &&
@@ -427,31 +379,12 @@ void Mixer::notifyTrackSelected(MixerTrack* track)
                   }
             }
       //mixerDetails->setTrack(track->mti());
-      }
+      } */
 
 void Mixer::currentItemChanged()
       {
             qDebug()<<"Row change in tree view (and maybe column change too)";
             qDebug()<<mixerTreeWidget->currentItem();
-      }
-
-//---------------------------------------------------------
-//   writeSettings
-//---------------------------------------------------------
-
-void Mixer::writeSettings()
-      {
-      MuseScore::saveGeometry(this);
-      }
-
-//---------------------------------------------------------
-//   readSettings
-//---------------------------------------------------------
-
-void Mixer::readSettings()
-      {
-      resize(QSize(480, 600)); //ensure default size if no geometry in settings
-      MuseScore::restoreGeometry(this);
       }
 
 

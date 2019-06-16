@@ -23,6 +23,13 @@
 #include "libmscore/part.h"
 #include "seq.h"
 
+/* obq-note
+      pretty important class for the mixer. represents either a PART or a sub-part (i.e. a channel)
+
+      it's very much MODEL and has not reference to UI / Views - so in redesign this class can (almost
+      certainly) be kept. BUT IT DOES need a refactor. It's horrible just now.
+ */
+
 namespace Ms {
 
 //---------------------------------------------------------
@@ -78,6 +85,19 @@ int MixerTrackItem::color()
 void MixerTrackItem::setVolume(char value)
       {
 //      char v = (char)qBound(0, (int)(value * 128.0 / 100.0), 127);
+
+      /* obq-note
+
+       repeated code in lots of this functions
+
+       if SOMETHING is a PART then it seeks to apply the changes to all the sub-parts (i.e. channels)
+       otherwise it just applies it once.
+
+       must be a more efficient way to do this, e.g. get a LIST and then apply the operation to all the
+       items on the list! the repeated code is CRAZY... it makes the code harder to follow and the
+       overall code length much longer...
+       */
+
 
       if (_trackType == TrackType::PART) {
             const InstrumentList* il = _part->instruments();
@@ -289,6 +309,5 @@ void MixerTrackItem::setSolo(bool value)
                   }
             }
       }
-
 }
 

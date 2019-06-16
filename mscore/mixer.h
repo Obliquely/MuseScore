@@ -59,6 +59,16 @@ char userRangeToReverb(double v);
 //   Mixer
 //---------------------------------------------------------
 
+/* obq-notes
+      Mixer has MULTIPLE inheritance. the Ui::Mixer breaks down all the
+      encapsulation. Maybe a good thing! And then MixerTrackGroup provides,
+      mmm, a sort of PROTOCOL allowing things other than the Mixer to be the
+      target for cetain signals??
+
+      Not very clear when/how GROUP is used. Maybe the mixer IS the only group?
+      Might have something to do with PARTS etc.
+ */
+
 class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       {
       Q_OBJECT
@@ -77,14 +87,11 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       QList<MixerTrack*> trackList;
 
       int _scrollPosition = 0;
-      bool _needToKeepScrollPosition = false;
 
       virtual void closeEvent(QCloseEvent*) override;
       virtual void showEvent(QShowEvent*) override;
       virtual bool eventFilter(QObject*, QEvent*) override;
       virtual void keyPressEvent(QKeyEvent*) override;
-      void readSettings();
-      void keepScrollPosition();
       void setPlaybackScore(Score*);
 
    private slots:
@@ -95,8 +102,6 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       void midiPrefsChanged(bool showMidiControls);
       void masterVolumeChanged(double val);
       void synthGainChanged(float val);
-      void adjustScrollPosition(int, int);
-      void checkKeptScrollValue(int);
       void currentItemChanged(); // obq
 
    signals:
@@ -110,10 +115,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       Mixer(QWidget* parent);
       void setScore(Score*);
       PartEdit* getPartAtIndex(int index);
-      void writeSettings();
-      void expandToggled(Part* part, bool expanded) override;
-      void notifyTrackSelected(MixerTrack* track) override;
-      void showDetailsToggled(bool shown);
+      //void notifyTrackSelected(MixerTrack* track) override;
       };
 
 
