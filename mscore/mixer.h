@@ -97,6 +97,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       void synthGainChanged(float val);
       void adjustScrollPosition(int, int);
       void checkKeptScrollValue(int);
+      void currentItemChanged(); // obq
 
    signals:
       void closed(bool);

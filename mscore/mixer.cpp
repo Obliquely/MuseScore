@@ -94,6 +94,7 @@ Mixer::Mixer(QWidget* parent)
       //detailsArea->setLayout(detailsLayout);
 
 
+      connect(mixerTreeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), SLOT(currentItemChanged()));
       connect(synti, SIGNAL(gainChanged(float)), SLOT(synthGainChanged(float)));
 //      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(rangeChanged(int, int)), SLOT(adjustScrollPosition(int, int)));
 //      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(valueChanged(int)), SLOT(checkKeptScrollValue(int)));
@@ -428,6 +429,11 @@ void Mixer::notifyTrackSelected(MixerTrack* track)
       //mixerDetails->setTrack(track->mti());
       }
 
+void Mixer::currentItemChanged()
+      {
+            qDebug()<<"Row change in tree view (and maybe column change too)";
+            qDebug()<<mixerTreeWidget->currentItem();
+      }
 
 //---------------------------------------------------------
 //   writeSettings
