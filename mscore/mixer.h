@@ -89,6 +89,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
 
       MixerTrackChannel* mixerRowWidget(MixerTrackItem* mixerTrackItem);
       void updateDetails(MixerTrackItem*);
+      void updatePatch(MixerTrackItem* mixerTrackItem);
 
    private slots:
       void on_partOnlyCheckBox_toggled(bool checked);

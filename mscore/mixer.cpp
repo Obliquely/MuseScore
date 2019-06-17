@@ -263,6 +263,57 @@ MixerTrackChannel* Mixer::mixerRowWidget(MixerTrackItem* mixerTrackItem)
       return new MixerTrackChannel(this, mixerTrackItem);
       }
 
+void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
+      {
+      Channel* channel = mixerTrackItem->chan();
+      MidiMapping* midiMap = mixerTrackItem->midiMap();
+
+      //Check if drumkit
+      const bool drum = midiMap->part()->instrument()->useDrumset();
+      drumkitCheck->blockSignals(true);
+      drumkitCheck->setChecked(drum);
+      drumkitCheck->blockSignals(false);
+
+      //Populate patch combo
+      patchCombo->blockSignals(true);
+      patchCombo->clear();
+      const auto& pl = synti->getPatchInfo();
+      int patchIndex = 0;
+
+      // Order by program number instead of bank, so similar instruments
+      // appear next to each other, but ordered primarily by soundfont
+      std::map<int, std::map<int, std::vector<const MidiPatch*>>> orderedPl;
+
+      for (const MidiPatch* p : pl)
+            orderedPl[p->sfid][p->prog].push_back(p);
+
+      std::vector<QString> usedNames;
+      for (auto const& sf : orderedPl) {
+            for (auto const& pn : sf.second) {
+                  for (const MidiPatch* p : pn.second) {
+                        if (p->drum == drum || p->synti != "Fluid") {
+                              QString pName = p->name;
+                              if (std::find(usedNames.begin(), usedNames.end(), p->name) != usedNames.end()) {
+                                    QString addNum = QString(" (%1)").arg(p->sfid);
+                                    pName.append(addNum);
+                                    }
+                              else
+                                    usedNames.push_back(p->name);
+
+                              patchCombo->addItem(pName, QVariant::fromValue<void*>((void*)p));
+                              if (p->synti == channel->synti() &&
+                                  p->bank == channel->bank() &&
+                                  p->prog == channel->program())
+                                    patchIndex = patchCombo->count() - 1;
+                              }
+                        }
+                  }
+            }
+      patchCombo->setCurrentIndex(patchIndex);
+
+      patchCombo->blockSignals(false);
+      }
+
 
 void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       {
@@ -277,6 +328,8 @@ void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
       panSlider->setMaximum(63);
       panSlider->setMinimum(-63);
+
+      updatePatch(mixerTrackItem);
       }
 
 
@@ -387,35 +440,12 @@ void Mixer::midiPrefsChanged(bool)
       }
 
 
-
-//---------------------------------------------------------
-//   notifyTrackSelected
-//---------------------------------------------------------
-
-/*void Mixer::notifyTrackSelected(MixerTrack* track)
-      {
-      for (MixerTrack *mt: trackList) {
-            if (!(mt->mti()->part() == track->mti()->part() &&
-                  mt->mti()->chan() == track->mti()->chan() &&
-                  mt->mti()->trackType() == track->mti()->trackType())) {
-                  mt->setSelected(false);
-                  }
-            }
-      //mixerDetails->setTrack(track->mti());
-      } */
-
 void Mixer::currentItemChanged()
       {
-      qDebug()<<"Row change in tree view (and maybe column change too)";
-      qDebug()<<mixerTreeWidget->currentItem();
       MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1));
       updateDetails(itemWidget->getMixerTrackItem());
       }
 
-
-//---------------------------------------------------------
-//   showMixer
-//---------------------------------------------------------
 
 void MuseScore::showMixer(bool val)
       {
