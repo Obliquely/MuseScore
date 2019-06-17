@@ -265,6 +265,31 @@ MixerTrackChannel* Mixer::mixerRowWidget(MixerTrackItem* mixerTrackItem)
       return new MixerTrackChannel(this, mixerTrackItem);
       }
 
+
+      //TODO: panning tooltip
+      /*
+       panSlider->setValue(channel->pan());
+       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
+       panSlider->setMaxValue(127);
+       panSlider->setMinValue(0);
+       */
+
+      /*
+       case Channel::Prop::PAN: {
+       //                  panSlider->blockSignals(true);
+       //                  panSlider->setValue(channel->pan());
+       //                  panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
+       //                  panSlider->blockSignals(false);
+       break;
+       }
+       */
+      //void MixerTrackChannel::panChanged(double value)
+      //      {
+      //      _mixerTrackItem->setPan(value);
+      //      panSlider->setToolTip(tr("Pan: %1").arg(QString::number(value)));
+      //      }
+
+
 //---------------------------------------------------------
 //   updateTracks
 //---------------------------------------------------------

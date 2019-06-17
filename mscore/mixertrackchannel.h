@@ -41,28 +41,23 @@ class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public C
       {
       Q_OBJECT
 
-      MixerTrackItem* _mixerTrackItem;
-      MixerTrackGroup* _group;
+      MixerTrackItem* mixerTrackItem;
 
-      void updateNameLabel();
+      void setupAdditionalUi();
+      void setupSlotsAndSignals();
+      void update();
 
 public slots:
       void updateSolo(bool);
       void updateMute(bool);
       void volumeChanged(double);
-      // void panChanged(double);
-      void applyStyle();            // possibley retain for light / dark theme
 
 protected:
-      void propertyChanged(Channel::Prop property) override;
+      void propertyChanged(Channel::Prop property) override;      // ChannelListener method
             
 public:
       explicit MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrackItem);
-
-      QWidget* getWidget() { return this; }
-      MixerTrackGroup* group() { return _group; }
-      MixerTrackItem* mixerTrackItem() { return _mixerTrackItem; }
-      void setGroup(MixerTrackGroup* group) { _group = group; }
+      MixerTrackItem* getMixerTrackItem() { return mixerTrackItem; }    //TODO: obq-note is this used?
       };
 }
 
