@@ -242,8 +242,7 @@ void Mixer::setScore(Score* score)
       partOnlyCheckBox->setEnabled(_activeScore && !_activeScore->isMaster());
       }
 
-      //TODO: obq-note - pull this out in to a class! 
-QWidget* mixerRowWidget(QString name)
+MixerTrackChannel* Mixer::mixerRowWidget(MixerTrackItem* mixerTrackItem)
       {
       //QLabel* labelWidget = new QLabel(name);
 
@@ -263,7 +262,7 @@ QWidget* mixerRowWidget(QString name)
       layout->setMargin(0);
       itemWidget->setLayout(layout);
       itemWidget->setMinimumHeight(25);
-      return itemWidget;
+      return new MixerTrackChannel(this, mixerTrackItem);
       }
 
 //---------------------------------------------------------
@@ -335,7 +334,7 @@ void Mixer::updateTracks()
             columns.append("");
             QTreeWidgetItem* item = new QTreeWidgetItem((QTreeWidget*)0, columns);
             mixerTreeWidget->addTopLevelItem(item);
-            mixerTreeWidget->setItemWidget(item, 1, mixerRowWidget(part->partName()));
+            mixerTreeWidget->setItemWidget(item, 1, mixerRowWidget(mixerTrackItem));
 
 
             //Add per channel tracks
@@ -353,7 +352,9 @@ void Mixer::updateTracks()
                         columns.append("");
                         QTreeWidgetItem* child = new QTreeWidgetItem((QTreeWidget*)0, columns);
                         item->addChild(child);
-                        mixerTreeWidget->setItemWidget(child, 1, mixerRowWidget(chan->name()));
+
+                        //TODO: this needs to get its own mixerTrackItem for the sub-part
+                        mixerTreeWidget->setItemWidget(child, 1, mixerRowWidget(mixerTrackItem));
 
                         }
                   }

@@ -25,6 +25,7 @@
 #include "libmscore/instrument.h"
 #include "enableplayforwidget.h"
 #include "mixertrackgroup.h"
+#include "mixertrackchannel.h"
 #include <QWidget>
 #include <QDockWidget>
 #include <QScrollArea>
@@ -93,6 +94,9 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       virtual bool eventFilter(QObject*, QEvent*) override;
       virtual void keyPressEvent(QKeyEvent*) override;
       void setPlaybackScore(Score*);
+
+      MixerTrackChannel* mixerRowWidget(MixerTrackItem* mixerTrackItem);
+
 
    private slots:
       void on_partOnlyCheckBox_toggled(bool checked);
