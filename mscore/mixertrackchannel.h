@@ -26,6 +26,8 @@
 #include "mixertrackitem.h"
 #include "libmscore/instrument.h"
 
+// obq-note - re-purposing this for thw new mixer design
+
 namespace Ms {
 
 class MidiMapping;
@@ -35,48 +37,32 @@ class MixerTrackItem;
 //   MixerTrack
 //---------------------------------------------------------
 
-class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public ChannelListener, public MixerTrack
+class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public ChannelListener
       {
       Q_OBJECT
 
-      MixerTrackItemPtr _mti;
-
-      bool _selected;
-      static const QString unselStyleLight;
-      static const QString selStyleLight;
-      static const QString unselStyleDark;
-      static const QString selStyleDark;
-      static const QString sliderStyle;
-
+      MixerTrackItem* _mixerTrackItem;
       MixerTrackGroup* _group;
 
       void updateNameLabel();
 
-signals:
-      void selectedChanged(bool);
-
 public slots:
       void updateSolo(bool);
       void updateMute(bool);
-      void setSelected(bool) override;
       void volumeChanged(double);
-      void panChanged(double);
-      void controlSelected();
-      void applyStyle();
+      // void panChanged(double);
+      void applyStyle();            // possibley retain for light / dark theme
 
 protected:
-      void mouseReleaseEvent(QMouseEvent * event) override;
       void propertyChanged(Channel::Prop property) override;
-
+            
 public:
-      explicit MixerTrackChannel(QWidget *parent, MixerTrackItemPtr trackItem);
+      explicit MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrackItem);
 
-      bool selected() override { return _selected; }
-      QWidget* getWidget() override { return this; }
-      MixerTrackGroup* group() override { return _group; }
-      MixerTrackItemPtr mti() override { return _mti; }
+      QWidget* getWidget() { return this; }
+      MixerTrackGroup* group() { return _group; }
+      MixerTrackItem* mixerTrackItem() { return _mixerTrackItem; }
       void setGroup(MixerTrackGroup* group) { _group = group; }
-      void paintEvent(QPaintEvent* evt) override;
       };
 }
 

@@ -302,15 +302,18 @@ void Mixer::updateTracks()
 
             const InstrumentList* instrumenList = part->instruments();
 
-//            Instrument* proxyInstr = nullptr;
-//            Channel* proxyChan = nullptr;
-//            if (!instrumenList->empty()) {
-//                  instrumenList->begin();
-//                  proxyInstr = instrumenList->begin()->second;
-//                  proxyChan = proxyInstr->playbackChannel(1, _score->masterScore());
-//                  }
-//
-//            MixerTrackItem mixerTrackItem = MixerTrackItem(MixerTrackItem::TrackType::PART, part, proxyInstr, proxyChan);
+            Instrument* proxyInstr = nullptr;
+            Channel* proxyChan = nullptr;
+            if (!instrumenList->empty()) {
+                  instrumenList->begin();
+                  proxyInstr = instrumenList->begin()->second;
+                  proxyChan = proxyInstr->playbackChannel(0, _score->masterScore());
+                  }
+
+            //MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instrument, Channel *channel)
+
+
+            MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::PART, part, proxyInstr, proxyChan);
             // we want to use the ITEM to set up the itemWidget
             // at time of writing this comment, the itemWidget is hand-rolled in a function
             // need to refactor it into a class AND think about the model...
@@ -320,11 +323,15 @@ void Mixer::updateTracks()
             // the itemWidget in the tree view... OR maintain a LIST of them in the mixer class?
             // IS this updateTracks method called a lot? Does it have any particular overhead?
 
-            //int volumne = mixerTrackItem->getVolume();
+
+
+            QStringList columns = QStringList(part->partName());
+
+            char volume = mixerTrackItem->getVolume();
+            qDebug()<<"Volume for "<<part->partName()<<" is:"<<int(volume);
             // there is no getVolume - how, on current setup, does the mixer control get the current value
             // need to dig into the code more to find out...
 
-            QStringList columns = QStringList(part->partName());
             columns.append("");
             QTreeWidgetItem* item = new QTreeWidgetItem((QTreeWidget*)0, columns);
             mixerTreeWidget->addTopLevelItem(item);

@@ -47,16 +47,7 @@ MixerTrackItem::MixerTrackItem(TrackType tt, Part* part, Instrument* instr, Chan
 
 MidiMapping *MixerTrackItem::midiMap()
       {
-      return _part->masterScore()->midiMapping(focusedChan()->channel());
-      }
-
-//---------------------------------------------------------
-//   partChan
-//---------------------------------------------------------
-
-Channel *MixerTrackItem::focusedChan()
-      {
-      return _chan;
+      return _part->masterScore()->midiMapping(chan()->channel());
       }
 
 //---------------------------------------------------------
@@ -81,6 +72,27 @@ int MixerTrackItem::color()
 //---------------------------------------------------------
 //   setVolume
 //---------------------------------------------------------
+
+char MixerTrackItem::getVolume()
+      {
+      return chan()->volume();
+      }
+
+char MixerTrackItem::getPan()
+      {
+      return chan()->pan();
+      }
+
+bool MixerTrackItem::getMute()
+      {
+      return chan()->mute();
+      }
+
+bool MixerTrackItem::getSolo()
+      {
+      return chan()->solo();
+      }
+
 
 void MixerTrackItem::setVolume(char value)
       {

@@ -37,12 +37,10 @@ namespace Ms {
 //---------------------------------------------------------
 //   MixerDetails
 //---------------------------------------------------------
-
-MixerDetails::MixerDetails(QWidget *parent) :
-      QWidget(parent),
-      _mti(nullptr),
-      mutePerVoiceHolder(nullptr)
+ /*
+MixerDetails::MixerDetails(QWidget *parent)
       {
+
       setupUi(this);
 
       connect(partNameLineEdit,    SIGNAL(editingFinished()),              SLOT(partNameChanged()));
@@ -61,8 +59,10 @@ MixerDetails::MixerDetails(QWidget *parent) :
       connect(drumkitCheck,        SIGNAL(toggled(bool)),                  SLOT(drumkitToggled(bool)));
 
       updateFromTrack();
+             */
       }
 
+/*
 //---------------------------------------------------------
 //   setTrack
 //---------------------------------------------------------
@@ -70,7 +70,7 @@ MixerDetails::MixerDetails(QWidget *parent) :
 void MixerDetails::setTrack(MixerTrackItemPtr track)
       {
       _mti = track;
-      setNotifier(_mti ? _mti->focusedChan() : nullptr);
+      setNotifier(_mti ? _mti->chan() : nullptr);
       updateFromTrack();
       }
 
@@ -158,7 +158,7 @@ void MixerDetails::updateFromTrack()
 
       MidiMapping* midiMap = _mti->midiMap();
       Part* part = _mti->part();
-      Channel* chan = _mti->focusedChan();
+      Channel* chan = _mti->chan();
 
       //Check if drumkit
       const bool drum = midiMap->part()->instrument()->useDrumset();
@@ -508,7 +508,7 @@ void MixerDetails::drumkitToggled(bool val)
             return;
 
       Part* part = _mti->part();
-      Channel* channel = _mti->focusedChan();
+      Channel* channel = _mti->chan();
 
 
       Instrument *instr;
@@ -550,7 +550,7 @@ void MixerDetails::midiChannelChanged(int)
             return;
 
       Part* part = _mti->part();
-      Channel* channel = _mti->focusedChan();
+      Channel* channel = _mti->chan();
 
       seq->stopNotes(channel->channel());
       int p =    portSpinBox->value() - 1;
@@ -572,3 +572,5 @@ void MixerDetails::midiChannelChanged(int)
 
 
 }
+
+ */

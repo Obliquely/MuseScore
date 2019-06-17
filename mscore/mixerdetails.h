@@ -39,7 +39,7 @@ class MixerTrackItem;
 
 class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelListener
       {
-      Q_OBJECT
+     /* Q_OBJECT
 
       MixerTrackItemPtr _mti;
       QWidget* mutePerVoiceHolder;
@@ -66,6 +66,7 @@ public:
       void setTrack(MixerTrackItemPtr track);
       void setVoiceMute(int staffIdx, int voice, bool shouldMute);
       void propertyChanged(Channel::Prop property) override;
+      */
       };
 
 //---------------------------------------------------------
@@ -73,7 +74,7 @@ public:
 //---------------------------------------------------------
 
 class MixerDetailsVoiceButtonHandler : public QObject
-      {
+      { /*
       Q_OBJECT
 
       MixerDetails* _mixerDetails;
@@ -92,6 +93,6 @@ public slots:
             {
             _mixerDetails->setVoiceMute(_staff, _voice, checked);
             }
-      };
+    */  };
 }
 #endif // __MIXERDETAILS_H__
