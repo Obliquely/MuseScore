@@ -43,6 +43,9 @@ MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrack
       {
       setupUi(this);
 
+      muteBn->setStyleSheet("QToolButton{background: white; color: black; font-weight: bold; border: 1px solid gray;} QToolButton:checked, QToolButton:pressed { color: white; background: red;}");
+      soloBn->setStyleSheet("QToolButton{background: white; color: black; font-weight: bold; border: 1px solid gray;} QToolButton:checked, QToolButton:pressed { color: white; background: green; }");
+
       connect(soloBn, SIGNAL(toggled(bool)), SLOT(updateSolo(bool)));
       connect(muteBn, SIGNAL(toggled(bool)), SLOT(updateMute(bool)));
 

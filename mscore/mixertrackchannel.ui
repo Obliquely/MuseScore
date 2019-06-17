@@ -67,8 +67,8 @@
      </property>
      <property name="iconSize">
       <size>
-       <width>32</width>
-       <height>32</height>
+       <width>16</width>
+       <height>16</height>
       </size>
      </property>
      <property name="checkable">
@@ -76,6 +76,9 @@
      </property>
      <property name="checked">
       <bool>false</bool>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextOnly</enum>
      </property>
     </widget>
    </item>
@@ -89,8 +92,8 @@
      </property>
      <property name="iconSize">
       <size>
-       <width>32</width>
-       <height>32</height>
+       <width>16</width>
+       <height>16</height>
       </size>
      </property>
      <property name="checkable">
@@ -98,6 +101,9 @@
      </property>
      <property name="checked">
       <bool>false</bool>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonTextOnly</enum>
      </property>
     </widget>
    </item>
