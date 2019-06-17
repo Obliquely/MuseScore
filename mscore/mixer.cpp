@@ -72,9 +72,7 @@ char userRangeToReverb(double v) { return (char)qBound(0, (int)(v / 100.0 * 128.
 //---------------------------------------------------------
 
 Mixer::Mixer(QWidget* parent)
-    : QDockWidget("Mixer", parent),
-      showDetails(true),
-      trackHolder(nullptr)
+    : QDockWidget("Mixer", parent)
       {
       setupUi(this);
 
@@ -141,12 +139,12 @@ void Mixer::on_partOnlyCheckBox_toggled(bool checked)
 void Mixer::retranslate(bool firstTime)
       {
       setWindowTitle(tr("Mixer"));
-      if (!firstTime) {
-            for (int i = 0; i < trackAreaLayout->count(); i++) {
-                  PartEdit* p = getPartAtIndex(i);
-                  if (p) p->retranslateUi(p);
-                  }
-            }
+//      if (!firstTime) {
+//            for (int i = 0; i < trackAreaLayout->count(); i++) {
+//                  PartEdit* p = getPartAtIndex(i);
+//                  if (p) p->retranslateUi(p);
+//                  }
+//            }
       }
 
 //---------------------------------------------------------
@@ -266,28 +264,20 @@ MixerTrackChannel* Mixer::mixerRowWidget(MixerTrackItem* mixerTrackItem)
       }
 
 
-      //TODO: panning tooltip
-      /*
-       panSlider->setValue(channel->pan());
-       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
-       panSlider->setMaxValue(127);
-       panSlider->setMinValue(0);
-       */
+void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
+      {
+      // block signals first? (is that needed or is it defensive?)
 
-      /*
-       case Channel::Prop::PAN: {
-       //                  panSlider->blockSignals(true);
-       //                  panSlider->setValue(channel->pan());
-       //                  panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
-       //                  panSlider->blockSignals(false);
-       break;
-       }
-       */
-      //void MixerTrackChannel::panChanged(double value)
-      //      {
-      //      _mixerTrackItem->setPan(value);
-      //      panSlider->setToolTip(tr("Pan: %1").arg(QString::number(value)));
-      //      }
+      Part* part = mixerTrackItem->part();
+      Channel* channel = mixerTrackItem->chan();
+
+      partNameLineEdit->setText(part->partName());
+
+      panSlider->setValue(channel->pan()-64);
+      panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
+      panSlider->setMaximum(63);
+      panSlider->setMinimum(-63);
+      }
 
 
 //---------------------------------------------------------
@@ -416,8 +406,10 @@ void Mixer::midiPrefsChanged(bool)
 
 void Mixer::currentItemChanged()
       {
-            qDebug()<<"Row change in tree view (and maybe column change too)";
-            qDebug()<<mixerTreeWidget->currentItem();
+      qDebug()<<"Row change in tree view (and maybe column change too)";
+      qDebug()<<mixerTreeWidget->currentItem();
+      MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1));
+      updateDetails(itemWidget->getMixerTrackItem());
       }
 
 

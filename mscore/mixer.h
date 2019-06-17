@@ -37,7 +37,6 @@ class Score;
 class Channel;
 class Part;
 class PartEdit;
-class MixerDetails;
 class MixerTrack;
 class MidiMapping;
 
@@ -74,29 +73,22 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       {
       Q_OBJECT
 
-      Score* _score = nullptr; // playback score
-      Score* _activeScore = nullptr; // may be a _score itself or its excerpt;
-      QHBoxLayout* trackAreaLayout;
+      Score* _score = nullptr;            // playback score
+      Score* _activeScore = nullptr;      // may be a _score itself or its excerpt;
       EnablePlayForWidget* enablePlay;
 
-      MixerDetails* mixerDetails;
-      QGridLayout* detailsLayout;
-
-      bool showDetails;
       QSet<Part*> expandedParts;
-      QWidget* trackHolder;
       QList<MixerTrack*> trackList;
-
-      int _scrollPosition = 0;
 
       virtual void closeEvent(QCloseEvent*) override;
       virtual void showEvent(QShowEvent*) override;
       virtual bool eventFilter(QObject*, QEvent*) override;
       virtual void keyPressEvent(QKeyEvent*) override;
+
       void setPlaybackScore(Score*);
 
       MixerTrackChannel* mixerRowWidget(MixerTrackItem* mixerTrackItem);
-
+      void updateDetails(MixerTrackItem*);
 
    private slots:
       void on_partOnlyCheckBox_toggled(bool checked);
