@@ -83,14 +83,24 @@ Mixer::Mixer(QWidget* parent)
       mixerTreeWidget->setColumnCount(2);
       mixerTreeWidget->setHeaderLabels({"Part", "Volume"});
 
-      connect(mixerTreeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), SLOT(currentItemChanged()));
-      connect(synti, SIGNAL(gainChanged(float)), SLOT(synthGainChanged(float)));
+
 
       enablePlay = new EnablePlayForWidget(this);
       retranslate(true);
+      setupSlotsAndSignals();
       }
 
+void Mixer::setupSlotsAndSignals()
+      {
+      connect(panSlider,      SIGNAL(valueChanged(int)),    SLOT(panChanged(int)));
+      connect(panSpinBox,     SIGNAL(valueChanged(double)), SLOT(panChanged(double)));
+      connect(mixerTreeWidget,SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
+                                                            SLOT(currentItemChanged()));
+      connect(synti, SIGNAL(gainChanged(float)),            SLOT(synthGainChanged(float)));
+      connect(patchCombo,     SIGNAL(activated(int)),       SLOT(patchChanged(int)));
 
+      }
+      
 
 //---------------------------------------------------------
 //   synthGainChanged
@@ -113,6 +123,45 @@ void Mixer::masterVolumeChanged(double decibels)
 
       }
 
+void Mixer::panChanged(double value)
+{
+      if (!detailsMixerTrackItem)
+            return;
+      detailsMixerTrackItem->setPan(value);
+}
+      
+void Mixer::panChanged(int value)
+      {
+      if (!detailsMixerTrackItem)
+            return;
+      detailsMixerTrackItem->setPan(value);
+}
+
+void Mixer::patchChanged(int n)
+      {
+      qDebug()<<"Mixer::patchChanged('"<<n<<")";
+      if (!detailsMixerTrackItem)
+            return;
+      
+      const MidiPatch* p = (MidiPatch*)patchCombo->itemData(n, Qt::UserRole).value<void*>();
+      if (p == 0) {
+            qDebug("PartEdit::patchChanged: no patch");
+            return;
+            }
+      
+      Part* part = detailsMixerTrackItem->midiMap()->part();
+      Channel* channel = detailsMixerTrackItem->midiMap()->articulation();
+      Score* score = part->score();
+      if (score) {
+            score->startCmd();
+            score->undo(new ChangePatch(score, channel, p));
+            score->undo(new SetUserBankController(channel, true));
+            score->setLayoutAll();
+            score->endCmd();
+            }
+      }
+
+      
 //---------------------------------------------------------
 //   on_partOnlyCheckBox_toggled
 //---------------------------------------------------------
@@ -300,6 +349,7 @@ void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
 
 void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       {
+      detailsMixerTrackItem = mixerTrackItem;
       // block signals first? (is that needed or is it defensive?)
 
       Part* part = mixerTrackItem->part();
@@ -317,8 +367,7 @@ void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
 
 void Mixer::disableMixer()
       {
-      // no parts or tracks present, so grey everything out
-
+      //TODO: no parts or tracks present, so grey everything out
       }
 
 void Mixer::updateTreeSelection()
@@ -383,7 +432,6 @@ MixerTrackItem* Mixer::mixerTrackItemFromPart(Part* part)
 
 void Mixer::updateTracks()
       {
-
       qDebug()<<"Mixer::updateTracks()";
 
       mixerTreeWidget->clear();
@@ -430,7 +478,7 @@ void Mixer::updateTracks()
                         QTreeWidgetItem* child = new QTreeWidgetItem((QTreeWidget*)0, columns);
                         item->addChild(child);
 
-                        MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::PART, part, instrument, channel);
+                        MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
                         mixerTreeWidget->setItemWidget(child, 1, mixerRowWidget(mixerTrackItem));
                         }
                   }

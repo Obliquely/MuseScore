@@ -75,6 +75,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
 
       Score* _score = nullptr;            // playback score
       Score* _activeScore = nullptr;      // may be a _score itself or its excerpt;
+      MixerTrackItem* detailsMixerTrackItem = nullptr;
       EnablePlayForWidget* enablePlay;
 
       QSet<Part*> expandedParts;
@@ -86,6 +87,8 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       virtual void keyPressEvent(QKeyEvent*) override;
 
       void setPlaybackScore(Score*);
+      void setupSlotsAndSignals();
+
 
       MixerTrackChannel* mixerRowWidget(MixerTrackItem* mixerTrackItem);
       void updateDetails(MixerTrackItem*);
@@ -101,6 +104,9 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       void updateTracks();
       void midiPrefsChanged(bool showMidiControls);
       void masterVolumeChanged(double val);
+      void panChanged(int);
+      void panChanged(double);
+      void patchChanged(int);
       void synthGainChanged(float val);
       void currentItemChanged(); // obq
 

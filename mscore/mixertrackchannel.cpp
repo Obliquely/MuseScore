@@ -38,7 +38,7 @@ MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrack
       {
       setupUi(this);
       setupAdditionalUi();
-
+      setupSlotsAndSignals();
       update();
 
       Channel* channel = mixerTrackItem->chan();
@@ -50,7 +50,7 @@ void MixerTrackChannel::setupSlotsAndSignals()
       {
       connect(muteButton,     SIGNAL(toggled(bool)),        SLOT(updateMute(bool)));
       connect(soloButton,     SIGNAL(toggled(bool)),        SLOT(updateSolo(bool)));
-      connect(volumeSlider,   SIGNAL(valueChanged(double)), SLOT(volumeChanged(double)));
+      connect(volumeSlider,   SIGNAL(valueChanged(int)),    SLOT(volumeChanged(int)));
       }
 
 
@@ -101,8 +101,9 @@ void MixerTrackChannel::propertyChanged(Channel::Prop property)
       update();
       }
 
-void MixerTrackChannel::volumeChanged(double value)
+void MixerTrackChannel::volumeChanged(int value)
       {
+      qDebug()<<"MixerTrackChannel::volumeChanged("<<value<<")";
       mixerTrackItem->setVolume(value);
       volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(value)));
       }
@@ -110,12 +111,14 @@ void MixerTrackChannel::volumeChanged(double value)
 
 void MixerTrackChannel::updateSolo(bool val)
       {
+      qDebug()<<"MixerTrackChannel::updateSolo("<<val<<")";
       mixerTrackItem->setSolo(val);
       }
 
 
 void MixerTrackChannel::updateMute(bool val)
       {
+      qDebug()<<"MixerTrackChannel::updateMute("<<val<<")";
       mixerTrackItem->setMute(val);
       }
 

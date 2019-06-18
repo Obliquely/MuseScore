@@ -50,7 +50,7 @@ class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public C
 public slots:
       void updateSolo(bool);
       void updateMute(bool);
-      void volumeChanged(double);
+      void volumeChanged(int);
 
 protected:
       void propertyChanged(Channel::Prop property) override;      // ChannelListener method

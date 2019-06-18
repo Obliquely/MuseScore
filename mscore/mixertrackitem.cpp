@@ -65,7 +65,7 @@ Channel* MixerTrackItem::playbackChannel(const Channel* channel)
 
 int MixerTrackItem::color()
       {
-            return _trackType ==TrackType::PART ? _part->color()
+      return _trackType ==TrackType::PART ? _part->color()
                                                 : _chan->color();
       }
 
@@ -109,12 +109,14 @@ void MixerTrackItem::setVolume(char value)
        items on the list! the repeated code is CRAZY... it makes the code harder to follow and the
        overall code length much longer...
        */
-
+      qDebug()<<"MixerTrackItem::setVolume("<<int(value)<<")";
 
       if (_trackType == TrackType::PART) {
+            qDebug()<<"TrackType::PART";
             const InstrumentList* il = _part->instruments();
             for (auto it = il->begin(); it != il->end(); ++it) {
                   Instrument* instr = it->second;
+                  qDebug()<<"Setting volume on: '"<<instr->trackName()<<"'";
                   for (const Channel* instrChan: instr->channel()) {
                         Channel* chan = playbackChannel(instrChan);
                         if (chan->volume() != value) {
@@ -125,6 +127,7 @@ void MixerTrackItem::setVolume(char value)
                   }
             }
       else {
+            qDebug()<<"TrackType::CHANNEL";
             if (_chan->volume() != value) {
                   _chan->setVolume(value);
                   seq->setController(_chan->channel(), CTRL_VOLUME, _chan->volume());

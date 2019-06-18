@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>174</width>
+    <width>150</width>
     <height>27</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>174</width>
+    <width>150</width>
     <height>20</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>174</width>
+    <width>162</width>
     <height>27</height>
    </size>
   </property>
@@ -54,13 +54,13 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>120</width>
+       <width>90</width>
        <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>120</width>
+       <width>90</width>
        <height>20</height>
       </size>
      </property>
@@ -89,9 +89,14 @@
     <widget class="QToolButton" name="soloButton">
      <property name="maximumSize">
       <size>
-       <width>20</width>
-       <height>20</height>
+       <width>16</width>
+       <height>16</height>
       </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
      </property>
      <property name="toolTip">
       <string>Solo</string>
@@ -136,9 +141,14 @@
     <widget class="QToolButton" name="muteButton">
      <property name="maximumSize">
       <size>
-       <width>20</width>
-       <height>20</height>
+       <width>16</width>
+       <height>16</height>
       </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
      </property>
      <property name="toolTip">
       <string>Mute</string>
