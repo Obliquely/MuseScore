@@ -79,6 +79,10 @@ Mixer::Mixer(QWidget* parent)
       setWindowFlags(Qt::Tool);
       setWindowFlags(this->windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
+      mixerTreeWidget->setAlternatingRowColors(true);
+      mixerTreeWidget->setColumnCount(2);
+      mixerTreeWidget->setHeaderLabels({"Part", "Volume"});
+
       connect(mixerTreeWidget, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), SLOT(currentItemChanged()));
       connect(synti, SIGNAL(gainChanged(float)), SLOT(synthGainChanged(float)));
 
@@ -97,9 +101,6 @@ void Mixer::synthGainChanged(float)
       float decibels = qBound(minDecibels, log10f(synti->gain()), 0.0f);
       qDebug()<<"Used to update master slider with value: "<<decibels;
       }
-
-
-
 
 //---------------------------------------------------------
 //   masterVolumeChanged
@@ -242,24 +243,6 @@ void Mixer::setScore(Score* score)
 
 MixerTrackChannel* Mixer::mixerRowWidget(MixerTrackItem* mixerTrackItem)
       {
-      //QLabel* labelWidget = new QLabel(name);
-
-      QSlider* slider = new QSlider(Qt::Horizontal);
-      slider->setValue(50);
-
-      QHBoxLayout* sliderLayout = new QHBoxLayout();
-      sliderLayout->setContentsMargins(0, 0, 10, 0);
-      sliderLayout->addWidget(slider);
-
-      QWidget* itemWidget = new QWidget();
-
-      QVBoxLayout *layout = new QVBoxLayout;
-      layout->setAlignment(Qt::AlignVCenter);
-      //layout->addWidget(labelWidget);
-      layout->addLayout(sliderLayout);
-      layout->setMargin(0);
-      itemWidget->setLayout(layout);
-      itemWidget->setMinimumHeight(25);
       return new MixerTrackChannel(this, mixerTrackItem);
       }
 
@@ -332,6 +315,67 @@ void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       updatePatch(mixerTrackItem);
       }
 
+void Mixer::disableMixer()
+      {
+      // no parts or tracks present, so grey everything out
+
+      }
+
+void Mixer::updateTreeSelection()
+      {
+      if (mixerTreeWidget->topLevelItemCount() == 0) {
+            disableMixer();
+            return;
+      }
+
+      if (!mixerTreeWidget->currentItem()) {
+            mixerTreeWidget->setCurrentItem(mixerTreeWidget->topLevelItem(0));
+      }
+
+      MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1));
+
+      MixerTrackItem* mixerTrackItem = itemWidget->getMixerTrackItem();
+      if (mixerTrackItem) {
+            updateDetails(mixerTrackItem);
+      }
+      else {
+            qDebug()<<"**MIXER WARNING** Unexpected missing mixerTrackItem **. Non-fatal.";
+            }
+      //older code
+
+//      Part* selPart = 0;
+//      Channel* selChan = 0;
+//
+//      if (_score) {
+//            //If nothing selected, select first available track
+//            if (!_score->parts().isEmpty())
+//            {
+//                  selPart = _score->parts()[0]->masterPart();
+//                  selChan = selPart->instrument(Fraction(0,1))->playbackChannel(0, _score->masterScore());
+//            }
+//      }
+      }
+
+
+MixerTrackItem* Mixer::mixerTrackItemFromPart(Part* part)
+      {
+      const InstrumentList* instrumenList = part->instruments();
+
+      // why is it called a proxy instrument here
+      // is it because, well, it IS and this represents the part
+      // but we somehow tuck in (second) to get the first instrument in the part??
+      Instrument* proxyInstr = nullptr;
+      Channel* proxyChan = nullptr;
+      if (!instrumenList->empty()) {
+            instrumenList->begin();
+            proxyInstr = instrumenList->begin()->second;
+            proxyChan = proxyInstr->playbackChannel(0, _score->masterScore());
+            }
+
+      MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::PART, part, proxyInstr, proxyChan);
+
+      return mixerTrackItem;
+      }
 
 //---------------------------------------------------------
 //   updateTracks
@@ -339,91 +383,55 @@ void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
 
 void Mixer::updateTracks()
       {
-      //MixerTrackItem* oldSel = mixerDetails->track().get();
 
-      Part* selPart = 0; //oldSel ? oldSel->part() : 0;
-      Channel* selChan = 0; //oldSel ? oldSel->chan() : 0;
-
-      if (_score && !selPart) {
-            //If nothing selected, select first available track
-            if (!_score->parts().isEmpty())
-                  {
-                  selPart = _score->parts()[0]->masterPart();
-                  selChan = selPart->instrument(Fraction(0,1))->playbackChannel(0, _score->masterScore());
-                  }
-            }
+      qDebug()<<"Mixer::updateTracks()";
 
       mixerTreeWidget->clear();
       trackList.clear();
 
-      if (!_score)
+      if (!_score) {
+            disableMixer();
             return;
-
-      mixerTreeWidget->setAlternatingRowColors(true);
-      //mixerTreeWidget->headerItem()->setHidden(true);
-      mixerTreeWidget->setColumnCount(2);
-      mixerTreeWidget->setHeaderLabels({"Part", "Volume"});
+      }
 
       for (Part* localPart : _score->parts()) {
             Part* part = localPart->masterPart();
 
-            const InstrumentList* instrumenList = part->instruments();
+            qDebug()<<"Mixer::updateTracks() - outer loop - part->name()"<<part->longName();
 
-            Instrument* proxyInstr = nullptr;
-            Channel* proxyChan = nullptr;
-            if (!instrumenList->empty()) {
-                  instrumenList->begin();
-                  proxyInstr = instrumenList->begin()->second;
-                  proxyChan = proxyInstr->playbackChannel(0, _score->masterScore());
-                  }
+            MixerTrackItem* mixerTrackItem = mixerTrackItemFromPart(part);
 
-            //MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instrument, Channel *channel)
-
-
-            MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::PART, part, proxyInstr, proxyChan);
-            // we want to use the ITEM to set up the itemWidget
-            // at time of writing this comment, the itemWidget is hand-rolled in a function
-            // need to refactor it into a class AND think about the model...
-            // AND the key details are, where, in  _score->parts()->mastetPart->instruments ??
-            // the MixerTrackItem keeps a track of all this, so it is a good (good-ish) MODEL object
-            // where do I want to KEEP the mixerTrackItem - could have it as an ivar on
-            // the itemWidget in the tree view... OR maintain a LIST of them in the mixer class?
-            // IS this updateTracks method called a lot? Does it have any particular overhead?
-
-
-
-            QStringList columns = QStringList(part->partName());
-
-            char volume = mixerTrackItem->getVolume();
-            qDebug()<<"Volume for "<<part->partName()<<" is:"<<int(volume);
-            // there is no getVolume - how, on current setup, does the mixer control get the current value
-            // need to dig into the code more to find out...
-
-            columns.append("");
+            QStringList columns = QStringList(part->partName());  // first column has part name
+            columns.append("");     // second column left blank - occuped by mixerTrackChannel widget
             QTreeWidgetItem* item = new QTreeWidgetItem((QTreeWidget*)0, columns);
             mixerTreeWidget->addTopLevelItem(item);
             mixerTreeWidget->setItemWidget(item, 1, mixerRowWidget(mixerTrackItem));
 
-
             //Add per channel tracks
-            const InstrumentList* il1 = part->instruments();
-            for (auto it = instrumenList->begin(); it != il1->end(); ++it) {
-                  Instrument* instr = it->second;
+            const InstrumentList* partInstrumentList = part->instruments();
 
-                  if (instr->channel().size() <= 1)
+            // Note sure I understand the code here - will this loop ever iterate more
+            // than once?
+            for (auto partInstrumentListItem = partInstrumentList->begin(); partInstrumentListItem != partInstrumentList->end(); ++partInstrumentListItem) {
+
+                  Instrument* instrument = partInstrumentListItem->second;
+                  qDebug()<<"    Mixer::updateTracks() - inner loop - instrument->trackName()"<<instrument->trackName();
+
+                  if (instrument->channel().size() <= 1)
                         continue;
 
-                  for (int i = 0; i < instr->channel().size(); ++i) {
-                        Channel* chan = instr->playbackChannel(i, _score->masterScore());
+                  // add an item for each channel used by a given instrument
+                  for (int i = 0; i < instrument->channel().size(); ++i) {
+                        Channel* channel = instrument->playbackChannel(i, _score->masterScore());
+                        qDebug()<<"        Mixer::updateTracks() - inner loop, inner loop - channel->name()()"<<channel->name();
 
-                        QStringList columns = QStringList(chan->name());
+                        QStringList columns = QStringList(channel->name());
                         columns.append("");
                         QTreeWidgetItem* child = new QTreeWidgetItem((QTreeWidget*)0, columns);
                         item->addChild(child);
 
-                        //TODO: this needs to get its own mixerTrackItem for the sub-part
+                        MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::PART, part, instrument, channel);
                         mixerTreeWidget->setItemWidget(child, 1, mixerRowWidget(mixerTrackItem));
-
                         }
                   }
             }
@@ -443,7 +451,8 @@ void Mixer::midiPrefsChanged(bool)
 void Mixer::currentItemChanged()
       {
       MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1));
-      updateDetails(itemWidget->getMixerTrackItem());
+      if (itemWidget)
+            updateDetails(itemWidget->getMixerTrackItem());
       }
 
 
