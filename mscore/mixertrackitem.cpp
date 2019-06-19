@@ -26,7 +26,7 @@
 /* obq-note
       pretty important class for the mixer. represents either a PART or a sub-part (i.e. a channel)
 
-      it's very much MODEL and has not reference to UI / Views - so in redesign this class can (almost
+      it's very much MODEL and has no reference to UI / Views - so in redesign this class can (almost
       certainly) be kept. BUT IT DOES need a refactor. It's horrible just now.
  */
 
