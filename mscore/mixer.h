@@ -89,12 +89,24 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       void setPlaybackScore(Score*);
       void setupSlotsAndSignals();
 
+      // imported from mixerdetails
+      QWidget* mutePerVoiceHolder;
+      QGridLayout* mutePerVoiceGrid;
+      QList<QPushButton*> voiceButtons;
 
       MixerTrackChannel* mixerRowWidget(MixerTrackItem* mixerTrackItem);
       void updateDetails(MixerTrackItem*);
       void updatePatch(MixerTrackItem* mixerTrackItem);
+      void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
       void updateTreeSelection();
+
       void disableMixer();
+
+      void disableDetails();
+      void enableDetails();
+      void blockDetailsSignals();
+      void unBlockDetailsSignals();
+
       MixerTrackItem* mixerTrackItemFromPart(Part* part);
 
    private slots:
@@ -109,6 +121,13 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       void patchChanged(int);
       void synthGainChanged(float val);
       void currentItemChanged(); // obq
+      void partNameChanged();
+      // void trackColorChanged(QColor);
+      void volumeChanged(double);
+      void chorusChanged(double);
+      void reverbChanged(double);
+      void drumkitToggled(bool);
+      void midiChannelChanged(int);
 
    signals:
       void closed(bool);
@@ -122,6 +141,8 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       void setScore(Score*);
       PartEdit* getPartAtIndex(int index);
       //void notifyTrackSelected(MixerTrack* track) override;
+      void setVoiceMute(int staffIdx, int voice, bool shouldMute);
+      void propertyChanged(Channel::Prop property); // override;
       };
 
 

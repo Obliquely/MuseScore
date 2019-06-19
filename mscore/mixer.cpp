@@ -81,8 +81,7 @@ Mixer::Mixer(QWidget* parent)
 
       mixerTreeWidget->setAlternatingRowColors(true);
       mixerTreeWidget->setColumnCount(2);
-      mixerTreeWidget->setHeaderLabels({"Part", "Volume"});
-
+      mixerTreeWidget->setHeaderLabels({tr("Instrument"), tr("Volume")});
 
 
       enablePlay = new EnablePlayForWidget(this);
@@ -92,15 +91,26 @@ Mixer::Mixer(QWidget* parent)
 
 void Mixer::setupSlotsAndSignals()
       {
-      connect(panSlider,      SIGNAL(valueChanged(int)),    SLOT(panChanged(int)));
-      connect(panSpinBox,     SIGNAL(valueChanged(double)), SLOT(panChanged(double)));
-      connect(mixerTreeWidget,SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
-                                                            SLOT(currentItemChanged()));
-      connect(synti, SIGNAL(gainChanged(float)),            SLOT(synthGainChanged(float)));
-      connect(patchCombo,     SIGNAL(activated(int)),       SLOT(patchChanged(int)));
+      connect(panSlider,            SIGNAL(valueChanged(int)),    SLOT(panChanged(int)));
+      connect(panSpinBox,           SIGNAL(valueChanged(double)), SLOT(panChanged(double)));
+      connect(mixerTreeWidget,      SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
+                                                                  SLOT(currentItemChanged()));
+      connect(synti,                SIGNAL(gainChanged(float)),   SLOT(synthGainChanged(float)));
+      connect(patchCombo,           SIGNAL(activated(int)),       SLOT(patchChanged(int)));
 
+      connect(partNameLineEdit,     SIGNAL(editingFinished()),    SLOT(partNameChanged()));
+      //connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),  SLOT(trackColorChanged(QColor)));
+      connect(volumeSlider,         SIGNAL(valueChanged),         SLOT(volumeChanged));
+      connect(volumeSpinBox,        SIGNAL(valueChanged(double)), SLOT(volumeChanged(double)));
+      connect(chorusSlider,         SIGNAL(valueChanged(int)),    SLOT(chorusChanged()));
+      connect(chorusSpinBox,        SIGNAL(valueChanged(double)), SLOT(chorusChanged(double)));
+      connect(reverbSlider,         SIGNAL(valueChanged(int)),    SLOT(reverbChanged()));
+      connect(reverbSpinBox,        SIGNAL(valueChanged(double)), SLOT(reverbChanged(double)));
+      connect(portSpinBox,          SIGNAL(valueChanged(int)),    SLOT(midiChannelChanged(int)));
+      connect(channelSpinBox,       SIGNAL(valueChanged(int)),    SLOT(midiChannelChanged(int)));
+      connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(drumkitToggled(bool)));
       }
-      
+
 
 //---------------------------------------------------------
 //   synthGainChanged
@@ -123,43 +133,6 @@ void Mixer::masterVolumeChanged(double decibels)
 
       }
 
-void Mixer::panChanged(double value)
-{
-      if (!detailsMixerTrackItem)
-            return;
-      detailsMixerTrackItem->setPan(value);
-}
-      
-void Mixer::panChanged(int value)
-      {
-      if (!detailsMixerTrackItem)
-            return;
-      detailsMixerTrackItem->setPan(value);
-}
-
-void Mixer::patchChanged(int n)
-      {
-      qDebug()<<"Mixer::patchChanged('"<<n<<")";
-      if (!detailsMixerTrackItem)
-            return;
-      
-      const MidiPatch* p = (MidiPatch*)patchCombo->itemData(n, Qt::UserRole).value<void*>();
-      if (p == 0) {
-            qDebug("PartEdit::patchChanged: no patch");
-            return;
-            }
-      
-      Part* part = detailsMixerTrackItem->midiMap()->part();
-      Channel* channel = detailsMixerTrackItem->midiMap()->articulation();
-      Score* score = part->score();
-      if (score) {
-            score->startCmd();
-            score->undo(new ChangePatch(score, channel, p));
-            score->undo(new SetUserBankController(channel, true));
-            score->setLayoutAll();
-            score->endCmd();
-            }
-      }
 
       
 //---------------------------------------------------------
@@ -350,19 +323,32 @@ void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
 void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       {
       detailsMixerTrackItem = mixerTrackItem;
-      // block signals first? (is that needed or is it defensive?)
+      if (!detailsMixerTrackItem) {
+                  disableDetails();
+                  return;
+            }
 
+      enableDetails();
+      blockDetailsSignals();
       Part* part = mixerTrackItem->part();
       Channel* channel = mixerTrackItem->chan();
 
-      partNameLineEdit->setText(part->partName());
+      QString partName = part->partName();
+      if (!channel->name().isEmpty())
+            channelLabel->setText(qApp->translate("InstrumentsXML", channel->name().toUtf8().data()));
+      else
+            channelLabel->setText("");
+      partNameLineEdit->setText(partName);
+      partNameLineEdit->setToolTip(partName);
 
-      panSlider->setValue(channel->pan()-64);
+      panSlider->setValue(channel->pan()-64); //TODO: this adjustment shoudl go elsewhere...
       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
       panSlider->setMaximum(63);
       panSlider->setMinimum(-63);
 
       updatePatch(mixerTrackItem);
+      updateMutePerVoice(mixerTrackItem);
+      unBlockDetailsSignals();
       }
 
 void Mixer::disableMixer()
@@ -483,7 +469,7 @@ void Mixer::updateTracks()
                         }
                   }
             }
-
+            mixerTreeWidget->expandAll(); // force expansion - TODO: hack to avoid issue with unwanted wigdets displaying when un-expanded
       }
 
 //---------------------------------------------------------

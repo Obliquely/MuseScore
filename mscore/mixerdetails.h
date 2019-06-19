@@ -17,73 +17,25 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#ifndef __MIXERDETAILS_H__
-#define __MIXERDETAILS_H__
-
-#include "ui_mixerdetails.h"
-#include "libmscore/instrument.h"
-#include "mixertrackitem.h"
-
-#include <functional>
-#include <QPushButton>
+#include "mixer.h"
 
 namespace Ms {
-
-
-class MixerTrackItem;
-
-
-//---------------------------------------------------------
-//   MixerDetails
-//---------------------------------------------------------
-
-class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelListener
-      {
-     /* Q_OBJECT
-
-      MixerTrackItemPtr _mti;
-      QWidget* mutePerVoiceHolder;
-      QGridLayout* mutePerVoiceGrid;
-      QList<QPushButton*> voiceButtons;
-
-      void updateFromTrack();
-
-public slots:
-      void partNameChanged();
-      void trackColorChanged(QColor);
-      void patchChanged(int);
-      void volumeChanged(double);
-      void panChanged(double);
-      void chorusChanged(double);
-      void reverbChanged(double);
-      void drumkitToggled(bool);
-      void midiChannelChanged(int);
-
-public:
-      explicit MixerDetails(QWidget *parent);
-
-      MixerTrackItemPtr track() { return _mti; }
-      void setTrack(MixerTrackItemPtr track);
-      void setVoiceMute(int staffIdx, int voice, bool shouldMute);
-      void propertyChanged(Channel::Prop property) override;
-      */
-      };
 
 //---------------------------------------------------------
 //   MixerDetailsVoiceButtonHandler
 //---------------------------------------------------------
 
 class MixerDetailsVoiceButtonHandler : public QObject
-      { /*
+      {
       Q_OBJECT
 
-      MixerDetails* _mixerDetails;
+      Mixer* _mixer;
       int _staff;
       int _voice;
 public:
-      MixerDetailsVoiceButtonHandler(MixerDetails* mixerDetails, int staff, int voice, QObject* parent = nullptr)
+      MixerDetailsVoiceButtonHandler(Mixer* mixer, int staff, int voice, QObject* parent = nullptr)
             : QObject(parent),
-              _mixerDetails(mixerDetails),
+              _mixer(mixer),
               _staff(staff),
               _voice(voice)
             {}
@@ -91,8 +43,7 @@ public:
 public slots:
       void setVoiceMute(bool checked)
             {
-            _mixerDetails->setVoiceMute(_staff, _voice, checked);
+            _mixer->setVoiceMute(_staff, _voice, checked);
             }
-    */  };
+   };
 }
-#endif // __MIXERDETAILS_H__
