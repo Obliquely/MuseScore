@@ -149,10 +149,10 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
       deleteButton->setEnabled(flag);
       }
 
-//
+//---------------------------------------------------------
 // disableEditGroupIfRequired
-//
-      
+//---------------------------------------------------------
+
 void ExcerptsDialog::disableEditGroupIfRequired()
       {
       editGroup->setEnabled(excerptList->count() != 0);
@@ -290,11 +290,13 @@ void ExcerptsDialog::addButtonClicked()
             pi->setText(0, pi->part()->name());
             cur->parts().append(pi->part());
             partList->addTopLevelItem(pi);
+            int staffCount = 1;
             for (Staff* s : *pi->part()->staves()) {
                   StaffItem* sli = new StaffItem(pi);
                   sli->setStaff(s);
                   for (int j = 0; j < VOICES; j++)
                         sli->setCheckState(j + 1, Qt::Checked);
+                  sli->setText(0, tr("Staff %1").arg(staffCount++));
                   }
             pi->setText(0, pi->part()->partName());
             }
@@ -344,10 +346,12 @@ void ExcerptsDialog::excerptChanged(QListWidgetItem* cur, QListWidgetItem*)
             for (Part* p: pl) {
                   PartItem* pi = new PartItem(p, partList);
                   partList->addTopLevelItem(pi);
+                  int staffCount = 1;
                   for (Staff* s : *p->staves()) {
                         StaffItem* sli = new StaffItem(pi);
                         sli->setStaff(s);
                         sli->setDisabled(!b);
+                        sli->setText(0, tr("Staff %1").arg(staffCount++));
                         }
                   pi->setText(0, p->partName());
                   partList->setItemExpanded(pi, false);
