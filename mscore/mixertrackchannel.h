@@ -39,6 +39,7 @@ namespace Ms {
 
 class MidiMapping;
 class MixerTrackItem;
+class Mixer;
 
 //---------------------------------------------------------
 //   MixerTrack
@@ -48,6 +49,8 @@ class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public C
       {
       Q_OBJECT
 
+      Mixer* mixer;
+      QTreeWidgetItem * treeWidgetItem;   // to enable selecting item when user interacts with controls
       MixerTrackItem* mixerTrackItem;
 
       void setupAdditionalUi();
@@ -58,12 +61,16 @@ public slots:
       void stripMuteToggled(bool);
       void stripSoloToggled(bool);
       void stripVolumeSliderMoved(int);
+      void takeSelection();
+
+      signals:
+      void userInteraction(QTreeWidgetItem*);
 
 protected:
       void propertyChanged(Channel::Prop property) override;      // ChannelListener method
             
 public:
-      explicit MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrackItem);
+      explicit MixerTrackChannel(QTreeWidgetItem*, MixerTrackItem*);
       MixerTrackItem* getMixerTrackItem() { return mixerTrackItem; }
       };
 }

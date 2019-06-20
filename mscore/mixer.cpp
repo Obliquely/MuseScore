@@ -82,7 +82,10 @@ Mixer::Mixer(QWidget* parent)
       mixerTreeWidget->setAlternatingRowColors(true);
       mixerTreeWidget->setColumnCount(2);
       mixerTreeWidget->setHeaderLabels({tr("Instrument"), tr("Volume")});
-
+      mixerTreeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+      mixerTreeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+      mixerTreeWidget->header()->setDefaultSectionSize(180);
+      mixerTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
       enablePlay = new EnablePlayForWidget(this);
       retranslate(true);
@@ -99,8 +102,8 @@ void Mixer::setupSlotsAndSignals()
 
       connect(partNameLineEdit,     SIGNAL(editingFinished()),    SLOT(partNameChanged()));
       //connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),  SLOT(trackColorChanged(QColor)));
-      connect(volumeSlider,         SIGNAL(valueChanged(int)),    SLOT(volumeChanged(int)));
-      connect(volumeSpinBox,        SIGNAL(valueChanged(double)), SLOT(volumeChanged(double)));
+      connect(volumeSlider,         SIGNAL(valueChanged(int)),    SLOT(detailsVolumeSliderMoved(int)));
+      connect(volumeSpinBox,        SIGNAL(valueChanged(double)), SLOT(detailsVolumeSpinBoxEdited(double)));
       connect(panSlider,            SIGNAL(valueChanged(int)),    SLOT(detailsPanSliderMoved(int)));
       connect(panSpinBox,           SIGNAL(valueChanged(double)), SLOT(detailsPanSpinBoxEdited(double)));
       connect(chorusSlider,         SIGNAL(valueChanged(int)),    SLOT(detailsChorusSliderMoved()));
@@ -197,12 +200,24 @@ void Mixer::showEvent(QShowEvent* e)
 //   eventFilter
 //---------------------------------------------------------
 
-bool Mixer::eventFilter(QObject* obj, QEvent* e)
+bool Mixer::eventFilter(QObject* object, QEvent* event)
       {
-      if (enablePlay->eventFilter(obj, e))
+      if (enablePlay->eventFilter(object, event))
             return true;
-      return QWidget::eventFilter(obj, e);
+
+      if (object == panSlider) {
+            if (event->type() == QEvent::MouseButtonDblClick) {
+                  QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+                  qDebug() << "Ate Double click on pan slider" << keyEvent->key();
+                  detailsPanSliderMoved(0);
+                  return true;
+                  }
       }
+
+
+      return QWidget::eventFilter(object, event);
+      }
+
 
 //---------------------------------------------------------
 //   keyPressEvent
@@ -264,15 +279,12 @@ void Mixer::setScore(Score* score)
       partOnlyCheckBox->setEnabled(_activeScore && !_activeScore->isMaster());
       }
 
-MixerTrackChannel* Mixer::mixerRowWidget(MixerTrackItem* mixerTrackItem)
-      {
-      return new MixerTrackChannel(this, mixerTrackItem);
-      }
 
 void Mixer::disableMixer()
       {
       //TODO: no parts or tracks present, so grey everything out
       }
+
 
 void Mixer::updateTreeSelection()
       {
@@ -357,7 +369,7 @@ void Mixer::updateTracks()
             columns.append("");     // second column left blank - occuped by mixerTrackChannel widget
             QTreeWidgetItem* item = new QTreeWidgetItem((QTreeWidget*)0, columns);
             mixerTreeWidget->addTopLevelItem(item);
-            mixerTreeWidget->setItemWidget(item, 1, mixerRowWidget(mixerTrackItem));
+            mixerTreeWidget->setItemWidget(item, 1, new MixerTrackChannel(item, mixerTrackItem));
 
             //Add per channel tracks
             const InstrumentList* partInstrumentList = part->instruments();
@@ -383,11 +395,12 @@ void Mixer::updateTracks()
                         item->addChild(child);
 
                         MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
-                        mixerTreeWidget->setItemWidget(child, 1, mixerRowWidget(mixerTrackItem));
+                        mixerTreeWidget->setItemWidget(child, 1, new MixerTrackChannel(child, mixerTrackItem));
                         }
                   }
             }
             mixerTreeWidget->expandAll(); // force expansion - TODO: hack to avoid issue with unwanted wigdets displaying when un-expanded
+            updateTreeSelection();
       }
 
 //---------------------------------------------------------
@@ -412,6 +425,8 @@ void Mixer::currentItemChanged()
 
       MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(treeItemWidget);
       updateDetails(itemWidget->getMixerTrackItem());
+      qDebug()<<"about to call takeSelection";
+      itemWidget->takeSelection();
       }
 
 

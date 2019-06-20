@@ -33,8 +33,8 @@
 
 namespace Ms {
 
-MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrackItem) :
-      QWidget(parent), mixerTrackItem(mixerTrackItem)
+MixerTrackChannel::MixerTrackChannel(QTreeWidgetItem* treeWidgetItem, MixerTrackItem* mixerTrackItem) :
+      treeWidgetItem(treeWidgetItem), mixerTrackItem(mixerTrackItem)
       {
       setupUi(this);
       setupAdditionalUi();
@@ -51,8 +51,13 @@ void MixerTrackChannel::setupSlotsAndSignals()
       connect(muteButton,     SIGNAL(toggled(bool)),        SLOT(stripMuteToggled(bool)));
       connect(soloButton,     SIGNAL(toggled(bool)),        SLOT(stripSoloToggled(bool)));
       connect(volumeSlider,   SIGNAL(valueChanged(int)),    SLOT(stripVolumeSliderMoved(int)));
+      connect(volumeSlider,   SIGNAL(sliderPressed()),      SLOT(takeSelection()));
       }
 
+void MixerTrackChannel::takeSelection()
+      {
+      treeWidgetItem->treeWidget()->setCurrentItem(treeWidgetItem);
+      }
 
 void MixerTrackChannel::setupAdditionalUi()
       {
@@ -107,18 +112,21 @@ void MixerTrackChannel::stripVolumeSliderMoved(int value)
       {
       mixerTrackItem->setVolume(value);
       volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(value)));
+      takeSelection();
       }
 
       
 void MixerTrackChannel::stripSoloToggled(bool val)
       {
       mixerTrackItem->setSolo(val);
+      takeSelection();
       }
 
       
 void MixerTrackChannel::stripMuteToggled(bool val)
       {
       mixerTrackItem->setMute(val);
+      takeSelection();
       }
 
 }

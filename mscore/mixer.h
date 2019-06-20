@@ -94,7 +94,6 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       QGridLayout* mutePerVoiceGrid;
       QList<QPushButton*> voiceButtons;
 
-      MixerTrackChannel* mixerRowWidget(MixerTrackItem* mixerTrackItem);
       void updateDetails(MixerTrackItem*);
       void updatePatch(MixerTrackItem* mixerTrackItem);
       void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
@@ -105,7 +104,8 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void updateName();
       void updateMidiChannel();
 
-      void updateTreeSelection();
+      void updateTreeSelection();                     // go to first item OR disable mixer
+
 
       void disableMixer();
 
