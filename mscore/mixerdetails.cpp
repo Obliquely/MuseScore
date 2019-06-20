@@ -224,8 +224,9 @@ void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
 void Mixer::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
       {
        if (mutePerVoiceHolder) {
-       mutePerVoiceHolder->deleteLater();
-       mutePerVoiceHolder = nullptr;
+            // deleteLater() deletes object after the current event loop completes
+             mutePerVoiceHolder->deleteLater();
+             mutePerVoiceHolder = nullptr;
        }
 
       Part* part = mixerTrackItem->part();

@@ -69,7 +69,7 @@ char userRangeToReverb(double v);
       Might have something to do with PARTS etc.
  */
 
-class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
+class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, public ChannelListener
       {
       Q_OBJECT
 
@@ -90,7 +90,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup
       void setupSlotsAndSignals();
 
       // imported from mixerdetails
-      QWidget* mutePerVoiceHolder;
+      QWidget* mutePerVoiceHolder = nullptr;
       QGridLayout* mutePerVoiceGrid;
       QList<QPushButton*> voiceButtons;
 

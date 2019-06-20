@@ -27,7 +27,10 @@
 #include "libmscore/instrument.h"
 
 // obq-note - re-purposing this for thw new mixer design
-
+// This is the Widget that is included in the TreeView
+// It shows volume and mute
+// ChannelListener means it can receive propertyChanged signals
+// How / when does it register for these?
 namespace Ms {
 
 class MidiMapping;
