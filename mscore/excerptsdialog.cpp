@@ -142,12 +142,22 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
       int n = score->excerpts().size();
       if (n > 0)
             excerptList->setCurrentRow(0);
+      disableEditGroupIfRequired();
       moveDownButton->setEnabled(n > 1);
       moveUpButton->setEnabled(false);
       bool flag = excerptList->currentItem() != 0;
       deleteButton->setEnabled(flag);
       }
 
+//
+// disableEditGroupIfRequired
+//
+      
+void ExcerptsDialog::disableEditGroupIfRequired()
+      {
+      editGroup->setEnabled(excerptList->count() != 0);
+      }
+      
 //---------------------------------------------------------
 //   startExcerptsDialog
 //---------------------------------------------------------
@@ -188,6 +198,7 @@ void ExcerptsDialog::newClicked()
                         eii->excerpt()->setTitle(eii->text());
                   }
             }
+      disableEditGroupIfRequired();
       }
 
 //---------------------------------------------------------
@@ -206,6 +217,7 @@ void ExcerptsDialog::newAllClicked()
             excerptList->selectionModel()->clearSelection();
             excerptList->setCurrentItem(ei, QItemSelectionModel::SelectCurrent);
             }
+      disableEditGroupIfRequired();
       }
 
 //---------------------------------------------------------
@@ -219,6 +231,7 @@ void ExcerptsDialog::deleteClicked()
             return;
 
       delete cur;
+      disableEditGroupIfRequired();
       }
 
 //---------------------------------------------------------

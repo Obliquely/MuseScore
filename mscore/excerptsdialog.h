@@ -113,6 +113,7 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       void doubleClickedInstrument(QTreeWidgetItem*);
       void addButtonClicked();
       void removeButtonClicked();
+      void disableEditGroupIfRequired();
 
    public:
       ExcerptsDialog(MasterScore*, QWidget* parent = 0);
