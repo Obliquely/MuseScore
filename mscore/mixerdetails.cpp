@@ -325,61 +325,109 @@ void Mixer::partNameChanged()
       }
 */
 
-//---------------------------------------------------------
-//   propertyChanged
-//---------------------------------------------------------
+void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
+{
+      detailsMixerTrackItem = mixerTrackItem;
 
+      if (!detailsMixerTrackItem) {
+            disableDetails();
+            setNotifier(nullptr);
+            return;
+      }
+
+      // setNotifier(channel) zaps previous notifiers and then calls addListener(this)
+      // as a listener, we receive propertyChanged() calls when the channels is changed
+      // this ensures the details view is synced with changes in the tree view
+
+      setNotifier(detailsMixerTrackItem->chan());
+
+      enableDetails();
+
+      blockDetailsSignals();
+
+      updateVolume();
+      updatePan();
+      updateReverb();
+      updateChorus();
+      updateName();
+      updatePatch(mixerTrackItem);
+      updateMutePerVoice(mixerTrackItem);
+
+      unBlockDetailsSignals();
+}
+
+void Mixer::updateVolume()
+      {
+      Channel* channel = detailsMixerTrackItem->chan();
+      volumeSlider->setValue((int)channel->volume());
+      volumeSpinBox->setValue(channel->volume());
+      }
+
+void Mixer::updatePan()
+      {
+      Channel* channel = detailsMixerTrackItem->chan();
+      panSlider->setValue(channel->pan()-63);
+      panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan()-63)));
+      }
+
+
+void Mixer::updateReverb()
+      {
+      Channel* channel = detailsMixerTrackItem->chan();
+      reverbSlider->setValue((int)channel->reverb());
+      reverbSpinBox->setValue(channel->reverb());
+      }
+
+
+void Mixer::updateChorus()
+      {
+      Channel* channel = detailsMixerTrackItem->chan();
+      reverbSlider->setValue((int)channel->reverb());
+      reverbSpinBox->setValue(channel->reverb());
+      }
+
+
+void Mixer::updateName()
+      {
+      Part* part = detailsMixerTrackItem->part();
+      Channel* channel = detailsMixerTrackItem->chan();
+      QString partName = part->partName();
+      if (!channel->name().isEmpty())
+            channelLabel->setText(qApp->translate("InstrumentsXML", channel->name().toUtf8().data()));
+      else
+            channelLabel->setText("");
+      partNameLineEdit->setText(partName);
+      partNameLineEdit->setToolTip(partName);
+      }
+
+
+
+// propertyChanged - we're listening to changes to the channel
+// When they occur, this method is called so that we can update
+// the UI. Signals sent by the UI control are blocked during the
+// update to prevent getting caught in an update loop.
 void Mixer::propertyChanged(Channel::Prop property)
       {
       if (!detailsMixerTrackItem)
             return;
 
-      MidiMapping* _midiMap = detailsMixerTrackItem->midiMap();
-      Channel* chan = _midiMap->articulation();
+      blockDetailsSignals();
 
       switch (property) {
             case Channel::Prop::VOLUME: {
-                  volumeSlider->blockSignals(true);
-                  volumeSpinBox->blockSignals(true);
-
-                  volumeSlider->setValue((int)chan->volume());
-                  volumeSpinBox->setValue(chan->volume());
-
-                  volumeSlider->blockSignals(false);
-                  volumeSpinBox->blockSignals(false);
+                  updateVolume();
                   break;
                   }
             case Channel::Prop::PAN: {
-                  panSlider->blockSignals(true);
-                  panSpinBox->blockSignals(true);
-
-                  panSlider->setValue((int)chan->pan());
-                  panSpinBox->setValue(chan->pan());
-
-                  panSlider->blockSignals(false);
-                  panSpinBox->blockSignals(false);
+                  updatePan();
                   break;
                   }
             case Channel::Prop::CHORUS: {
-                  chorusSlider->blockSignals(true);
-                  chorusSpinBox->blockSignals(true);
-
-                  chorusSlider->setValue((int)chan->chorus());
-                  chorusSpinBox->setValue(chan->chorus());
-
-                  chorusSlider->blockSignals(false);
-                  chorusSpinBox->blockSignals(false);
+                  updateChorus();
                   break;
                   }
             case Channel::Prop::REVERB: {
-                  reverbSlider->blockSignals(true);
-                  reverbSpinBox->blockSignals(true);
-
-                  reverbSlider->setValue((int)chan->reverb());
-                  reverbSpinBox->setValue(chan->reverb());
-
-                  reverbSlider->blockSignals(false);
-                  reverbSpinBox->blockSignals(false);
+                  updateReverb();
                   break;
                   }
             case Channel::Prop::COLOR: {
@@ -387,44 +435,46 @@ void Mixer::propertyChanged(Channel::Prop property)
                   break;
                   }
             case Channel::Prop::NAME: {
-                  partNameLineEdit->blockSignals(true);
-                  Part* part = detailsMixerTrackItem->part();
-                  QString partName = part->partName();
-                  partNameLineEdit->setText(partName);
-                  partNameLineEdit->blockSignals(false);
+                  updateName();
                   break;
                   }
             default:
                   break;
             }
+
+            unBlockDetailsSignals();
       }
 
-//---------------------------------------------------------
-//   volumeChanged
-//---------------------------------------------------------
 
+// volumeChanged - process signal from volumeSlider
 void Mixer::volumeChanged(double value)
       {
+      qDebug()<<"volumeChanged(double "<<value<<")";
       if (!detailsMixerTrackItem)
             return;
-
       detailsMixerTrackItem->setVolume(value);
       }
 
+// volumeChanged - process signal from volumeSpinBox
+void Mixer::volumeChanged(int value)
+{
+      qDebug()<<"volumeChanged(double "<<value<<")";
+      if (!detailsMixerTrackItem)
+            return;
+      detailsMixerTrackItem->setVolume(value);
+}
 
-//---------------------------------------------------------
-//   panChanged
-//---------------------------------------------------------
 
+
+// panChanged - process signal from panSlider
 void Mixer::panChanged(double value)
       {
       if (detailsMixerTrackItem)
             return;
-
       detailsMixerTrackItem->setPan(value);
       }
 
-
+// panChanged - process signal from panSpinBox
 void Mixer::panChanged(int value)
 {
       if (!detailsMixerTrackItem)

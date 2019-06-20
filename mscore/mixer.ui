@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>795</width>
+    <width>796</width>
     <height>468</height>
    </rect>
   </property>
@@ -100,10 +100,10 @@
            <number>0</number>
           </property>
           <property name="minimum">
-           <double>0.000000000000000</double>
+           <double>-63.000000000000000</double>
           </property>
           <property name="maximum">
-           <double>127.000000000000000</double>
+           <double>64.000000000000000</double>
           </property>
          </widget>
         </item>
@@ -205,10 +205,10 @@
            <string>Pan</string>
           </property>
           <property name="minimum">
-           <number>0</number>
+           <number>-63</number>
           </property>
           <property name="maximum">
-           <number>127</number>
+           <number>63</number>
           </property>
           <property name="pageStep">
            <number>16</number>

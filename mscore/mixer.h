@@ -98,6 +98,12 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void updateDetails(MixerTrackItem*);
       void updatePatch(MixerTrackItem* mixerTrackItem);
       void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
+      void updateVolume();
+      void updatePan();
+      void updateReverb();
+      void updateChorus();
+      void updateName();
+
       void updateTreeSelection();
 
       void disableMixer();
@@ -124,6 +130,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void partNameChanged();
       // void trackColorChanged(QColor);
       void volumeChanged(double);
+      void volumeChanged(int);
       void chorusChanged(double);
       void reverbChanged(double);
       void drumkitToggled(bool);

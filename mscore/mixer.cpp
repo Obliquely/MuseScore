@@ -100,7 +100,7 @@ void Mixer::setupSlotsAndSignals()
 
       connect(partNameLineEdit,     SIGNAL(editingFinished()),    SLOT(partNameChanged()));
       //connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),  SLOT(trackColorChanged(QColor)));
-      connect(volumeSlider,         SIGNAL(valueChanged),         SLOT(volumeChanged));
+      connect(volumeSlider,         SIGNAL(valueChanged(int)),    SLOT(volumeChanged(int)));
       connect(volumeSpinBox,        SIGNAL(valueChanged(double)), SLOT(volumeChanged(double)));
       connect(chorusSlider,         SIGNAL(valueChanged(int)),    SLOT(chorusChanged()));
       connect(chorusSpinBox,        SIGNAL(valueChanged(double)), SLOT(chorusChanged(double)));
@@ -266,39 +266,6 @@ void Mixer::setScore(Score* score)
 MixerTrackChannel* Mixer::mixerRowWidget(MixerTrackItem* mixerTrackItem)
       {
       return new MixerTrackChannel(this, mixerTrackItem);
-      }
-
-
-
-void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
-      {
-      detailsMixerTrackItem = mixerTrackItem;
-      if (!detailsMixerTrackItem) {
-                  disableDetails();
-                  return;
-            }
-
-      enableDetails();
-      blockDetailsSignals();
-      Part* part = mixerTrackItem->part();
-      Channel* channel = mixerTrackItem->chan();
-
-      QString partName = part->partName();
-      if (!channel->name().isEmpty())
-            channelLabel->setText(qApp->translate("InstrumentsXML", channel->name().toUtf8().data()));
-      else
-            channelLabel->setText("");
-      partNameLineEdit->setText(partName);
-      partNameLineEdit->setToolTip(partName);
-
-      panSlider->setValue(channel->pan()-64); //TODO: this adjustment shoudl go elsewhere...
-      panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan())));
-      panSlider->setMaximum(63);
-      panSlider->setMinimum(-63);
-
-      updatePatch(mixerTrackItem);
-      updateMutePerVoice(mixerTrackItem);
-      unBlockDetailsSignals();
       }
 
 void Mixer::disableMixer()
