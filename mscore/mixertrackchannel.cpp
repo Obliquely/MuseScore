@@ -48,14 +48,15 @@ MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrack
 
 void MixerTrackChannel::setupSlotsAndSignals()
       {
-      connect(muteButton,     SIGNAL(toggled(bool)),        SLOT(updateMute(bool)));
-      connect(soloButton,     SIGNAL(toggled(bool)),        SLOT(updateSolo(bool)));
-      connect(volumeSlider,   SIGNAL(valueChanged(int)),    SLOT(volumeChanged(int)));
+      connect(muteButton,     SIGNAL(toggled(bool)),        SLOT(stripMuteToggled(bool)));
+      connect(soloButton,     SIGNAL(toggled(bool)),        SLOT(stripSoloToggled(bool)));
+      connect(volumeSlider,   SIGNAL(valueChanged(int)),    SLOT(stripVolumeSliderMoved(int)));
       }
 
 
 void MixerTrackChannel::setupAdditionalUi()
       {
+      //TODO: a more responsible approach to styling that's also light/dark theme respectful
       QString basicButton = "QToolButton{background: white; color: black; font-weight: bold; border: 1px solid gray;}";
       QString colorTemplate = "QToolButton:checked, QToolButton:pressed { color: white; background: %1;}";
       muteButton->setStyleSheet(basicButton + colorTemplate.arg("red"));
@@ -69,12 +70,13 @@ void MixerTrackChannel::update()
       const QSignalBlocker blockMuteSignals(muteButton);
       const QSignalBlocker blockSoloSignals(soloButton);
 
-      Channel* channel = mixerTrackItem->chan();
-      volumeSlider->setValue(channel->volume());
-      volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(channel->volume())));
-      muteButton->setChecked(channel->mute());
-      soloButton->setChecked(channel->solo());
+      volumeSlider->setValue(mixerTrackItem->getVolume());
+      volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(mixerTrackItem->getVolume())));
+      
+      muteButton->setChecked(mixerTrackItem->getMute());
+      soloButton->setChecked(mixerTrackItem->getSolo());
 
+      Channel* channel = mixerTrackItem->chan();
       MidiPatch* midiPatch = synti->getPatchInfo(channel->synti(), channel->bank(), channel->program());
       Part* part = mixerTrackItem->part();
       Instrument* instrument = mixerTrackItem->instrument();
@@ -95,30 +97,27 @@ void MixerTrackChannel::update()
       }
 
 
-
 void MixerTrackChannel::propertyChanged(Channel::Prop property)
       {
       update();
       }
 
-void MixerTrackChannel::volumeChanged(int value)
+      
+void MixerTrackChannel::stripVolumeSliderMoved(int value)
       {
-      qDebug()<<"MixerTrackChannel::volumeChanged("<<value<<")";
       mixerTrackItem->setVolume(value);
       volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(value)));
       }
 
-
-void MixerTrackChannel::updateSolo(bool val)
+      
+void MixerTrackChannel::stripSoloToggled(bool val)
       {
-      qDebug()<<"MixerTrackChannel::updateSolo("<<val<<")";
       mixerTrackItem->setSolo(val);
       }
 
-
-void MixerTrackChannel::updateMute(bool val)
+      
+void MixerTrackChannel::stripMuteToggled(bool val)
       {
-      qDebug()<<"MixerTrackChannel::updateMute("<<val<<")";
       mixerTrackItem->setMute(val);
       }
 

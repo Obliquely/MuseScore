@@ -122,19 +122,21 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void updateTracks();
       void midiPrefsChanged(bool showMidiControls);
       void masterVolumeChanged(double val);
-      void panChanged(int);
-      void panChanged(double);
-      void patchChanged(int);
-      void synthGainChanged(float val);
+      
       void currentItemChanged(); // obq
+
+      void detailsPatchComboEdited(int);
+      void synthGainChanged(float val);
       void partNameChanged();
       // void trackColorChanged(QColor);
-      void volumeChanged(double);
-      void volumeChanged(int);
-      void chorusChanged(double);
-      void reverbChanged(double);
-      void drumkitToggled(bool);
-      void midiChannelChanged(int);
+      void detailsVolumeSpinBoxEdited(double);
+      void detailsVolumeSliderMoved(int);
+      void detailsPanSliderMoved(int);
+      void detailsPanSpinBoxEdited(double);
+      void detailsChorusSliderMoved(double);
+      void detailsReverbSliderMoved(double);
+      void detailsDrumsetCheckboxToggled(bool);
+      void detailsMidiChannelOrPortEdited(int);
 
    signals:
       void closed(bool);

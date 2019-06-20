@@ -39,7 +39,7 @@ class MixerTrackPart : public QWidget, public Ui::MixerTrackPart, public Channel
       {
       Q_OBJECT
 
-      MixerTrackItem* _mti;
+      MixerTrackItem* mixerTrackItem;
 
       bool _selected;
       static const QString unselStyleDark;
@@ -58,8 +58,8 @@ signals:
 public slots:
       void updateSolo(bool);
       void updateMute(bool);
-      void volumeChanged(double);
-      void panChanged(double);
+      void stripVolumeSliderMoved(double);
+      void stripPanSliderMoved(double);
       void controlSelected();
       void applyStyle();
 

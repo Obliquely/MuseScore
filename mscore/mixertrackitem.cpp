@@ -24,10 +24,24 @@
 #include "seq.h"
 
 /* obq-note
-      pretty important class for the mixer. represents either a PART or a sub-part (i.e. a channel)
-
-      it's very much MODEL and has no reference to UI / Views - so in redesign this class can (almost
-      certainly) be kept. BUT IT DOES need a refactor. It's horrible just now.
+ MixerTrackItem objects
+ 1) represent a channel that is one the sound source for an instrument that
+ in turn belongs to a part. Provides a uniform / clean interface for interacting with
+ the sound source in the mixer.
+ 
+ 2) represents a collection of channels that form the variant sound sources for an
+ instrument. Implements rules whereby changes to the top level (the collection level)
+ are trickled down to the sub-levels (indidvidual channels).
+ 
+ TODO: clarify my understanding - the enum cases are {PART, CHANNEL}, but, I think, that's
+ at odds with how the terminology is used elsewhere. The TrackTypes are, I think, better
+ described as:
+ - Instrument (one or more channels as a sound source)
+ - Channel (a sound source that belongs to an instrument)
+ 
+ The set methods, e.g. setVolume, setReverb etc. apply changes to the underlying channel.
+ When thes changes are applied to the underlying channel, any listeners to that channel
+ are notified by a propertyChanged() call.
  */
 
 namespace Ms {
@@ -65,14 +79,10 @@ Channel* MixerTrackItem::playbackChannel(const Channel* channel)
 
 int MixerTrackItem::color()
       {
-      return _trackType ==TrackType::PART ? _part->color()
-                                                : _chan->color();
+      return _trackType ==TrackType::PART ? _part->color() : _chan->color();
       }
 
-//---------------------------------------------------------
-//   setVolume
-//---------------------------------------------------------
-
+      
 char MixerTrackItem::getVolume()
       {
       return chan()->volume();
@@ -93,7 +103,9 @@ bool MixerTrackItem::getSolo()
       return chan()->solo();
       }
 
-
+// MixerTrackItem settters - when a change is made to underlying channel a propertyChange()
+// will be sent to any registered listeners
+      
 void MixerTrackItem::setVolume(char value)
       {
 //      char v = (char)qBound(0, (int)(value * 128.0 / 100.0), 127);
@@ -143,6 +155,8 @@ void MixerTrackItem::setPan(char value)
       {
 //      char v = (char)qBound(0, (int)((value + 180.0) / 360.0 * 128.0), 127);
 
+      qDebug()<<"MixerTrackItem::setPan("<<value<<")";
+      
       if (_trackType == TrackType::PART) {
             const InstrumentList* il = _part->instruments();
             for (auto it = il->begin(); it != il->end(); ++it) {

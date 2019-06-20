@@ -300,9 +300,10 @@ void Mixer::updateVolume()
 
 void Mixer::updatePan()
       {
-      Channel* channel = detailsMixerTrackItem->chan();
-      panSlider->setValue(channel->pan()-63);
-      panSlider->setToolTip(tr("Pan: %1").arg(QString::number(channel->pan()-63)));
+      int pan = detailsMixerTrackItem->getPan()-63;
+      panSlider->setValue(pan);
+      panSlider->setToolTip(tr("Pan: %1").arg(QString::number(pan)));
+      panSpinBox->setValue(pan);
       }
 
 
@@ -388,7 +389,7 @@ void Mixer::propertyChanged(Channel::Prop property)
 
 
 // volumeChanged - process signal from volumeSlider
-void Mixer::volumeChanged(double value)
+void Mixer::detailsVolumeSpinBoxEdited(double value)
       {
       qDebug()<<"volumeChanged(double "<<value<<")";
       if (!detailsMixerTrackItem)
@@ -397,7 +398,7 @@ void Mixer::volumeChanged(double value)
       }
 
 // volumeChanged - process signal from volumeSpinBox
-void Mixer::volumeChanged(int value)
+void Mixer::detailsVolumeSliderMoved(int value)
 {
       qDebug()<<"volumeChanged(double "<<value<<")";
       if (!detailsMixerTrackItem)
@@ -407,24 +408,27 @@ void Mixer::volumeChanged(int value)
 
 
 // panChanged - process signal from panSlider
-void Mixer::panChanged(double value)
+void Mixer::detailsPanSpinBoxEdited(double value)
       {
-      if (detailsMixerTrackItem)
+      if (!detailsMixerTrackItem)
             return;
       detailsMixerTrackItem->setPan(value + 63);
       }
 
 // panChanged - process signal from panSpinBox
-void Mixer::panChanged(int value)
+void Mixer::detailsPanSliderMoved(int value)
 {
+      // is this required? if mixerDetails is disabled can this ever be called
       if (!detailsMixerTrackItem)
             return;
+      // note: a guaranteed side effect is that propertyChanged() will
+      // be called on this object - I think that's true?!
       detailsMixerTrackItem->setPan(value + 63);
 }
 
 // reverbChanged - process signal from reverbSlider
 
-void Mixer::reverbChanged(double v)
+void Mixer::detailsReverbSliderMoved(double v)
       {
       if (!detailsMixerTrackItem)
             return;
@@ -432,7 +436,7 @@ void Mixer::reverbChanged(double v)
       }
 
 //  chorusChanged - process signal from chorusSlider
-void Mixer::chorusChanged(double v)
+void Mixer::detailsChorusSliderMoved(double v)
       {
       if (!detailsMixerTrackItem)
             return;
@@ -440,7 +444,7 @@ void Mixer::chorusChanged(double v)
       }
 
 //  patchChanged - process signal from patchCombo
-void Mixer::patchChanged(int n)
+void Mixer::detailsPatchComboEdited(int n)
 {
       qDebug()<<"Mixer::patchChanged('"<<n<<")";
       if (!detailsMixerTrackItem)
@@ -465,7 +469,7 @@ void Mixer::patchChanged(int n)
 }
 
 // drumkitToggled - process signal from drumkitCheck
-void Mixer::drumkitToggled(bool val)
+void Mixer::detailsDrumsetCheckboxToggled(bool val)
       {
       if (!detailsMixerTrackItem)
             return;
@@ -506,7 +510,7 @@ void Mixer::drumkitToggled(bool val)
 
 // midiChannelChanged - process signal from either portSpinBox
 // or channelSpinBox, i.e. MIDI port or channel change
-void Mixer::midiChannelChanged(int)
+void Mixer::detailsMidiChannelOrPortEdited(int)
       {
       if (!detailsMixerTrackItem)
             return;

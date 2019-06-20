@@ -78,13 +78,13 @@ const QString MixerTrackPart::selStyleDark = "#controlWidget {"
 //   MixerTrack
 //---------------------------------------------------------
 
-MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItem* mti, bool expanded) :
-      QWidget(parent), _mti(mti), _selected(false), _group(0)
+MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItem* mixerTrackItem, bool expanded) :
+      QWidget(parent), mixerTrackItem(mixerTrackItem), _selected(false), _group(0)
       {
       setupUi(this);
 
       int numChannels = 0;
-      Part* part = _mti->part();
+      Part* part = mixerTrackItem->part();
       const InstrumentList* il = part->instruments();
       for (auto it = il->begin(); it != il->end(); ++it) {
             Instrument* instr = it->second;
@@ -101,7 +101,7 @@ MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItem* mti, bool expand
 
       //set up rest
 
-      Channel* chan = _mti->chan();
+      Channel* chan = mixerTrackItem->chan();
 
       soloBn->setChecked(chan->solo());
       muteBn->setChecked(chan->mute());
@@ -123,8 +123,8 @@ MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItem* mti, bool expand
       panSlider->setMaxValue(127);
       panSlider->setMinValue(0);
 
-      connect(volumeSlider, SIGNAL(valueChanged(double)),      SLOT(volumeChanged(double)));
-      connect(panSlider,    SIGNAL(valueChanged(double, int)), SLOT(panChanged(double)));
+      connect(volumeSlider, SIGNAL(valueChanged(double)),      SLOT(stripVolumeSliderMoved(double)));
+      connect(panSlider,    SIGNAL(valueChanged(double, int)), SLOT(stripPanSliderMoved(double)));
 
       connect(volumeSlider, SIGNAL(sliderPressed()),    SLOT(controlSelected()));
       connect(panSlider,    SIGNAL(sliderPressed(int)), SLOT(controlSelected()));
@@ -153,8 +153,8 @@ void MixerTrackPart::applyStyle()
 
 void MixerTrackPart::updateNameLabel()
       {
-      Part* part = _mti->part();
-      Channel* chan = _mti->chan();
+      Part* part = mixerTrackItem->part();
+      Channel* chan = mixerTrackItem->chan();
       trackLabel->setText(part->partName());
 
       MidiPatch* mp = synti->getPatchInfo(chan->synti(), chan->bank(), chan->program());
@@ -201,7 +201,7 @@ void MixerTrackPart::updateNameLabel()
 
 void MixerTrackPart::propertyChanged(Channel::Prop property)
       {
-      Channel* chan = _mti->chan();
+      Channel* chan = mixerTrackItem->chan();
 
       switch (property) {
             case Channel::Prop::VOLUME: {
@@ -243,9 +243,9 @@ void MixerTrackPart::propertyChanged(Channel::Prop property)
 //   volumeChanged
 //---------------------------------------------------------
 
-void MixerTrackPart::volumeChanged(double value)
+void MixerTrackPart::stripVolumeSliderMoved(double value)
       {
-      _mti->setVolume(value);
+      mixerTrackItem->setVolume(value);
       volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(value)));
       }
 
@@ -253,9 +253,9 @@ void MixerTrackPart::volumeChanged(double value)
 //   panChanged
 //---------------------------------------------------------
 
-void MixerTrackPart::panChanged(double value)
+void MixerTrackPart::stripPanSliderMoved(double value)
       {
-      _mti->setPan(value);
+      mixerTrackItem->setPan(value);
       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(value)));
       }
 
@@ -265,7 +265,7 @@ void MixerTrackPart::panChanged(double value)
 
 void MixerTrackPart::updateSolo(bool val)
       {
-      _mti->setSolo(val);
+      mixerTrackItem->setSolo(val);
       }
 
 //---------------------------------------------------------
@@ -274,7 +274,7 @@ void MixerTrackPart::updateSolo(bool val)
 
 void MixerTrackPart::updateMute(bool val)
       {
-      _mti->setMute(val);
+      mixerTrackItem->setMute(val);
       }
 
 //---------------------------------------------------------

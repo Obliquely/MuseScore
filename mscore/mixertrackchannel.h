@@ -26,11 +26,15 @@
 #include "mixertrackitem.h"
 #include "libmscore/instrument.h"
 
-// obq-note - re-purposing this for thw new mixer design
+// obq-note
+// This class has been re-purposed for the new mixer design.
 // This is the Widget that is included in the TreeView
-// It shows volume and mute
-// ChannelListener means it can receive propertyChanged signals
-// How / when does it register for these?
+// It shows volume, mute, and solo controls.
+//
+// It is a ChannelListener for the channel represented by the
+// mixerTrackItem. So when the underlying channel changes this
+// object will receive a propertyChanged call.
+
 namespace Ms {
 
 class MidiMapping;
@@ -51,16 +55,16 @@ class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public C
       void update();
 
 public slots:
-      void updateSolo(bool);
-      void updateMute(bool);
-      void volumeChanged(int);
+      void stripMuteToggled(bool);
+      void stripSoloToggled(bool);
+      void stripVolumeSliderMoved(int);
 
 protected:
       void propertyChanged(Channel::Prop property) override;      // ChannelListener method
             
 public:
       explicit MixerTrackChannel(QWidget *parent, MixerTrackItem* mixerTrackItem);
-      MixerTrackItem* getMixerTrackItem() { return mixerTrackItem; }    //TODO: obq-note is this used?
+      MixerTrackItem* getMixerTrackItem() { return mixerTrackItem; }
       };
 }
 

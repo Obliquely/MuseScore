@@ -91,24 +91,25 @@ Mixer::Mixer(QWidget* parent)
 
 void Mixer::setupSlotsAndSignals()
       {
-      connect(panSlider,            SIGNAL(valueChanged(int)),    SLOT(panChanged(int)));
-      connect(panSpinBox,           SIGNAL(valueChanged(double)), SLOT(panChanged(double)));
+    
       connect(mixerTreeWidget,      SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
                                                                   SLOT(currentItemChanged()));
       connect(synti,                SIGNAL(gainChanged(float)),   SLOT(synthGainChanged(float)));
-      connect(patchCombo,           SIGNAL(activated(int)),       SLOT(patchChanged(int)));
+      connect(patchCombo,           SIGNAL(activated(int)),       SLOT(detailsPatchComboEdited(int)));
 
       connect(partNameLineEdit,     SIGNAL(editingFinished()),    SLOT(partNameChanged()));
       //connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),  SLOT(trackColorChanged(QColor)));
       connect(volumeSlider,         SIGNAL(valueChanged(int)),    SLOT(volumeChanged(int)));
       connect(volumeSpinBox,        SIGNAL(valueChanged(double)), SLOT(volumeChanged(double)));
-      connect(chorusSlider,         SIGNAL(valueChanged(int)),    SLOT(chorusChanged()));
-      connect(chorusSpinBox,        SIGNAL(valueChanged(double)), SLOT(chorusChanged(double)));
-      connect(reverbSlider,         SIGNAL(valueChanged(int)),    SLOT(reverbChanged()));
-      connect(reverbSpinBox,        SIGNAL(valueChanged(double)), SLOT(reverbChanged(double)));
-      connect(portSpinBox,          SIGNAL(valueChanged(int)),    SLOT(midiChannelChanged(int)));
-      connect(channelSpinBox,       SIGNAL(valueChanged(int)),    SLOT(midiChannelChanged(int)));
-      connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(drumkitToggled(bool)));
+      connect(panSlider,            SIGNAL(valueChanged(int)),    SLOT(detailsPanSliderMoved(int)));
+      connect(panSpinBox,           SIGNAL(valueChanged(double)), SLOT(detailsPanSpinBoxEdited(double)));
+      connect(chorusSlider,         SIGNAL(valueChanged(int)),    SLOT(detailsChorusSliderMoved()));
+      connect(chorusSpinBox,        SIGNAL(valueChanged(double)), SLOT(chorusChanged(double)));//TODO: spinbox chorus
+      connect(reverbSlider,         SIGNAL(valueChanged(int)),    SLOT(detailsReverbSliderMoved()));
+      connect(reverbSpinBox,        SIGNAL(valueChanged(double)), SLOT(reverbChanged(double)));//TODO:spinbox reverb
+      connect(portSpinBox,          SIGNAL(valueChanged(int)),    SLOT(detailsMidiChannelOrPortEdited(int)));
+      connect(channelSpinBox,       SIGNAL(valueChanged(int)),    SLOT(detailsMidiChannelOrPortEdited(int)));
+      connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(detailsDrumsetCheckboxToggled(bool)));
       }
 
 
@@ -401,9 +402,16 @@ void Mixer::midiPrefsChanged(bool)
 
 void Mixer::currentItemChanged()
       {
-      MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1));
-      if (itemWidget)
-            updateDetails(itemWidget->getMixerTrackItem());
+      QWidget* treeItemWidget = mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1);
+      
+      if (!treeItemWidget) {
+            resetDetails();
+            enableDetails(false);
+            return;
+            }
+
+      MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(treeItemWidget);
+      updateDetails(itemWidget->getMixerTrackItem());
       }
 
 
