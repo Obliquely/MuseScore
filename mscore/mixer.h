@@ -103,15 +103,15 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void updateReverb();
       void updateChorus();
       void updateName();
+      void updateMidiChannel();
 
       void updateTreeSelection();
 
       void disableMixer();
 
-      void disableDetails();
-      void enableDetails();
-      void blockDetailsSignals();
-      void unBlockDetailsSignals();
+      void enableDetails(bool);
+      void resetDetails();          // default values (for when not detail selected)
+      void blockDetailsSignals(bool);
 
       MixerTrackItem* mixerTrackItemFromPart(Part* part);
 

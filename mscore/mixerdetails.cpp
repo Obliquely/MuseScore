@@ -34,17 +34,70 @@
 
 namespace Ms {
 
-/*
- void MixerDetails::setTrack(MixerTrackItemPtr track)
+void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       {
-      _mti = track;
-      setNotifier(_mti ? _mti->chan() : nullptr);
-      updateFromTrack();
+      detailsMixerTrackItem = mixerTrackItem;
+
+      if (!detailsMixerTrackItem) {
+            resetDetails();         // return controls to default / unset state
+            enableDetails(false);   // disable controls
+            setNotifier(nullptr);
+            return;
+            }
+
+      // setNotifier(channel) zaps previous notifiers and then calls addListener(this).
+      // As a listener, this object receives propertyChanged() calls when the channel is
+      // changed. This ensures the details view is synced with changes in the tree view.
+
+      setNotifier(detailsMixerTrackItem->chan());
+      enableDetails(true);
+
+      blockDetailsSignals(true);
+
+      updateVolume();
+      updatePan();
+      updateReverb();
+      updateChorus();
+      updateName();
+      updateMidiChannel();
+      updatePatch(mixerTrackItem);
+      updateMutePerVoice(mixerTrackItem);
+
+      blockDetailsSignals(false);
       }
-*/
 
 
-void Mixer::disableDetails()
+void Mixer::enableDetails(bool enable)
+      {
+      drumkitCheck->setEnabled(enable);
+      patchCombo->setEnabled(enable);
+      partNameLineEdit->setEnabled(enable);
+      volumeSlider->setEnabled(enable);
+      volumeSpinBox->setEnabled(enable);
+      panSlider->setEnabled(enable);
+      panSpinBox->setEnabled(enable);
+      reverbSlider->setEnabled(enable);
+      reverbSpinBox->setEnabled(enable);
+      chorusSlider->setEnabled(enable);
+      chorusSpinBox->setEnabled(enable);
+      portSpinBox->setEnabled(enable);
+      channelSpinBox->setEnabled(enable);
+      //trackColorLabel->setEnabled(enable);
+
+      // is this meaningful to disable the labels or just redundant?
+      labelName->setEnabled(enable);
+      labelChannel->setEnabled(enable);
+      labelChannel_2->setEnabled(enable);
+      labelChorus->setEnabled(enable);
+      labelPan->setEnabled(enable);
+      labelPatch->setEnabled(enable);
+      labelPort->setEnabled(enable);
+      labelReverb->setEnabled(enable);
+      labelVolume->setEnabled(enable);
+      }
+
+      
+void Mixer::resetDetails()
       {
       drumkitCheck->setChecked(false);
       patchCombo->clear();
@@ -61,115 +114,27 @@ void Mixer::disableDetails()
       portSpinBox->setValue(0);
       channelSpinBox->setValue(0);
       //trackColorLabel->setColor(QColor());
-
-      drumkitCheck->setEnabled(false);
-      patchCombo->setEnabled(false);
-      partNameLineEdit->setEnabled(false);
-      volumeSlider->setEnabled(false);
-      volumeSpinBox->setEnabled(false);
-      panSlider->setEnabled(false);
-      panSpinBox->setEnabled(false);
-      reverbSlider->setEnabled(false);
-      reverbSpinBox->setEnabled(false);
-      chorusSlider->setEnabled(false);
-      chorusSpinBox->setEnabled(false);
-      portSpinBox->setEnabled(false);
-      channelSpinBox->setEnabled(false);
-      //trackColorLabel->setEnabled(false);
-
-      labelName->setEnabled(false);
-      labelChannel->setEnabled(false);
-      labelChannel_2->setEnabled(false);
-      labelChorus->setEnabled(false);
-      labelPan->setEnabled(false);
-      labelPatch->setEnabled(false);
-      labelPort->setEnabled(false);
-      labelReverb->setEnabled(false);
-      labelVolume->setEnabled(false);
       }
-
-void Mixer::enableDetails()
-      {
-      drumkitCheck->setEnabled(true);
-      patchCombo->setEnabled(true);
-      partNameLineEdit->setEnabled(true);
-      volumeSlider->setEnabled(true);
-      volumeSpinBox->setEnabled(true);
-      panSlider->setEnabled(true);
-      panSpinBox->setEnabled(true);
-      reverbSlider->setEnabled(true);
-      reverbSpinBox->setEnabled(true);
-      chorusSlider->setEnabled(true);
-      chorusSpinBox->setEnabled(true);
-      portSpinBox->setEnabled(true);
-      channelSpinBox->setEnabled(true);
-      //trackColorLabel->setEnabled(true);
-
-      labelName->setEnabled(true);
-      labelChannel->setEnabled(true);
-      labelChannel_2->setEnabled(true);
-      labelChorus->setEnabled(true);
-      labelPan->setEnabled(true);
-      labelPatch->setEnabled(true);
-      labelPort->setEnabled(true);
-      labelReverb->setEnabled(true);
-      labelVolume->setEnabled(true);
-
-      }
-
-
-//---------------------------------------------------------
-//   updateFromTrack
-//---------------------------------------------------------
-
-void Mixer::blockDetailsSignals()
-      {
-      //trackColorLabel->blockSignals(true);
-      volumeSlider->blockSignals(true);
-      volumeSpinBox->blockSignals(true);
-      panSlider->blockSignals(true);
-      panSpinBox->blockSignals(true);
-      reverbSlider->blockSignals(true);
-      reverbSpinBox->blockSignals(true);
-      chorusSlider->blockSignals(true);
-      chorusSpinBox->blockSignals(true);
-      portSpinBox->blockSignals(true);
-      channelSpinBox->blockSignals(true);
-      }
-
-void Mixer::unBlockDetailsSignals()
-      {
-      //trackColorLabel->blockSignals(false);
-      volumeSlider->blockSignals(false);
-      volumeSpinBox->blockSignals(false);
-      panSlider->blockSignals(false);
-      panSpinBox->blockSignals(false);
-      reverbSlider->blockSignals(false);
-      reverbSpinBox->blockSignals(false);
-      chorusSlider->blockSignals(false);
-      chorusSpinBox->blockSignals(false);
-
-      portSpinBox->blockSignals(false);
-      channelSpinBox->blockSignals(false);
-      }
-
-      /*
-      trackColorLabel->setColor(QColor(_mti->color() | 0xff000000));
-
-      volumeSlider->setValue((int)chan->volume());
-      volumeSpinBox->setValue(chan->volume());
-      panSlider->setValue((int)chan->pan());
-      panSpinBox->setValue(chan->pan());
-      reverbSlider->setValue((int)chan->reverb());
-      reverbSpinBox->setValue(chan->reverb());
-      chorusSlider->setValue((int)chan->chorus());
-      chorusSpinBox->setValue(chan->chorus());
-
-      portSpinBox->setValue(part->masterScore()->midiMapping(chan->channel())->port() + 1);
-      channelSpinBox->setValue(part->masterScore()->midiMapping(chan->channel())->channel() + 1);
-*/
 
       
+void Mixer::blockDetailsSignals(bool block)
+      {
+      //trackColorLabel->blockSignals(block);
+      volumeSlider->blockSignals(block);
+      volumeSpinBox->blockSignals(block);
+      panSlider->blockSignals(block);
+      panSpinBox->blockSignals(block);
+      reverbSlider->blockSignals(block);
+      reverbSpinBox->blockSignals(block);
+      chorusSlider->blockSignals(block);
+      chorusSpinBox->blockSignals(block);
+      portSpinBox->blockSignals(block);
+      channelSpinBox->blockSignals(block);
+      }
+
+// updatePatch - is there a missing case here - can the patch
+// be updated outwith the mixer - and if it is are we listening
+// for that change? - not clear that we are
 void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
       {
       Channel* channel = mixerTrackItem->chan();
@@ -177,12 +142,9 @@ void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
       
       //Check if drumkit
       const bool drum = midiMap->part()->instrument()->useDrumset();
-      drumkitCheck->blockSignals(true);
       drumkitCheck->setChecked(drum);
-      drumkitCheck->blockSignals(false);
       
       //Populate patch combo
-      patchCombo->blockSignals(true);
       patchCombo->clear();
       const auto& pl = synti->getPatchInfo();
       int patchIndex = 0;
@@ -217,8 +179,6 @@ void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
             }
       }
       patchCombo->setCurrentIndex(patchIndex);
-      
-      patchCombo->blockSignals(false);
       }
       
 void Mixer::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
@@ -324,37 +284,12 @@ void Mixer::partNameChanged()
       _mti->setColor(col.rgb());
       }
 */
+/*
+ trackColorLabel->setColor(QColor(_mti->color() | 0xff000000));
+ */
+       
 
-void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
-{
-      detailsMixerTrackItem = mixerTrackItem;
 
-      if (!detailsMixerTrackItem) {
-            disableDetails();
-            setNotifier(nullptr);
-            return;
-      }
-
-      // setNotifier(channel) zaps previous notifiers and then calls addListener(this)
-      // as a listener, we receive propertyChanged() calls when the channels is changed
-      // this ensures the details view is synced with changes in the tree view
-
-      setNotifier(detailsMixerTrackItem->chan());
-
-      enableDetails();
-
-      blockDetailsSignals();
-
-      updateVolume();
-      updatePan();
-      updateReverb();
-      updateChorus();
-      updateName();
-      updatePatch(mixerTrackItem);
-      updateMutePerVoice(mixerTrackItem);
-
-      unBlockDetailsSignals();
-}
 
 void Mixer::updateVolume()
       {
@@ -400,8 +335,14 @@ void Mixer::updateName()
       partNameLineEdit->setToolTip(partName);
       }
 
-
-
+void Mixer::updateMidiChannel()
+      {
+      Part* part = detailsMixerTrackItem->part();
+      Channel* channel = detailsMixerTrackItem->chan();
+      portSpinBox->setValue(part->masterScore()->midiMapping(channel->channel())->port() + 1);
+      channelSpinBox->setValue(part->masterScore()->midiMapping(channel->channel())->channel() + 1);
+      }
+      
 // propertyChanged - we're listening to changes to the channel
 // When they occur, this method is called so that we can update
 // the UI. Signals sent by the UI control are blocked during the
@@ -411,7 +352,7 @@ void Mixer::propertyChanged(Channel::Prop property)
       if (!detailsMixerTrackItem)
             return;
 
-      blockDetailsSignals();
+      blockDetailsSignals(true);
 
       switch (property) {
             case Channel::Prop::VOLUME: {
@@ -442,7 +383,7 @@ void Mixer::propertyChanged(Channel::Prop property)
                   break;
             }
 
-            unBlockDetailsSignals();
+            blockDetailsSignals(false);
       }
 
 
@@ -465,13 +406,12 @@ void Mixer::volumeChanged(int value)
 }
 
 
-
 // panChanged - process signal from panSlider
 void Mixer::panChanged(double value)
       {
       if (detailsMixerTrackItem)
             return;
-      detailsMixerTrackItem->setPan(value);
+      detailsMixerTrackItem->setPan(value + 63);
       }
 
 // panChanged - process signal from panSpinBox
@@ -479,43 +419,27 @@ void Mixer::panChanged(int value)
 {
       if (!detailsMixerTrackItem)
             return;
-      detailsMixerTrackItem->setPan(value);
+      detailsMixerTrackItem->setPan(value + 63);
 }
 
-
-
-
-
-
-//---------------------------------------------------------
-//   reverbChanged
-//---------------------------------------------------------
+// reverbChanged - process signal from reverbSlider
 
 void Mixer::reverbChanged(double v)
       {
       if (!detailsMixerTrackItem)
             return;
-
       detailsMixerTrackItem->setReverb(v);
       }
 
-//---------------------------------------------------------
-//   chorusChanged
-//---------------------------------------------------------
-
+//  chorusChanged - process signal from chorusSlider
 void Mixer::chorusChanged(double v)
       {
       if (!detailsMixerTrackItem)
             return;
-
       detailsMixerTrackItem->setChorus(v);
       }
 
-//---------------------------------------------------------
-//   patchChanged
-//---------------------------------------------------------
-
-
+//  patchChanged - process signal from patchCombo
 void Mixer::patchChanged(int n)
 {
       qDebug()<<"Mixer::patchChanged('"<<n<<")";
@@ -540,10 +464,7 @@ void Mixer::patchChanged(int n)
       }
 }
 
-//---------------------------------------------------------
-//   drumkitToggled
-//---------------------------------------------------------
-
+// drumkitToggled - process signal from drumkitCheck
 void Mixer::drumkitToggled(bool val)
       {
       if (!detailsMixerTrackItem)
@@ -551,7 +472,6 @@ void Mixer::drumkitToggled(bool val)
 
       Part* part = detailsMixerTrackItem->part();
       Channel* channel = detailsMixerTrackItem->chan();
-
 
       Instrument *instr;
       if (detailsMixerTrackItem->trackType() == MixerTrackItem::TrackType::CHANNEL)
@@ -579,14 +499,13 @@ void Mixer::drumkitToggled(bool val)
             score->setLayoutAll();
             score->endCmd();
             }
+      blockDetailsSignals(true);
       updatePatch(detailsMixerTrackItem);
+      blockDetailsSignals(false);
       }
 
-//---------------------------------------------------------
-//   midiChannelChanged
-//   handles MIDI port & channel change
-//---------------------------------------------------------
-
+// midiChannelChanged - process signal from either portSpinBox
+// or channelSpinBox, i.e. MIDI port or channel change
 void Mixer::midiChannelChanged(int)
       {
       if (!detailsMixerTrackItem)
