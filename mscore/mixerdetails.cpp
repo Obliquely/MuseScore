@@ -406,7 +406,7 @@ void MixerDetails::propertyChanged(Channel::Prop property)
 
 
 // volumeChanged - process signal from volumeSlider
-void MixerDetails::detailsVolumeSpinBoxEdited(double value)
+void MixerDetails::volumeSpinBoxEdited(double value)
       {
       qDebug()<<"volumeChanged(double "<<value<<")";
       if (!selectedMixerTrackItem)
@@ -445,7 +445,7 @@ void MixerDetails::panSliderMoved(int value)
 
 void MixerDetails::resetPanToCentre()
       {
-      detailsPanSliderMoved(0);
+      panSliderMoved(0);
       }
 
 // reverbChanged - process signal from reverbSlider

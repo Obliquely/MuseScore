@@ -71,7 +71,7 @@ char userRangeToReverb(double v);
       Might have something to do with PARTS etc.
  */
 
-class Mixer : public QDockWidget, public Ui::Mixer, /* public MixerTrackGroup, */ public ChannelListener
+class Mixer : public QDockWidget, public Ui::Mixer
       {
       Q_OBJECT
 
@@ -123,8 +123,6 @@ class Mixer : public QDockWidget, public Ui::Mixer, /* public MixerTrackGroup, *
       Mixer(QWidget* parent);
       void setScore(Score*);
       PartEdit* getPartAtIndex(int index);
-      //void notifyTrackSelected(MixerTrack* track) override;
-      void propertyChanged(Channel::Prop property) override;
       void contextMenuEvent(QContextMenuEvent *event) override;
       MixerDetails* mixerDetails;
       QAction* act1;

@@ -63,10 +63,10 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void volumeSliderMoved(int);
       void panSliderMoved(int);
       void panSpinBoxEdited(double);
-      void phorusSliderMoved(double);
-      void peverbSliderMoved(double);
-      void prumsetCheckboxToggled(bool);
-      void pidiChannelOrPortEdited(int);
+      void chorusSliderMoved(double);
+      void reverbSliderMoved(double);
+      void drumsetCheckboxToggled(bool);
+      void midiChannelOrPortEdited(int);
       void patchComboEdited(int);
 
    public:
