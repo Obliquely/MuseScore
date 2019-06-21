@@ -87,7 +87,18 @@ Mixer::Mixer(QWidget* parent)
       mixerTreeWidget->header()->setDefaultSectionSize(180);
       mixerTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-      
+      mixerDetails = new MixerDetails(this);
+
+      // default layout - and we can re-organise in code
+      //TODO: implement layout re-org from context menu
+      gridLayout = new QGridLayout(dockWidgetContents);
+      gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
+      gridLayout->addWidget(mixerDetails, 0, 2, 1, 1);
+      gridLayout->addWidget(partOnlyCheckBox, 1, 0, 1, 1);
+      gridLayout->addWidget(showDetailsButton, 1, 1, 1, 1);
+      gridLayout->addWidget(mixerTreeWidget, 0, 0, 1, 2);
+
+
       keyboardFilter = new MixerKeyboardControlFilter(this);
       this->installEventFilter(keyboardFilter);
       mixerTreeWidget->installEventFilter(keyboardFilter);
@@ -138,33 +149,16 @@ void Mixer::contextMenuEvent(QContextMenuEvent *event)
 
 void Mixer::setupSlotsAndSignals()
       {
-    
-      connect(mixerTreeWidget,      SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),
-                                                                  SLOT(currentItemChanged()));
-      connect(synti,                SIGNAL(gainChanged(float)),   SLOT(synthGainChanged(float)));
-      connect(patchCombo,           SIGNAL(activated(int)),       SLOT(detailsPatchComboEdited(int)));
-
-      connect(partNameLineEdit,     SIGNAL(editingFinished()),    SLOT(partNameChanged()));
-      //connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),  SLOT(trackColorChanged(QColor)));
-      connect(volumeSlider,         SIGNAL(valueChanged(int)),    SLOT(detailsVolumeSliderMoved(int)));
-      connect(volumeSpinBox,        SIGNAL(valueChanged(double)), SLOT(detailsVolumeSpinBoxEdited(double)));
-      connect(panSlider,            SIGNAL(valueChanged(int)),    SLOT(detailsPanSliderMoved(int)));
-      connect(panSpinBox,           SIGNAL(valueChanged(double)), SLOT(detailsPanSpinBoxEdited(double)));
-      connect(chorusSlider,         SIGNAL(valueChanged(int)),    SLOT(detailsChorusSliderMoved()));
-      connect(chorusSpinBox,        SIGNAL(valueChanged(double)), SLOT(chorusChanged(double)));//TODO: spinbox chorus
-      connect(reverbSlider,         SIGNAL(valueChanged(int)),    SLOT(detailsReverbSliderMoved()));
-      connect(reverbSpinBox,        SIGNAL(valueChanged(double)), SLOT(reverbChanged(double)));//TODO:spinbox reverb
-      connect(portSpinBox,          SIGNAL(valueChanged(int)),    SLOT(detailsMidiChannelOrPortEdited(int)));
-      connect(channelSpinBox,       SIGNAL(valueChanged(int)),    SLOT(detailsMidiChannelOrPortEdited(int)));
-      connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(detailsDrumsetCheckboxToggled(bool)));
-
-      connect(showDetailsButton,    SIGNAL(clicked()),             SLOT(showDetailsClicked()));
+      connect(mixerTreeWidget,SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),SLOT(currentItemChanged()));
+      connect(synti,SIGNAL(gainChanged(float)),SLOT(synthGainChanged(float)));
+      connect(showDetailsButton,SIGNAL(clicked()),SLOT(showDetailsClicked()));
       }
 
-      void Mixer::showDetailsClicked()
-      {
-            midiGroupBox->setVisible(!midiGroupBox->isVisible());
-      }
+void Mixer::showDetailsClicked()
+{
+      mixerDetails->setVisible(!mixerDetails->isVisible());
+}
+      
 //---------------------------------------------------------
 //   synthGainChanged
 //---------------------------------------------------------
@@ -254,15 +248,14 @@ bool Mixer::eventFilter(QObject* object, QEvent* event)
       if (enablePlay->eventFilter(object, event))
             return true;
 
-      if (object == panSlider) {
+      if (object == mixerDetails->panSlider) {
             if (event->type() == QEvent::MouseButtonDblClick) {
                   QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
                   qDebug() << "Ate Double click on pan slider" << keyEvent->key();
-                  detailsPanSliderMoved(0);
+                  mixerDetails->resetPanToCentre();
                   return true;
                   }
       }
-
 
       return QWidget::eventFilter(object, event);
       }
@@ -271,7 +264,7 @@ bool Mixer::eventFilter(QObject* object, QEvent* event)
 bool MixerKeyboardControlFilter::eventFilter(QObject *obj, QEvent *event)
       {
       
-      MixerTrackItem* selectedMixerTrackItem = mixer->getSelectedMixerTrackItem();
+      MixerTrackItem* selectedMixerTrackItem = mixer->mixerDetails->getSelectedMixerTrackItem();
       
       if (event->type() != QEvent::KeyPress) {
             return QObject::eventFilter(obj, event);
@@ -411,7 +404,7 @@ void Mixer::updateTreeSelection()
 
       MixerTrackItem* mixerTrackItem = itemWidget->getMixerTrackItem();
       if (mixerTrackItem) {
-            updateDetails(mixerTrackItem);
+            mixerDetails->updateDetails(mixerTrackItem);
       }
       else {
             qDebug()<<"**MIXER WARNING** Unexpected missing mixerTrackItem **. Non-fatal.";
@@ -529,13 +522,13 @@ void Mixer::currentItemChanged()
       QWidget* treeItemWidget = mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1);
       
       if (!treeItemWidget) {
-            resetDetails();
-            enableDetails(false);
+            mixerDetails->resetDetails();
+            mixerDetails->enableDetails(false);
             return;
             }
 
       MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(treeItemWidget);
-      updateDetails(itemWidget->getMixerTrackItem());
+      mixerDetails->updateDetails(itemWidget->getMixerTrackItem());
       qDebug()<<"about to call takeSelection";
       itemWidget->takeSelection();
       }

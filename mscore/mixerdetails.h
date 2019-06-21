@@ -17,7 +17,18 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
+#ifndef __MIXERDETAILS_H__
+#define __MIXERDETAILS_H__
+
+#include "ui_mixerdetails.h"
+#include "libmscore/instrument.h"
+#include "mixertrackitem.h"
 #include "mixer.h"
+
+#include <functional>
+#include <QPushButton>
+
+class Mixer;
 
 namespace Ms {
 
@@ -25,25 +36,73 @@ namespace Ms {
 //   MixerDetailsVoiceButtonHandler
 //---------------------------------------------------------
 
+class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelListener
+      {
+      Q_OBJECT
+
+      MixerTrackItem* selectedMixerTrackItem = nullptr;
+      void setupSlotsAndSignals();
+      QWidget* mutePerVoiceHolder = nullptr;
+      QGridLayout* mutePerVoiceGrid;
+      QList<QPushButton*> voiceButtons;
+
+      void updatePatch(MixerTrackItem* mixerTrackItem);
+      void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
+      void updateVolume();
+      void updatePan();
+      void updateReverb();
+      void updateChorus();
+      void updateName();
+      void updateMidiChannel();
+
+      void blockDetailsSignals(bool);
+
+      void partNameChanged();
+      // void trackColorChanged(QColor);
+      void volumeSpinBoxEdited(double);
+      void volumeSliderMoved(int);
+      void panSliderMoved(int);
+      void panSpinBoxEdited(double);
+      void phorusSliderMoved(double);
+      void peverbSliderMoved(double);
+      void prumsetCheckboxToggled(bool);
+      void pidiChannelOrPortEdited(int);
+      void patchComboEdited(int);
+
+   public:
+      MixerDetails(Mixer *mixer);
+      void updateDetails(MixerTrackItem*);
+      void enableDetails(bool);
+      void resetDetails();          // default values (for when not detail selected)
+      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
+      void setVoiceMute(int staffIdx, int voice, bool shouldMute);
+      void resetPanToCentre();
+      void propertyChanged(Channel::Prop property) override;
+      };
+
+class MixerDetails;
+
 class MixerDetailsVoiceButtonHandler : public QObject
       {
       Q_OBJECT
 
-      Mixer* _mixer;
-      int _staff;
-      int _voice;
-public:
-      MixerDetailsVoiceButtonHandler(Mixer* mixer, int staff, int voice, QObject* parent = nullptr)
+      MixerDetails* mixerDetails;
+      int staff;
+      int voice;
+
+   public:
+      MixerDetailsVoiceButtonHandler(MixerDetails* mixerDetails, int staff, int voice, QObject* parent = nullptr)
             : QObject(parent),
-              _mixer(mixer),
-              _staff(staff),
-              _voice(voice)
+              mixerDetails(mixerDetails),
+              staff(staff),
+              voice(voice)
             {}
 
 public slots:
       void setVoiceMute(bool checked)
             {
-            _mixer->setVoiceMute(_staff, _voice, checked);
+            mixerDetails->setVoiceMute(staff, voice, checked);
             }
    };
 }
+#endif // __MIXERDETAILS_H__

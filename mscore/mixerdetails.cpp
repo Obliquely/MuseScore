@@ -23,7 +23,6 @@
 
 #include "libmscore/score.h"
 #include "libmscore/part.h"
-#include "mixer.h"
 #include "mixertrack.h"
 #include "mixertrackitem.h"
 #include "seq.h"
@@ -34,7 +33,35 @@
 
 namespace Ms {
 
-void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
+MixerDetails::MixerDetails(Mixer *mixer) :
+QWidget(mixer),
+selectedMixerTrackItem(nullptr),
+mutePerVoiceHolder(nullptr)
+{
+      setupUi(this);
+      setupSlotsAndSignals();
+      updateDetails(selectedMixerTrackItem);
+}
+
+void MixerDetails::setupSlotsAndSignals()
+      {
+      connect(patchCombo,           SIGNAL(activated(int)),       SLOT(patchComboEdited(int)));
+      connect(partNameLineEdit,     SIGNAL(editingFinished()),    SLOT(partNameChanged()));
+      //connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),  SLOT(trackColorChanged(QColor)));
+      connect(volumeSlider,         SIGNAL(valueChanged(int)),    SLOT(volumeSliderMoved(int)));
+      connect(volumeSpinBox,        SIGNAL(valueChanged(double)), SLOT(volumeSpinBoxEdited(double)));
+      connect(panSlider,            SIGNAL(valueChanged(int)),    SLOT(panSliderMoved(int)));
+      connect(panSpinBox,           SIGNAL(valueChanged(double)), SLOT(panSpinBoxEdited(double)));
+      connect(chorusSlider,         SIGNAL(valueChanged(int)),    SLOT(chorusSliderMoved()));
+      connect(chorusSpinBox,        SIGNAL(valueChanged(double)), SLOT(chorusChanged(double)));//TODO: spinbox chorus
+      connect(reverbSlider,         SIGNAL(valueChanged(int)),    SLOT(reverbSliderMoved()));
+      connect(reverbSpinBox,        SIGNAL(valueChanged(double)), SLOT(reverbChanged(double)));//TODO:spinbox reverb
+      connect(portSpinBox,          SIGNAL(valueChanged(int)),    SLOT(midiChannelOrPortEdited(int)));
+      connect(channelSpinBox,       SIGNAL(valueChanged(int)),    SLOT(midiChannelOrPortEdited(int)));
+      connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(drumsetCheckboxToggled(bool)));
+      }
+
+void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       {
       selectedMixerTrackItem = mixerTrackItem;
 
@@ -67,7 +94,7 @@ void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       }
 
 
-void Mixer::enableDetails(bool enable)
+void MixerDetails::enableDetails(bool enable)
       {
       drumkitCheck->setEnabled(enable);
       patchCombo->setEnabled(enable);
@@ -84,20 +111,10 @@ void Mixer::enableDetails(bool enable)
       channelSpinBox->setEnabled(enable);
       //trackColorLabel->setEnabled(enable);
 
-      // is this meaningful to disable the labels or just redundant?
-      labelName->setEnabled(enable);
-      labelChannel->setEnabled(enable);
-      labelChannel_2->setEnabled(enable);
-      labelChorus->setEnabled(enable);
-      labelPan->setEnabled(enable);
-      labelPatch->setEnabled(enable);
-      labelPort->setEnabled(enable);
-      labelReverb->setEnabled(enable);
-      labelVolume->setEnabled(enable);
       }
 
       
-void Mixer::resetDetails()
+void MixerDetails::resetDetails()
       {
       drumkitCheck->setChecked(false);
       patchCombo->clear();
@@ -117,7 +134,7 @@ void Mixer::resetDetails()
       }
 
       
-void Mixer::blockDetailsSignals(bool block)
+void MixerDetails::blockDetailsSignals(bool block)
       {
       //trackColorLabel->blockSignals(block);
       volumeSlider->blockSignals(block);
@@ -135,7 +152,7 @@ void Mixer::blockDetailsSignals(bool block)
 // updatePatch - is there a missing case here - can the patch
 // be updated outwith the mixer - and if it is are we listening
 // for that change? - not clear that we are
-void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
+void MixerDetails::updatePatch(MixerTrackItem* mixerTrackItem)
       {
       Channel* channel = mixerTrackItem->chan();
       MidiMapping* midiMap = mixerTrackItem->midiMap();
@@ -181,7 +198,7 @@ void Mixer::updatePatch(MixerTrackItem* mixerTrackItem)
       patchCombo->setCurrentIndex(patchIndex);
       }
       
-void Mixer::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
+void MixerDetails::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
       {
        if (mutePerVoiceHolder) {
             // deleteLater() deletes object after the current event loop completes
@@ -225,7 +242,7 @@ void Mixer::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
 //   setVoiceMute
 //---------------------------------------------------------
 
-void Mixer::setVoiceMute(int staffIdx, int voice, bool shouldMute)
+void MixerDetails::setVoiceMute(int staffIdx, int voice, bool shouldMute)
       {
       Part* part = selectedMixerTrackItem->part();
       Staff* staff = part->staff(staffIdx);
@@ -250,7 +267,7 @@ void Mixer::setVoiceMute(int staffIdx, int voice, bool shouldMute)
 //   partNameChanged
 //---------------------------------------------------------
 
-void Mixer::partNameChanged()
+void MixerDetails::partNameChanged()
       {
       if (!selectedMixerTrackItem)
             return;
@@ -291,14 +308,14 @@ void Mixer::partNameChanged()
 
 
 
-void Mixer::updateVolume()
+void MixerDetails::updateVolume()
       {
       Channel* channel = selectedMixerTrackItem->chan();
       volumeSlider->setValue((int)channel->volume());
       volumeSpinBox->setValue(channel->volume());
       }
 
-void Mixer::updatePan()
+void MixerDetails::updatePan()
       {
       int pan = selectedMixerTrackItem->getPan()-63;
       panSlider->setValue(pan);
@@ -307,7 +324,7 @@ void Mixer::updatePan()
       }
 
 
-void Mixer::updateReverb()
+void MixerDetails::updateReverb()
       {
       Channel* channel = selectedMixerTrackItem->chan();
       reverbSlider->setValue((int)channel->reverb());
@@ -315,7 +332,7 @@ void Mixer::updateReverb()
       }
 
 
-void Mixer::updateChorus()
+void MixerDetails::updateChorus()
       {
       Channel* channel = selectedMixerTrackItem->chan();
       reverbSlider->setValue((int)channel->reverb());
@@ -323,7 +340,7 @@ void Mixer::updateChorus()
       }
 
 
-void Mixer::updateName()
+void MixerDetails::updateName()
       {
       Part* part = selectedMixerTrackItem->part();
       Channel* channel = selectedMixerTrackItem->chan();
@@ -336,7 +353,7 @@ void Mixer::updateName()
       partNameLineEdit->setToolTip(partName);
       }
 
-void Mixer::updateMidiChannel()
+void MixerDetails::updateMidiChannel()
       {
       Part* part = selectedMixerTrackItem->part();
       Channel* channel = selectedMixerTrackItem->chan();
@@ -348,7 +365,7 @@ void Mixer::updateMidiChannel()
 // When they occur, this method is called so that we can update
 // the UI. Signals sent by the UI control are blocked during the
 // update to prevent getting caught in an update loop.
-void Mixer::propertyChanged(Channel::Prop property)
+void MixerDetails::propertyChanged(Channel::Prop property)
       {
       if (!selectedMixerTrackItem)
             return;
@@ -389,7 +406,7 @@ void Mixer::propertyChanged(Channel::Prop property)
 
 
 // volumeChanged - process signal from volumeSlider
-void Mixer::detailsVolumeSpinBoxEdited(double value)
+void MixerDetails::detailsVolumeSpinBoxEdited(double value)
       {
       qDebug()<<"volumeChanged(double "<<value<<")";
       if (!selectedMixerTrackItem)
@@ -398,7 +415,7 @@ void Mixer::detailsVolumeSpinBoxEdited(double value)
       }
 
 // volumeChanged - process signal from volumeSpinBox
-void Mixer::detailsVolumeSliderMoved(int value)
+void MixerDetails::volumeSliderMoved(int value)
 {
       qDebug()<<"volumeChanged(double "<<value<<")";
       if (!selectedMixerTrackItem)
@@ -408,7 +425,7 @@ void Mixer::detailsVolumeSliderMoved(int value)
 
 
 // panChanged - process signal from panSlider
-void Mixer::detailsPanSpinBoxEdited(double value)
+void MixerDetails::panSpinBoxEdited(double value)
       {
       if (!selectedMixerTrackItem)
             return;
@@ -416,19 +433,24 @@ void Mixer::detailsPanSpinBoxEdited(double value)
       }
 
 // panChanged - process signal from panSpinBox
-void Mixer::detailsPanSliderMoved(int value)
-{
+void MixerDetails::panSliderMoved(int value)
+      {
       // is this required? if mixerDetails is disabled can this ever be called
       if (!selectedMixerTrackItem)
             return;
       // note: a guaranteed side effect is that propertyChanged() will
       // be called on this object - I think that's true?!
       selectedMixerTrackItem->setPan(value + 63);
-}
+      }
+
+void MixerDetails::resetPanToCentre()
+      {
+      detailsPanSliderMoved(0);
+      }
 
 // reverbChanged - process signal from reverbSlider
 
-void Mixer::detailsReverbSliderMoved(double v)
+void MixerDetails::reverbSliderMoved(double v)
       {
       if (!selectedMixerTrackItem)
             return;
@@ -436,7 +458,7 @@ void Mixer::detailsReverbSliderMoved(double v)
       }
 
 //  chorusChanged - process signal from chorusSlider
-void Mixer::detailsChorusSliderMoved(double v)
+void MixerDetails::chorusSliderMoved(double v)
       {
       if (!selectedMixerTrackItem)
             return;
@@ -444,7 +466,7 @@ void Mixer::detailsChorusSliderMoved(double v)
       }
 
 //  patchChanged - process signal from patchCombo
-void Mixer::detailsPatchComboEdited(int n)
+void MixerDetails::patchComboEdited(int n)
 {
       qDebug()<<"Mixer::patchChanged('"<<n<<")";
       if (!selectedMixerTrackItem)
@@ -469,7 +491,7 @@ void Mixer::detailsPatchComboEdited(int n)
 }
 
 // drumkitToggled - process signal from drumkitCheck
-void Mixer::detailsDrumsetCheckboxToggled(bool val)
+void MixerDetails::drumsetCheckboxToggled(bool val)
       {
       if (!selectedMixerTrackItem)
             return;
@@ -510,7 +532,7 @@ void Mixer::detailsDrumsetCheckboxToggled(bool val)
 
 // midiChannelChanged - process signal from either portSpinBox
 // or channelSpinBox, i.e. MIDI port or channel change
-void Mixer::detailsMidiChannelOrPortEdited(int)
+void MixerDetails::midiChannelOrPortEdited(int)
       {
       if (!selectedMixerTrackItem)
             return;
@@ -535,7 +557,6 @@ void Mixer::detailsMidiChannelOrPortEdited(int)
       if (seq->driver() && (preferences.getBool(PREF_IO_JACK_USEJACKMIDI) || preferences.getBool(PREF_IO_ALSA_USEALSAAUDIO)))
             seq->driver()->updateOutPortCount(maxPort + 1);
       }
-
 }
 
 

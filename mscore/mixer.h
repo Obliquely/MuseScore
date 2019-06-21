@@ -26,6 +26,7 @@
 #include "enableplayforwidget.h"
 #include "mixertrackgroup.h"
 #include "mixertrackchannel.h"
+#include "mixerdetails.h"
 #include <QWidget>
 #include <QDockWidget>
 #include <QScrollArea>
@@ -38,6 +39,7 @@ class Channel;
 class Part;
 class PartEdit;
 class MixerTrack;
+class MixerDetails;
 class MidiMapping;
 class MixerKeyboardControlFilter;
 
@@ -61,8 +63,7 @@ char userRangeToReverb(double v);
 //---------------------------------------------------------
 
 /* obq-notes
-      Mixer has MULTIPLE inheritance. the Ui::Mixer breaks down all the
-      encapsulation. Maybe a good thing! And then MixerTrackGroup provides,
+      MixerTrackGroup provides,
       mmm, a sort of PROTOCOL allowing things other than the Mixer to be the
       target for cetain signals??
 
@@ -70,13 +71,15 @@ char userRangeToReverb(double v);
       Might have something to do with PARTS etc.
  */
 
-class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, public ChannelListener
+class Mixer : public QDockWidget, public Ui::Mixer, /* public MixerTrackGroup, */ public ChannelListener
       {
       Q_OBJECT
 
       Score* _score = nullptr;            // playback score
       Score* _activeScore = nullptr;      // may be a _score itself or its excerpt;
-      MixerTrackItem* selectedMixerTrackItem = nullptr;
+      MixerKeyboardControlFilter* keyboardFilter;
+      QGridLayout* gridLayout;
+
       EnablePlayForWidget* enablePlay;
 
       QSet<Part*> expandedParts;
@@ -90,31 +93,9 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void setPlaybackScore(Score*);
       void setupSlotsAndSignals();
 
-      // imported from mixerdetails
-      QWidget* mutePerVoiceHolder = nullptr;
-      QGridLayout* mutePerVoiceGrid;
-      QList<QPushButton*> voiceButtons;
-      MixerKeyboardControlFilter* keyboardFilter;
-
-      void updateDetails(MixerTrackItem*);
-      void updatePatch(MixerTrackItem* mixerTrackItem);
-      void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
-      void updateVolume();
-      void updatePan();
-      void updateReverb();
-      void updateChorus();
-      void updateName();
-      void updateMidiChannel();
-
       void updateTreeSelection();                     // go to first item OR disable mixer
 
-
       void disableMixer();
-
-      void enableDetails(bool);
-      void resetDetails();          // default values (for when not detail selected)
-      void blockDetailsSignals(bool);
-
       MixerTrackItem* mixerTrackItemFromPart(Part* part);
 
    private slots:
@@ -127,18 +108,8 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       
       void currentItemChanged(); // obq
 
-      void detailsPatchComboEdited(int);
       void synthGainChanged(float val);
-      void partNameChanged();
-      // void trackColorChanged(QColor);
-      void detailsVolumeSpinBoxEdited(double);
-      void detailsVolumeSliderMoved(int);
-      void detailsPanSliderMoved(int);
-      void detailsPanSpinBoxEdited(double);
-      void detailsChorusSliderMoved(double);
-      void detailsReverbSliderMoved(double);
-      void detailsDrumsetCheckboxToggled(bool);
-      void detailsMidiChannelOrPortEdited(int);
+
       void showDetailsClicked();
             
    signals:
@@ -153,9 +124,9 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void setScore(Score*);
       PartEdit* getPartAtIndex(int index);
       //void notifyTrackSelected(MixerTrack* track) override;
-      void setVoiceMute(int staffIdx, int voice, bool shouldMute);
-      void propertyChanged(Channel::Prop property); // override;
+      void propertyChanged(Channel::Prop property) override;
       void contextMenuEvent(QContextMenuEvent *event) override;
+      MixerDetails* mixerDetails;
       QAction* act1;
       QAction* act2;
       QAction* act3;
@@ -164,8 +135,6 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       QAction* act6;
       void createActions();
       void verticalStacking();
-      
-      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };      
       };
 
 class MixerKeyboardControlFilter : public QObject
