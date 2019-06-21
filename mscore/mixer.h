@@ -137,7 +137,8 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       void detailsReverbSliderMoved(double);
       void detailsDrumsetCheckboxToggled(bool);
       void detailsMidiChannelOrPortEdited(int);
-
+      void showDetailsClicked();
+            
    signals:
       void closed(bool);
 
@@ -152,6 +153,15 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       //void notifyTrackSelected(MixerTrack* track) override;
       void setVoiceMute(int staffIdx, int voice, bool shouldMute);
       void propertyChanged(Channel::Prop property); // override;
+      void contextMenuEvent(QContextMenuEvent *event) override;
+      QAction* act1;
+      QAction* act2;
+      QAction* act3;
+      QAction* act4;
+      QAction* act5;
+      QAction* act6;
+      void createActions();
+      void verticalStacking();
       };
 
 

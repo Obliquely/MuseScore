@@ -90,7 +90,42 @@ Mixer::Mixer(QWidget* parent)
       enablePlay = new EnablePlayForWidget(this);
       retranslate(true);
       setupSlotsAndSignals();
+      createActions();
       }
+
+void Mixer::createActions()
+      {
+      act1 = new QAction("Vertical stacking");
+      act2 = new QAction("Horizontal stacking");
+      act3 = new QAction("Show Pan Slider in List");
+      act4 = new QAction("Overall volume: override");
+      act5 = new QAction("Overall volume: ratio");
+      act6 = new QAction("Overall volume: first channel");
+
+      act1->setStatusTip(tr("Detailed options shown below the mixer"));
+      connect(act1, &QAction::triggered, this, &Mixer::verticalStacking);
+      }
+
+      void Mixer::verticalStacking()
+      {
+      qDebug()<<"Vertical stacking menu item triggered.";
+      }
+
+void Mixer::contextMenuEvent(QContextMenuEvent *event)
+{
+
+      QMenu menu(this);
+      menu.addSection("Geometry");
+      menu.addAction(act1);
+      menu.addAction(act2);
+      menu.addSection("Controls");
+      menu.addAction(act3);
+      menu.addSection("Overall volume");
+      menu.addAction(act4);
+      menu.addAction(act5);
+      menu.addAction(act6);
+      menu.exec(event->globalPos());
+}
 
 void Mixer::setupSlotsAndSignals()
       {
@@ -113,9 +148,14 @@ void Mixer::setupSlotsAndSignals()
       connect(portSpinBox,          SIGNAL(valueChanged(int)),    SLOT(detailsMidiChannelOrPortEdited(int)));
       connect(channelSpinBox,       SIGNAL(valueChanged(int)),    SLOT(detailsMidiChannelOrPortEdited(int)));
       connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(detailsDrumsetCheckboxToggled(bool)));
+
+      connect(showDetailsButton,    SIGNAL(clicked()),             SLOT(showDetailsClicked()));
       }
 
-
+      void Mixer::showDetailsClicked()
+      {
+            midiGroupBox->setVisible(!midiGroupBox->isVisible());
+      }
 //---------------------------------------------------------
 //   synthGainChanged
 //---------------------------------------------------------
