@@ -39,6 +39,7 @@ class Part;
 class PartEdit;
 class MixerTrack;
 class MidiMapping;
+class MixerKeyboardControlFilter;
 
 double volumeToUserRange(char v);
 double panToUserRange(char v);
@@ -75,7 +76,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
 
       Score* _score = nullptr;            // playback score
       Score* _activeScore = nullptr;      // may be a _score itself or its excerpt;
-      MixerTrackItem* detailsMixerTrackItem = nullptr;
+      MixerTrackItem* selectedMixerTrackItem = nullptr;
       EnablePlayForWidget* enablePlay;
 
       QSet<Part*> expandedParts;
@@ -93,6 +94,7 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       QWidget* mutePerVoiceHolder = nullptr;
       QGridLayout* mutePerVoiceGrid;
       QList<QPushButton*> voiceButtons;
+      MixerKeyboardControlFilter* keyboardFilter;
 
       void updateDetails(MixerTrackItem*);
       void updatePatch(MixerTrackItem* mixerTrackItem);
@@ -162,9 +164,23 @@ class Mixer : public QDockWidget, public Ui::Mixer, public MixerTrackGroup, publ
       QAction* act6;
       void createActions();
       void verticalStacking();
+      
+      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };      
       };
 
+class MixerKeyboardControlFilter : public QObject
+      {
+      Q_OBJECT
+      Mixer* mixer;
+   protected:
+      bool eventFilter(QObject *obj, QEvent *event) override;
+      
+   public:
+      MixerKeyboardControlFilter(Mixer* mixer);
+      };
 
+      
+      
 } // namespace Ms
 #endif
 

@@ -28,6 +28,9 @@
     <height>27</height>
    </size>
   </property>
+  <property name="accessibleName">
+   <string>Instrument volume control</string>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
     <number>0</number>
@@ -63,6 +66,9 @@
        <width>90</width>
        <height>20</height>
       </size>
+     </property>
+     <property name="accessibleName">
+      <string>Volume</string>
      </property>
      <property name="maximum">
       <number>127</number>
@@ -102,6 +108,9 @@
       </font>
      </property>
      <property name="toolTip">
+      <string>Solo</string>
+     </property>
+     <property name="accessibleName">
       <string>Solo</string>
      </property>
      <property name="text">
@@ -154,6 +163,9 @@
       </font>
      </property>
      <property name="toolTip">
+      <string>Mute</string>
+     </property>
+     <property name="accessibleName">
       <string>Mute</string>
      </property>
      <property name="text">

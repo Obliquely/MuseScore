@@ -87,17 +87,26 @@ Mixer::Mixer(QWidget* parent)
       mixerTreeWidget->header()->setDefaultSectionSize(180);
       mixerTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
+      
+      keyboardFilter = new MixerKeyboardControlFilter(this);
+      this->installEventFilter(keyboardFilter);
+      mixerTreeWidget->installEventFilter(keyboardFilter);
+      
       enablePlay = new EnablePlayForWidget(this);
       retranslate(true);
       setupSlotsAndSignals();
       createActions();
       }
 
+MixerKeyboardControlFilter::MixerKeyboardControlFilter(Mixer* mixer) : mixer(mixer)
+      {
+      }
+      
 void Mixer::createActions()
       {
-      act1 = new QAction("Vertical stacking");
-      act2 = new QAction("Horizontal stacking");
-      act3 = new QAction("Show Pan Slider in List");
+      act1 = new QAction("Show Details Below");
+      act2 = new QAction("Show Details to the Side");
+      act3 = new QAction("Show Pan Slider in Mixer");
       act4 = new QAction("Overall volume: override");
       act5 = new QAction("Overall volume: ratio");
       act6 = new QAction("Overall volume: first channel");
@@ -258,7 +267,68 @@ bool Mixer::eventFilter(QObject* object, QEvent* event)
       return QWidget::eventFilter(object, event);
       }
 
-
+      
+bool MixerKeyboardControlFilter::eventFilter(QObject *obj, QEvent *event)
+      {
+      
+      MixerTrackItem* selectedMixerTrackItem = mixer->getSelectedMixerTrackItem();
+      
+      if (event->type() != QEvent::KeyPress) {
+            return QObject::eventFilter(obj, event);
+      }
+      
+      QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+      
+      if (keyEvent->key() == Qt::Key_Period && keyEvent->modifiers() == Qt::NoModifier) {
+            qDebug()<<"Volume up keyboard command";
+            if (selectedMixerTrackItem && int(selectedMixerTrackItem->getVolume()) < 128) {
+                  selectedMixerTrackItem->setVolume(selectedMixerTrackItem->getVolume() + 1);
+            }
+            return true;
+      }
+      
+      if (keyEvent->key() == Qt::Key_Comma && keyEvent->modifiers() == Qt::NoModifier) {
+            qDebug()<<"Volume down keyboard command";
+            if (selectedMixerTrackItem && int(selectedMixerTrackItem->getVolume()) >0) {
+                  selectedMixerTrackItem->setVolume(selectedMixerTrackItem->getVolume() - 1);
+            }
+            return true;
+      }
+      
+      if (keyEvent->key() == Qt::Key_Less && keyEvent->modifiers() == Qt::ShiftModifier) {
+            qDebug()<<"Pan left keyboard command";
+            if (selectedMixerTrackItem && int(selectedMixerTrackItem->getPan()) < 128) {
+                  selectedMixerTrackItem->setPan(selectedMixerTrackItem->getPan() + 1);
+            }
+            return true;
+      }
+      
+      if (keyEvent->key() == Qt::Key_Greater && keyEvent->modifiers() == Qt::ShiftModifier) {
+            qDebug()<<"Pan right keyboard command";
+            if (selectedMixerTrackItem && int(selectedMixerTrackItem->getPan()) >0) {
+                  selectedMixerTrackItem->setPan(selectedMixerTrackItem->getPan() - 1);
+            }
+            return true;
+      }
+      
+      if (keyEvent->key() == Qt::Key_M && keyEvent->modifiers() == Qt::NoModifier) {
+            qDebug()<<"Mute (M) keyboard command";
+            if (selectedMixerTrackItem) {
+                  selectedMixerTrackItem->setMute(!selectedMixerTrackItem->getMute());
+            }
+            return true;
+      }
+      
+      if (keyEvent->key() == Qt::Key_S && keyEvent->modifiers() == Qt::NoModifier) {
+            qDebug()<<"Solo (S) keyboard command";
+            if (selectedMixerTrackItem) {
+                  selectedMixerTrackItem->setSolo(!selectedMixerTrackItem->getSolo());
+            }
+            return true;
+      }
+      
+      return QObject::eventFilter(obj, event);
+      }
 //---------------------------------------------------------
 //   keyPressEvent
 //---------------------------------------------------------
@@ -407,7 +477,8 @@ void Mixer::updateTracks()
 
             QStringList columns = QStringList(part->partName());  // first column has part name
             columns.append("");     // second column left blank - occuped by mixerTrackChannel widget
-            QTreeWidgetItem* item = new QTreeWidgetItem((QTreeWidget*)0, columns);
+            QTreeWidgetItem* item = new QTreeWidgetItem(mixerTreeWidget);
+            item->setText(0, part->partName());
             mixerTreeWidget->addTopLevelItem(item);
             mixerTreeWidget->setItemWidget(item, 1, new MixerTrackChannel(item, mixerTrackItem));
 

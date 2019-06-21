@@ -36,9 +36,9 @@ namespace Ms {
 
 void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       {
-      detailsMixerTrackItem = mixerTrackItem;
+      selectedMixerTrackItem = mixerTrackItem;
 
-      if (!detailsMixerTrackItem) {
+      if (!selectedMixerTrackItem) {
             resetDetails();         // return controls to default / unset state
             enableDetails(false);   // disable controls
             setNotifier(nullptr);
@@ -49,7 +49,7 @@ void Mixer::updateDetails(MixerTrackItem* mixerTrackItem)
       // As a listener, this object receives propertyChanged() calls when the channel is
       // changed. This ensures the details view is synced with changes in the tree view.
 
-      setNotifier(detailsMixerTrackItem->chan());
+      setNotifier(selectedMixerTrackItem->chan());
       enableDetails(true);
 
       blockDetailsSignals(true);
@@ -227,7 +227,7 @@ void Mixer::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
 
 void Mixer::setVoiceMute(int staffIdx, int voice, bool shouldMute)
       {
-      Part* part = detailsMixerTrackItem->part();
+      Part* part = selectedMixerTrackItem->part();
       Staff* staff = part->staff(staffIdx);
       switch (voice) {
             case 0:
@@ -252,11 +252,11 @@ void Mixer::setVoiceMute(int staffIdx, int voice, bool shouldMute)
 
 void Mixer::partNameChanged()
       {
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
 
       QString text = partNameLineEdit->text();
-      Part* part = detailsMixerTrackItem->part();
+      Part* part = selectedMixerTrackItem->part();
       if (part->partName() == text) {
             return;
             }
@@ -293,14 +293,14 @@ void Mixer::partNameChanged()
 
 void Mixer::updateVolume()
       {
-      Channel* channel = detailsMixerTrackItem->chan();
+      Channel* channel = selectedMixerTrackItem->chan();
       volumeSlider->setValue((int)channel->volume());
       volumeSpinBox->setValue(channel->volume());
       }
 
 void Mixer::updatePan()
       {
-      int pan = detailsMixerTrackItem->getPan()-63;
+      int pan = selectedMixerTrackItem->getPan()-63;
       panSlider->setValue(pan);
       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(pan)));
       panSpinBox->setValue(pan);
@@ -309,7 +309,7 @@ void Mixer::updatePan()
 
 void Mixer::updateReverb()
       {
-      Channel* channel = detailsMixerTrackItem->chan();
+      Channel* channel = selectedMixerTrackItem->chan();
       reverbSlider->setValue((int)channel->reverb());
       reverbSpinBox->setValue(channel->reverb());
       }
@@ -317,7 +317,7 @@ void Mixer::updateReverb()
 
 void Mixer::updateChorus()
       {
-      Channel* channel = detailsMixerTrackItem->chan();
+      Channel* channel = selectedMixerTrackItem->chan();
       reverbSlider->setValue((int)channel->reverb());
       reverbSpinBox->setValue(channel->reverb());
       }
@@ -325,8 +325,8 @@ void Mixer::updateChorus()
 
 void Mixer::updateName()
       {
-      Part* part = detailsMixerTrackItem->part();
-      Channel* channel = detailsMixerTrackItem->chan();
+      Part* part = selectedMixerTrackItem->part();
+      Channel* channel = selectedMixerTrackItem->chan();
       QString partName = part->partName();
       if (!channel->name().isEmpty())
             channelLabel->setText(qApp->translate("InstrumentsXML", channel->name().toUtf8().data()));
@@ -338,8 +338,8 @@ void Mixer::updateName()
 
 void Mixer::updateMidiChannel()
       {
-      Part* part = detailsMixerTrackItem->part();
-      Channel* channel = detailsMixerTrackItem->chan();
+      Part* part = selectedMixerTrackItem->part();
+      Channel* channel = selectedMixerTrackItem->chan();
       portSpinBox->setValue(part->masterScore()->midiMapping(channel->channel())->port() + 1);
       channelSpinBox->setValue(part->masterScore()->midiMapping(channel->channel())->channel() + 1);
       }
@@ -350,7 +350,7 @@ void Mixer::updateMidiChannel()
 // update to prevent getting caught in an update loop.
 void Mixer::propertyChanged(Channel::Prop property)
       {
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
 
       blockDetailsSignals(true);
@@ -392,62 +392,62 @@ void Mixer::propertyChanged(Channel::Prop property)
 void Mixer::detailsVolumeSpinBoxEdited(double value)
       {
       qDebug()<<"volumeChanged(double "<<value<<")";
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
-      detailsMixerTrackItem->setVolume(value);
+      selectedMixerTrackItem->setVolume(value);
       }
 
 // volumeChanged - process signal from volumeSpinBox
 void Mixer::detailsVolumeSliderMoved(int value)
 {
       qDebug()<<"volumeChanged(double "<<value<<")";
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
-      detailsMixerTrackItem->setVolume(value);
+      selectedMixerTrackItem->setVolume(value);
 }
 
 
 // panChanged - process signal from panSlider
 void Mixer::detailsPanSpinBoxEdited(double value)
       {
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
-      detailsMixerTrackItem->setPan(value + 63);
+      selectedMixerTrackItem->setPan(value + 63);
       }
 
 // panChanged - process signal from panSpinBox
 void Mixer::detailsPanSliderMoved(int value)
 {
       // is this required? if mixerDetails is disabled can this ever be called
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
       // note: a guaranteed side effect is that propertyChanged() will
       // be called on this object - I think that's true?!
-      detailsMixerTrackItem->setPan(value + 63);
+      selectedMixerTrackItem->setPan(value + 63);
 }
 
 // reverbChanged - process signal from reverbSlider
 
 void Mixer::detailsReverbSliderMoved(double v)
       {
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
-      detailsMixerTrackItem->setReverb(v);
+      selectedMixerTrackItem->setReverb(v);
       }
 
 //  chorusChanged - process signal from chorusSlider
 void Mixer::detailsChorusSliderMoved(double v)
       {
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
-      detailsMixerTrackItem->setChorus(v);
+      selectedMixerTrackItem->setChorus(v);
       }
 
 //  patchChanged - process signal from patchCombo
 void Mixer::detailsPatchComboEdited(int n)
 {
       qDebug()<<"Mixer::patchChanged('"<<n<<")";
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
 
       const MidiPatch* p = (MidiPatch*)patchCombo->itemData(n, Qt::UserRole).value<void*>();
@@ -456,8 +456,8 @@ void Mixer::detailsPatchComboEdited(int n)
             return;
       }
 
-      Part* part = detailsMixerTrackItem->midiMap()->part();
-      Channel* channel = detailsMixerTrackItem->midiMap()->articulation();
+      Part* part = selectedMixerTrackItem->midiMap()->part();
+      Channel* channel = selectedMixerTrackItem->midiMap()->articulation();
       Score* score = part->score();
       if (score) {
             score->startCmd();
@@ -471,15 +471,15 @@ void Mixer::detailsPatchComboEdited(int n)
 // drumkitToggled - process signal from drumkitCheck
 void Mixer::detailsDrumsetCheckboxToggled(bool val)
       {
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
 
-      Part* part = detailsMixerTrackItem->part();
-      Channel* channel = detailsMixerTrackItem->chan();
+      Part* part = selectedMixerTrackItem->part();
+      Channel* channel = selectedMixerTrackItem->chan();
 
       Instrument *instr;
-      if (detailsMixerTrackItem->trackType() == MixerTrackItem::TrackType::CHANNEL)
-            instr = detailsMixerTrackItem->instrument();
+      if (selectedMixerTrackItem->trackType() == MixerTrackItem::TrackType::CHANNEL)
+            instr = selectedMixerTrackItem->instrument();
       else
             instr = part->instrument(Fraction(0,1));
 
@@ -504,7 +504,7 @@ void Mixer::detailsDrumsetCheckboxToggled(bool val)
             score->endCmd();
             }
       blockDetailsSignals(true);
-      updatePatch(detailsMixerTrackItem);
+      updatePatch(selectedMixerTrackItem);
       blockDetailsSignals(false);
       }
 
@@ -512,17 +512,17 @@ void Mixer::detailsDrumsetCheckboxToggled(bool val)
 // or channelSpinBox, i.e. MIDI port or channel change
 void Mixer::detailsMidiChannelOrPortEdited(int)
       {
-      if (!detailsMixerTrackItem)
+      if (!selectedMixerTrackItem)
             return;
 
-      Part* part = detailsMixerTrackItem->part();
-      Channel* channel = detailsMixerTrackItem->chan();
+      Part* part = selectedMixerTrackItem->part();
+      Channel* channel = selectedMixerTrackItem->chan();
 
       seq->stopNotes(channel->channel());
       int p =    portSpinBox->value() - 1;
       int c = channelSpinBox->value() - 1;
 
-      MidiMapping* midiMap = detailsMixerTrackItem->midiMap();
+      MidiMapping* midiMap = selectedMixerTrackItem->midiMap();
       part->masterScore()->updateMidiMapping(midiMap->articulation(), part, p, c);
 
       part->score()->setInstrumentsChanged(true);
