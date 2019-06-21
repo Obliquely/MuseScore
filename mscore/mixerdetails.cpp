@@ -63,6 +63,7 @@ void MixerDetails::setupSlotsAndSignals()
 
 void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       {
+      qDebug()<<"MixerDetails:updateDetails()";
       selectedMixerTrackItem = mixerTrackItem;
 
       if (!selectedMixerTrackItem) {
@@ -154,6 +155,7 @@ void MixerDetails::blockDetailsSignals(bool block)
 // for that change? - not clear that we are
 void MixerDetails::updatePatch(MixerTrackItem* mixerTrackItem)
       {
+      qDebug()<<"MixerDetails::updatePatch("<<mixerTrackItem->chan()->name()<<")";
       Channel* channel = mixerTrackItem->chan();
       MidiMapping* midiMap = mixerTrackItem->midiMap();
       
@@ -165,7 +167,8 @@ void MixerDetails::updatePatch(MixerTrackItem* mixerTrackItem)
       patchCombo->clear();
       const auto& pl = synti->getPatchInfo();
       int patchIndex = 0;
-      
+
+
       // Order by program number instead of bank, so similar instruments
       // appear next to each other, but ordered primarily by soundfont
       std::map<int, std::map<int, std::vector<const MidiPatch*>>> orderedPl;
@@ -401,7 +404,7 @@ void MixerDetails::propertyChanged(Channel::Prop property)
                   break;
             }
 
-            blockDetailsSignals(false);
+      blockDetailsSignals(false);
       }
 
 
@@ -466,33 +469,77 @@ void MixerDetails::chorusSliderMoved(double v)
       }
 
 //  patchChanged - process signal from patchCombo
-void MixerDetails::patchComboEdited(int n)
+void MixerDetails::patchComboEdited(int comboIndex)
 {
-      qDebug()<<"Mixer::patchChanged('"<<n<<")";
+      qDebug()<<"Mixer::patchComboEdited('"<<comboIndex<<")";
       if (!selectedMixerTrackItem)
             return;
 
-      const MidiPatch* p = (MidiPatch*)patchCombo->itemData(n, Qt::UserRole).value<void*>();
-      if (p == 0) {
+      const MidiPatch* patch = (MidiPatch*)patchCombo->itemData(comboIndex, Qt::UserRole).value<void*>();
+      if (patch == 0) {
             qDebug("PartEdit::patchChanged: no patch");
             return;
       }
 
+
+
+
       Part* part = selectedMixerTrackItem->midiMap()->part();
       Channel* channel = selectedMixerTrackItem->midiMap()->articulation();
+
+      //obq-note - AVOID the UNDO CODE
+
+      channel->setProgram(patch->prog);
+      channel->setBank(patch->bank);
+      channel->setSynti(patch->synti);
+
+      if (MScore::seq == 0) {
+            qWarning("no seq");
+            return;
+      }
+
+      NPlayEvent event;
+      event.setType(ME_CONTROLLER);
+      event.setChannel(channel->channel());
+
+      int hbank = (channel->bank() >> 7) & 0x7f;
+      int lbank = channel->bank() & 0x7f;
+
+      event.setController(CTRL_HBANK);
+      event.setValue(hbank);
+      MScore::seq->sendEvent(event);
+
+      event.setController(CTRL_LBANK);
+      event.setValue(lbank);
+      MScore::seq->sendEvent(event);
+
+      event.setController(CTRL_PROGRAM);
+      event.setValue(channel->program());
+
+      /*
+       // unlike ALL other changes, the patch change is currently
+       // handled through the undo / redo system - perhaps all the
+       // mixer changes *should be* like this
+
+       // a side effect here is that the mixer is forced to call
+       // updateTracks - that's because it's being told that there
+       // is, potentially, a new score. - see ALSO drumsetCheckBoxToggled()
+
       Score* score = part->score();
       if (score) {
-            score->startCmd();
-            score->undo(new ChangePatch(score, channel, p));
-            score->undo(new SetUserBankController(channel, true));
-            score->setLayoutAll();
-            score->endCmd();
+            //score->startCmd();
+            //score->undo(new ChangePatch(score, channel, patch));
+            //score->undo(new SetUserBankController(channel, true));
+            //score->setLayoutAll();
+            //score->endCmd();
       }
+       */
 }
 
 // drumkitToggled - process signal from drumkitCheck
 void MixerDetails::drumsetCheckboxToggled(bool val)
       {
+      qDebug()<<"MixerDetails::drumsetCheckboxToggled";
       if (!selectedMixerTrackItem)
             return;
 
@@ -516,6 +563,14 @@ void MixerDetails::drumsetCheckboxToggled(bool val)
                   break;
                   }
             }
+
+      // unlike ALL other changes, the patch change is currently
+      // handled through the undo / redo system - perhaps all the
+      // mixer changes *should be* like this
+
+      // a side effect here is that the mixer is forced to call
+      // updateTracks - that's because it's being told that there
+      // is, potentially, a new score. - see ALSO patchComboEdited()
 
       Score* score = part->score();
       if (newPatch) {

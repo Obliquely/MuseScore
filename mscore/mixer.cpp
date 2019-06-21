@@ -18,7 +18,7 @@
 //=============================================================================
 
 #include "musescore.h"
-#include "parteditbase.h"
+//#include "parteditbase.h"
 
 #include "libmscore/excerpt.h"
 #include "libmscore/score.h"
@@ -133,7 +133,6 @@ void Mixer::createActions()
 
 void Mixer::contextMenuEvent(QContextMenuEvent *event)
 {
-
       QMenu menu(this);
       menu.addSection("Geometry");
       menu.addAction(act1);
@@ -177,7 +176,6 @@ void Mixer::masterVolumeChanged(double decibels)
       {
       float gain = qBound(0.0f, powf(10, (float)decibels), 1.0f);
       synti->setGain(gain);
-
       }
 
 
@@ -348,11 +346,11 @@ void Mixer::changeEvent(QEvent *event)
 //---------------------------------------------------------
 //   partEdit
 //---------------------------------------------------------
-
-PartEdit* Mixer::getPartAtIndex(int)
-      {
-      return 0;
-      }
+//
+//PartEdit* Mixer::getPartAtIndex(int)
+//      {
+//      return 0;
+//      }
 
 //---------------------------------------------------------
 //   setPlaybackScore
@@ -360,6 +358,7 @@ PartEdit* Mixer::getPartAtIndex(int)
 
 void Mixer::setPlaybackScore(Score* score)
       {
+      qDebug()<<"Mixer::setPlayBackScore";
       if (_score != score) {
             _score = score;
             //mixerDetails->setTrack(0);
@@ -463,8 +462,7 @@ void Mixer::updateTracks()
 
       for (Part* localPart : _score->parts()) {
             Part* part = localPart->masterPart();
-
-            qDebug()<<"Mixer::updateTracks() - outer loop - part->name()"<<part->longName();
+            //qDebug()<<"Mixer::updateTracks() - outer loop - part->name()"<<part->longName();
 
             MixerTrackItem* mixerTrackItem = mixerTrackItemFromPart(part);
 
@@ -483,7 +481,7 @@ void Mixer::updateTracks()
             for (auto partInstrumentListItem = partInstrumentList->begin(); partInstrumentListItem != partInstrumentList->end(); ++partInstrumentListItem) {
 
                   Instrument* instrument = partInstrumentListItem->second;
-                  qDebug()<<"    Mixer::updateTracks() - inner loop - instrument->trackName()"<<instrument->trackName();
+                  //qDebug()<<"    Mixer::updateTracks() - inner loop - instrument->trackName()"<<instrument->trackName();
 
                   if (instrument->channel().size() <= 1)
                         continue;
@@ -491,7 +489,7 @@ void Mixer::updateTracks()
                   // add an item for each channel used by a given instrument
                   for (int i = 0; i < instrument->channel().size(); ++i) {
                         Channel* channel = instrument->playbackChannel(i, _score->masterScore());
-                        qDebug()<<"        Mixer::updateTracks() - inner loop, inner loop - channel->name()()"<<channel->name();
+                        //qDebug()<<"        Mixer::updateTracks() - inner loop, inner loop - channel->name()()"<<channel->name();
 
                         QStringList columns = QStringList(channel->name());
                         columns.append("");
@@ -513,6 +511,7 @@ void Mixer::updateTracks()
 
 void Mixer::midiPrefsChanged(bool)
       {
+      qDebug()<<"Mixer::midiPrefsChanged";
       updateTracks();
       }
 

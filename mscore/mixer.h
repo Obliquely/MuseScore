@@ -20,7 +20,7 @@
 #ifndef __ILEDIT_H__
 #define __ILEDIT_H__
 
-#include "ui_parteditbase.h"
+//#include "ui_parteditbase.h"
 #include "ui_mixer.h"
 #include "libmscore/instrument.h"
 #include "enableplayforwidget.h"
@@ -37,7 +37,7 @@ namespace Ms {
 class Score;
 class Channel;
 class Part;
-class PartEdit;
+//class PartEdit;
 class MixerTrack;
 class MixerDetails;
 class MidiMapping;
@@ -122,7 +122,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
    public:
       Mixer(QWidget* parent);
       void setScore(Score*);
-      PartEdit* getPartAtIndex(int index);
+      //PartEdit* getPartAtIndex(int index);
       void contextMenuEvent(QContextMenuEvent *event) override;
       MixerDetails* mixerDetails;
       QAction* act1;

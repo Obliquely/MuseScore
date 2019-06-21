@@ -56,7 +56,8 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void updateMidiChannel();
 
       void blockDetailsSignals(bool);
-
+            
+   public slots:
       void partNameChanged();
       // void trackColorChanged(QColor);
       void volumeSpinBoxEdited(double);
