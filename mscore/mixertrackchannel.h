@@ -49,7 +49,6 @@ class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public C
       {
       Q_OBJECT
 
-      Mixer* mixer;
       QTreeWidgetItem * treeWidgetItem;   // to enable selecting item when user interacts with controls
       MixerTrackItem* mixerTrackItem;
 
@@ -62,6 +61,8 @@ public slots:
       void stripSoloToggled(bool);
       void stripVolumeSliderMoved(int);
       void takeSelection();
+
+      void updateUiControls(Mixer* mixer); // for showing/hiding color and panning
 
       signals:
       void userInteraction(QTreeWidgetItem*);

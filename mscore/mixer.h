@@ -70,7 +70,8 @@ char userRangeToReverb(double v);
       Not very clear when/how GROUP is used. Maybe the mixer IS the only group?
       Might have something to do with PARTS etc.
  */
-
+class MixerContextMenu;
+      
 class Mixer : public QDockWidget, public Ui::Mixer
       {
       Q_OBJECT
@@ -78,7 +79,10 @@ class Mixer : public QDockWidget, public Ui::Mixer
       Score* _score = nullptr;            // playback score
       Score* _activeScore = nullptr;      // may be a _score itself or its excerpt;
       MixerKeyboardControlFilter* keyboardFilter;
+      MixerContextMenu* contextMenu;
       QGridLayout* gridLayout;
+
+      bool showingTrackColors;
 
       EnablePlayForWidget* enablePlay;
 
@@ -111,6 +115,8 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void synthGainChanged(float val);
 
       void showDetailsClicked();
+      void verticalStacking();
+      void showTrackColors();
             
    signals:
       void closed(bool);
@@ -125,14 +131,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
       //PartEdit* getPartAtIndex(int index);
       void contextMenuEvent(QContextMenuEvent *event) override;
       MixerDetails* mixerDetails;
-      QAction* act1;
-      QAction* act2;
-      QAction* act3;
-      QAction* act4;
-      QAction* act5;
-      QAction* act6;
-      void createActions();
-      void verticalStacking();
+      bool isShowingTrackColors() { return showingTrackColors; };
       };
 
 class MixerKeyboardControlFilter : public QObject
@@ -146,7 +145,23 @@ class MixerKeyboardControlFilter : public QObject
       MixerKeyboardControlFilter(Mixer* mixer);
       };
 
+class MixerContextMenu : public QObject
+{
+      Q_OBJECT
+      Mixer* mixer;
+
+public:
+      MixerContextMenu(Mixer* mixer);
+      void contextMenuEvent(QContextMenuEvent *event);
       
+      QAction* detailToSide;
+      QAction* detailBelow;
+      QAction* panSliderInMixer;
+      QAction* overallVolumeOverrideMode;
+      QAction* overallVolumeRatioMode;
+      QAction* overallVolumeFirstMode;
+      QAction* showTrackColors;
+};
       
 } // namespace Ms
 #endif

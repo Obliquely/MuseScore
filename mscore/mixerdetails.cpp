@@ -35,22 +35,15 @@ namespace Ms {
 
 //MARK:- Create and setup
 MixerDetails::MixerDetails(Mixer *mixer) :
-      QWidget(mixer),
+      QWidget(mixer), mixer(mixer),
       selectedMixerTrackItem(nullptr),
       mutePerVoiceHolder(nullptr)
       {
       setupUi(this);
-
-      // not clear track color has any role in new design
-      // removing from the UI
-//      trackColorLabel->setVisible(false);
-//      labelTrackColor->setVisible(false);
-//      patchDetailsLayout->removeWidget(trackColorLabel);
-//      patchDetailsLayout->removeWidget(labelTrackColor);
-
       setupSlotsAndSignals();
       updateDetails(selectedMixerTrackItem);
       }
+
 
 void MixerDetails::setupSlotsAndSignals()
       {
@@ -70,6 +63,15 @@ void MixerDetails::setupSlotsAndSignals()
       connect(reverbSpinBox,        SIGNAL(valueChanged(double)), SLOT(reverbSpinBoxEdited(double)));
       }
 
+void MixerDetails::updateUiOptions()
+      {
+      qDebug()<<"MixerDetails::updateUiOptions()";
+      bool showTrackColors = mixer->isShowingTrackColors();
+      trackColorLabel->setVisible(showTrackColors);
+      labelTrackColor->setVisible(showTrackColors);
+      }
+
+
 //MARK:- Main interface
 void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       {
@@ -88,6 +90,8 @@ void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       // changed. This ensures the details view is synced with changes in the tree view.
 
       setNotifier(selectedMixerTrackItem->chan());
+      updateUiOptions();
+
       enableDetails(true);
 
       blockDetailsSignals(true);

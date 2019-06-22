@@ -40,6 +40,7 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       {
       Q_OBJECT
 
+      Mixer* mixer;
       MixerTrackItem* selectedMixerTrackItem = nullptr;
       void setupSlotsAndSignals();
       QWidget* mutePerVoiceHolder = nullptr;
@@ -83,6 +84,7 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void resetDetails(); // apply default (0 or empty) values for when no track is selected
       void setVoiceMute(int staffIndex, int voiceIndex, bool shouldMute);
       void resetPanToCentre();
+      void updateUiOptions();
 
       MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
       };

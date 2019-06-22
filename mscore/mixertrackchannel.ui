@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>150</width>
+    <width>162</width>
     <height>27</height>
    </rect>
   </property>
@@ -208,7 +208,7 @@
     <widget class="QLabel" name="colorLabel">
      <property name="minimumSize">
       <size>
-       <width>4</width>
+       <width>8</width>
        <height>16</height>
       </size>
      </property>
@@ -221,10 +221,11 @@
      <property name="styleSheet">
       <string notr="true">QLabel{
 background: red;
+border-radius: 3px;
 }</string>
      </property>
      <property name="text">
-      <string>TextLabel</string>
+      <string/>
      </property>
     </widget>
    </item>

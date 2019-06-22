@@ -68,6 +68,11 @@ void MixerTrackChannel::setupAdditionalUi()
       soloButton->setStyleSheet(basicButton + colorTemplate.arg("green"));
       }
 
+void MixerTrackChannel::updateUiControls(Mixer* mixer)  // fudge for now!
+      {
+      bool showTrackColors = mixer->isShowingTrackColors();
+      colorLabel->setVisible(showTrackColors);
+      }
 
 void MixerTrackChannel::update()
       {
@@ -88,7 +93,7 @@ void MixerTrackChannel::update()
 
       QColor channelColor = channel->color();
       if (colorLabel)
-            colorLabel->setStyleSheet(QString("QLabel{background: %1;padding-top: 2px; padding-bottom: 2px;}").arg(channelColor.name()));
+            colorLabel->setStyleSheet(QString("QLabel{background: %1;padding-top: 2px; padding-bottom: 2px; border-radius: 3px;}").arg(channelColor.name()));
 
       QString tooltip = tr("Part Name: %1\n"
                            "Instrument: %2\n"

@@ -84,10 +84,13 @@ Mixer::Mixer(QWidget* parent)
       mixerTreeWidget->setHeaderLabels({tr("Instrument"), tr("Volume")});
       mixerTreeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
       mixerTreeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
-      mixerTreeWidget->header()->setDefaultSectionSize(180);
+      mixerTreeWidget->header()->setDefaultSectionSize(168);
       mixerTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
       mixerDetails = new MixerDetails(this);
+      contextMenu = new MixerContextMenu(this);
+
+      showingTrackColors = false;      // grab this from a saved preference!
 
       // default layout - and we can re-organise in code
       //TODO: implement layout re-org from context menu
@@ -98,7 +101,6 @@ Mixer::Mixer(QWidget* parent)
       gridLayout->addWidget(showDetailsButton, 1, 1, 1, 1);
       gridLayout->addWidget(mixerTreeWidget, 0, 0, 1, 2);
 
-
       keyboardFilter = new MixerKeyboardControlFilter(this);
       this->installEventFilter(keyboardFilter);
       mixerTreeWidget->installEventFilter(keyboardFilter);
@@ -106,44 +108,86 @@ Mixer::Mixer(QWidget* parent)
       enablePlay = new EnablePlayForWidget(this);
       retranslate(true);
       setupSlotsAndSignals();
-      createActions();
       }
 
 MixerKeyboardControlFilter::MixerKeyboardControlFilter(Mixer* mixer) : mixer(mixer)
       {
       }
-      
-void Mixer::createActions()
-      {
-      act1 = new QAction("Show Details Below");
-      act2 = new QAction("Show Details to the Side");
-      act3 = new QAction("Show Pan Slider in Mixer");
-      act4 = new QAction("Overall volume: override");
-      act5 = new QAction("Overall volume: ratio");
-      act6 = new QAction("Overall volume: first channel");
 
-      act1->setStatusTip(tr("Detailed options shown below the mixer"));
-      connect(act1, &QAction::triggered, this, &Mixer::verticalStacking);
+MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
+      {
+      detailToSide = new QAction("Show Details Below");
+      detailToSide->setCheckable(true);
+      detailToSide->setChecked(true);     // default (for testing)
+      detailBelow = new QAction("Show Details to the Side");
+      detailBelow->setCheckable(true);
+      panSliderInMixer = new QAction("Show Pan Slider in Mixer");
+      overallVolumeOverrideMode = new QAction("Overall volume: override");
+      overallVolumeRatioMode = new QAction("Overall volume: ratio");
+      overallVolumeFirstMode = new QAction("Overall volume: first channel");
+      showTrackColors = new QAction(tr("Track Colors"));
+      showTrackColors->setCheckable(true);
+
+      detailToSide->setStatusTip(tr("Detailed options shown below the mixer"));
+      connect(detailToSide, &QAction::triggered, mixer, &Mixer::verticalStacking);
+      connect(showTrackColors, SIGNAL(changed()), mixer, SLOT(showTrackColors()));
       }
 
-      void Mixer::verticalStacking()
+void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
+{
+      QMenu menu(mixer);
+      menu.addSection("Geometry");
+
+      QActionGroup* geometryGroup = new QActionGroup(mixer);
+
+      detailToSide->setActionGroup(geometryGroup);
+      detailBelow->setActionGroup(geometryGroup);
+      geometryGroup->setExclusive(true);
+
+      geometryGroup->addAction(detailBelow);
+      menu.addAction(detailToSide);
+      menu.addAction(detailBelow);
+
+
+      menu.addSection("Controls");
+      menu.addAction(panSliderInMixer);
+      menu.addAction(showTrackColors);
+      menu.addSection("Overall volume");
+      menu.addAction(overallVolumeRatioMode);
+      menu.addAction(overallVolumeFirstMode);
+      menu.addAction(overallVolumeFirstMode);
+      menu.exec(event->globalPos());
+}
+
+void Mixer::verticalStacking()
       {
       qDebug()<<"Vertical stacking menu item triggered.";
       }
 
+void Mixer::showTrackColors()
+      {
+      showingTrackColors = contextMenu->showTrackColors->isChecked();
+      qDebug()<<"showTrackColors: "<<showingTrackColors;
+
+      mixerDetails->updateUiOptions();
+
+      for (int topLevelIndex = 0; topLevelIndex < mixerTreeWidget->topLevelItemCount(); topLevelIndex++) {
+            QTreeWidgetItem* topLevelItem = mixerTreeWidget->topLevelItem(topLevelIndex);
+            MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(topLevelItem, 1));
+            itemWidget->updateUiControls(this);
+
+            for (int childIndex = 0; childIndex < topLevelItem->childCount(); childIndex++) {
+                  QTreeWidgetItem* childItem = topLevelItem->child(childIndex);
+                  MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(childItem, 1));
+                  itemWidget->updateUiControls(this);
+                  }
+            }
+      }
+
+
 void Mixer::contextMenuEvent(QContextMenuEvent *event)
 {
-      QMenu menu(this);
-      menu.addSection("Geometry");
-      menu.addAction(act1);
-      menu.addAction(act2);
-      menu.addSection("Controls");
-      menu.addAction(act3);
-      menu.addSection("Overall volume");
-      menu.addAction(act4);
-      menu.addAction(act5);
-      menu.addAction(act6);
-      menu.exec(event->globalPos());
+      contextMenu->contextMenuEvent(event);
 }
 
 void Mixer::setupSlotsAndSignals()
@@ -155,7 +199,20 @@ void Mixer::setupSlotsAndSignals()
 
 void Mixer::showDetailsClicked()
 {
+      QSize currentTreeWidgetSize = mixerTreeWidget->size();
+      QSize minTreeWidgetSize = mixerTreeWidget->minimumSize();   // respect settings from QT Creator / QT Designer
+      QSize maxTreeWidgetSize = mixerTreeWidget->maximumSize();   // respect settings from QT Creator / QT Designer
+
+      qDebug()<<"treeWidget current size: "<<currentTreeWidgetSize;
+
+      mixerTreeWidget->setMinimumSize(currentTreeWidgetSize);
+      mixerTreeWidget->setMaximumSize(currentTreeWidgetSize);
       mixerDetails->setVisible(!mixerDetails->isVisible());
+      mixerTreeWidget->adjustSize();
+      dockWidgetContents->adjustSize();
+      this->adjustSize();
+      mixerTreeWidget->setMinimumSize(minTreeWidgetSize);
+      mixerTreeWidget->setMaximumSize(maxTreeWidgetSize);
 }
       
 //---------------------------------------------------------
