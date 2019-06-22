@@ -33,11 +33,12 @@
 
 namespace Ms {
 
-MixerTrackChannel::MixerTrackChannel(QTreeWidgetItem* treeWidgetItem, MixerTrackItem* mixerTrackItem) :
+MixerTrackChannel::MixerTrackChannel(QTreeWidgetItem* treeWidgetItem, MixerTrackItem* mixerTrackItem, MixerOptions* options) :
       treeWidgetItem(treeWidgetItem), mixerTrackItem(mixerTrackItem)
       {
       setupUi(this);
       setupAdditionalUi();
+      updateUiControls(options);
       setupSlotsAndSignals();
       update();
 
@@ -68,9 +69,9 @@ void MixerTrackChannel::setupAdditionalUi()
       soloButton->setStyleSheet(basicButton + colorTemplate.arg("green"));
       }
 
-void MixerTrackChannel::updateUiControls(Mixer* mixer)  // fudge for now!
+void MixerTrackChannel::updateUiControls(MixerOptions* options)
       {
-      bool showTrackColors = mixer->isShowingTrackColors();
+      bool showTrackColors = options->showTrackColors;
       colorLabel->setVisible(showTrackColors);
       }
 

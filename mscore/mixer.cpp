@@ -84,13 +84,16 @@ Mixer::Mixer(QWidget* parent)
       mixerTreeWidget->setHeaderLabels({tr("Instrument"), tr("Volume")});
       mixerTreeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
       mixerTreeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+      //TODO: eliminate magic number - ask mixerTrackChannel for a number
+      // note also that this will depend if the control is expanded with a pan control (to be implemented)
       mixerTreeWidget->header()->setDefaultSectionSize(168);
       mixerTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
       mixerDetails = new MixerDetails(this);
       contextMenu = new MixerContextMenu(this);
 
-      showingTrackColors = false;      // grab this from a saved preference!
+      // TODO: grab this from a saved preference!
+      options = new MixerOptions(true, true, MixerVolumeMode::Override);
 
       // default layout - and we can re-organise in code
       //TODO: implement layout re-org from context menu
@@ -107,11 +110,18 @@ Mixer::Mixer(QWidget* parent)
       
       enablePlay = new EnablePlayForWidget(this);
       retranslate(true);
+      updateUiOptions();
       setupSlotsAndSignals();
       }
 
 MixerKeyboardControlFilter::MixerKeyboardControlFilter(Mixer* mixer) : mixer(mixer)
       {
+      }
+
+MixerOptions::MixerOptions(bool showTrackColors, bool detailsOnTheSide, MixerVolumeMode mode) :
+      showTrackColors(showTrackColors), detailsOnTheSide(detailsOnTheSide), mode(mode)
+      {
+
       }
 
 MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
@@ -166,24 +176,26 @@ void Mixer::verticalStacking()
 
 void Mixer::showTrackColors()
       {
-      showingTrackColors = contextMenu->showTrackColors->isChecked();
-      qDebug()<<"showTrackColors: "<<showingTrackColors;
+      options->showTrackColors = contextMenu->showTrackColors->isChecked();
+      updateUiOptions();
+      }
 
+void Mixer::updateUiOptions()
+      {
       mixerDetails->updateUiOptions();
 
       for (int topLevelIndex = 0; topLevelIndex < mixerTreeWidget->topLevelItemCount(); topLevelIndex++) {
             QTreeWidgetItem* topLevelItem = mixerTreeWidget->topLevelItem(topLevelIndex);
             MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(topLevelItem, 1));
-            itemWidget->updateUiControls(this);
+            itemWidget->updateUiControls(options);
 
             for (int childIndex = 0; childIndex < topLevelItem->childCount(); childIndex++) {
                   QTreeWidgetItem* childItem = topLevelItem->child(childIndex);
                   MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(childItem, 1));
-                  itemWidget->updateUiControls(this);
-                  }
+                  itemWidget->updateUiControls(options);
             }
       }
-
+      }
 
 void Mixer::contextMenuEvent(QContextMenuEvent *event)
 {
@@ -203,14 +215,27 @@ void Mixer::showDetailsClicked()
       QSize minTreeWidgetSize = mixerTreeWidget->minimumSize();   // respect settings from QT Creator / QT Designer
       QSize maxTreeWidgetSize = mixerTreeWidget->maximumSize();   // respect settings from QT Creator / QT Designer
 
-      qDebug()<<"treeWidget current size: "<<currentTreeWidgetSize;
+      if (!isFloating() && !mixerDetails->isVisible()) {
+            // Special case - make the mixerTreeView as narrow as possible before showing the
+            // detailsView. Without this step, mixerTreeView will be as fully wide as the dock
+            // and when the detailsView is added it will get even wider. (And if the user toggles QT
+            // will keep making the dock / mainWindow wider and wider, which is highly undesirable.)
+            mixerTreeWidget->setMaximumSize(minTreeWidgetSize);
+            mixerDetails->setVisible(!mixerDetails->isVisible());
+            dockWidgetContents->adjustSize();
+            mixerTreeWidget->setMaximumSize(maxTreeWidgetSize);
+            return;
+      }
 
+      // Pin the size of the mixerView when either showing or hiding the details view.
+      // This ensures that the mixer window (when undocked) will shrink or grow as
+      // appropriate.
       mixerTreeWidget->setMinimumSize(currentTreeWidgetSize);
       mixerTreeWidget->setMaximumSize(currentTreeWidgetSize);
       mixerDetails->setVisible(!mixerDetails->isVisible());
       mixerTreeWidget->adjustSize();
       dockWidgetContents->adjustSize();
-      this->adjustSize();
+      this->adjustSize(); // All three adjustSize() calls (appear) to be required
       mixerTreeWidget->setMinimumSize(minTreeWidgetSize);
       mixerTreeWidget->setMaximumSize(maxTreeWidgetSize);
 }
@@ -528,7 +553,7 @@ void Mixer::updateTracks()
             item->setToolTip(0, part->partName());
             mixerTreeWidget->addTopLevelItem(item);
 
-            MixerTrackChannel* mixerTrackWidget = new MixerTrackChannel(item, mixerTrackItem);
+            MixerTrackChannel* mixerTrackWidget = new MixerTrackChannel(item, mixerTrackItem, options);
             mixerTreeWidget->setItemWidget(item, 1, mixerTrackWidget);
 
             //Add per channel tracks
@@ -556,7 +581,7 @@ void Mixer::updateTracks()
                         item->addChild(child);
 
                         MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
-                        mixerTreeWidget->setItemWidget(child, 1, new MixerTrackChannel(child, mixerTrackItem));
+                        mixerTreeWidget->setItemWidget(child, 1, new MixerTrackChannel(child, mixerTrackItem, options));
                         }
                   }
             }
@@ -587,7 +612,6 @@ void Mixer::currentItemChanged()
 
       MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(treeItemWidget);
       mixerDetails->updateDetails(itemWidget->getMixerTrackItem());
-      qDebug()<<"about to call takeSelection";
       itemWidget->takeSelection();
       }
 

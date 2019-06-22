@@ -121,14 +121,11 @@ void MixerTrackItem::setVolume(char value)
        items on the list! the repeated code is CRAZY... it makes the code harder to follow and the
        overall code length much longer...
        */
-      qDebug()<<"MixerTrackItem::setVolume("<<int(value)<<")";
 
       if (_trackType == TrackType::PART) {
-            qDebug()<<"TrackType::PART";
             const InstrumentList* il = _part->instruments();
             for (auto it = il->begin(); it != il->end(); ++it) {
                   Instrument* instr = it->second;
-                  qDebug()<<"Setting volume on: '"<<instr->trackName()<<"'";
                   for (const Channel* instrChan: instr->channel()) {
                         Channel* chan = playbackChannel(instrChan);
                         if (chan->volume() != value) {
@@ -139,7 +136,6 @@ void MixerTrackItem::setVolume(char value)
                   }
             }
       else {
-            qDebug()<<"TrackType::CHANNEL";
             if (_chan->volume() != value) {
                   _chan->setVolume(value);
                   seq->setController(_chan->channel(), CTRL_VOLUME, _chan->volume());
@@ -155,8 +151,6 @@ void MixerTrackItem::setPan(char value)
       {
 //      char v = (char)qBound(0, (int)((value + 180.0) / 360.0 * 128.0), 127);
 
-      qDebug()<<"MixerTrackItem::setPan("<<value<<")";
-      
       if (_trackType == TrackType::PART) {
             const InstrumentList* il = _part->instruments();
             for (auto it = il->begin(); it != il->end(); ++it) {

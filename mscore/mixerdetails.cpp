@@ -65,8 +65,7 @@ void MixerDetails::setupSlotsAndSignals()
 
 void MixerDetails::updateUiOptions()
       {
-      qDebug()<<"MixerDetails::updateUiOptions()";
-      bool showTrackColors = mixer->isShowingTrackColors();
+      bool showTrackColors = mixer->getOptions()->showTrackColors;
       trackColorLabel->setVisible(showTrackColors);
       labelTrackColor->setVisible(showTrackColors);
       }
@@ -75,7 +74,6 @@ void MixerDetails::updateUiOptions()
 //MARK:- Main interface
 void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       {
-      qDebug()<<"MixerDetails:updateDetails()";
       selectedMixerTrackItem = mixerTrackItem;
 
       if (!selectedMixerTrackItem) {
@@ -90,8 +88,8 @@ void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       // changed. This ensures the details view is synced with changes in the tree view.
 
       setNotifier(selectedMixerTrackItem->chan());
-      updateUiOptions();
 
+      updateUiOptions();
       enableDetails(true);
 
       blockDetailsSignals(true);
@@ -160,7 +158,6 @@ void MixerDetails::propertyChanged(Channel::Prop property)
 // for that change? - not clear that we are
 void MixerDetails::updatePatch(MixerTrackItem* mixerTrackItem)
       {
-      qDebug()<<"MixerDetails::updatePatch("<<mixerTrackItem->chan()->name()<<")";
       Channel* channel = mixerTrackItem->chan();
       MidiMapping* midiMap = mixerTrackItem->midiMap();
       
@@ -373,7 +370,6 @@ void MixerDetails::trackColorEdited(QColor col)
 // volumeChanged - process signal from volumeSlider
 void MixerDetails::volumeSpinBoxEdited(double value)
       {
-      qDebug()<<"volumeChanged(double "<<value<<")";
       if (!selectedMixerTrackItem)
             return;
       selectedMixerTrackItem->setVolume(value);
@@ -382,7 +378,6 @@ void MixerDetails::volumeSpinBoxEdited(double value)
 // volumeChanged - process signal from volumeSpinBox
 void MixerDetails::volumeSliderMoved(int value)
       {
-      qDebug()<<"volumeChanged(double "<<value<<")";
       if (!selectedMixerTrackItem)
             return;
       selectedMixerTrackItem->setVolume(value);
@@ -441,7 +436,6 @@ void MixerDetails::chorusSpinBoxEdited(double value)
 //  patchChanged - process signal from patchCombo
 void MixerDetails::patchComboEdited(int comboIndex)
       {
-      qDebug()<<"Mixer::patchComboEdited('"<<comboIndex<<")";
       if (!selectedMixerTrackItem)
             return;
 
@@ -451,10 +445,7 @@ void MixerDetails::patchComboEdited(int comboIndex)
             return;
             }
 
-
-
-
-      Part* part = selectedMixerTrackItem->midiMap()->part();
+     // Part* part = selectedMixerTrackItem->midiMap()->part();
       Channel* channel = selectedMixerTrackItem->midiMap()->articulation();
 
       //obq-note - AVOID the UNDO CODE
@@ -509,7 +500,6 @@ void MixerDetails::patchComboEdited(int comboIndex)
 // drumkitToggled - process signal from drumkitCheck
 void MixerDetails::drumsetCheckboxToggled(bool val)
       {
-      qDebug()<<"MixerDetails::drumsetCheckboxToggled";
       if (!selectedMixerTrackItem)
             return;
 

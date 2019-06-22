@@ -42,6 +42,9 @@ class MixerTrack;
 class MixerDetails;
 class MidiMapping;
 class MixerKeyboardControlFilter;
+//class MixerOptions;
+class MixerContextMenu;
+class MixerOptions;
 
 double volumeToUserRange(char v);
 double panToUserRange(char v);
@@ -70,8 +73,14 @@ char userRangeToReverb(double v);
       Not very clear when/how GROUP is used. Maybe the mixer IS the only group?
       Might have something to do with PARTS etc.
  */
-class MixerContextMenu;
-      
+
+enum class MixerVolumeMode : int
+      {
+            Override,
+            Ratio,
+            PrimaryInstrument
+      };
+
 class Mixer : public QDockWidget, public Ui::Mixer
       {
       Q_OBJECT
@@ -81,8 +90,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
       MixerKeyboardControlFilter* keyboardFilter;
       MixerContextMenu* contextMenu;
       QGridLayout* gridLayout;
-
-      bool showingTrackColors;
+      MixerOptions* options;
 
       EnablePlayForWidget* enablePlay;
 
@@ -97,7 +105,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void setPlaybackScore(Score*);
       void setupSlotsAndSignals();
 
-      void updateTreeSelection();                     // go to first item OR disable mixer
+      void updateTreeSelection(); // go to first item OR disable mixer
 
       void disableMixer();
       MixerTrackItem* mixerTrackItemFromPart(Part* part);
@@ -109,11 +117,8 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void updateTracks();
       void midiPrefsChanged(bool showMidiControls);
       void masterVolumeChanged(double val);
-      
       void currentItemChanged(); // obq
-
       void synthGainChanged(float val);
-
       void showDetailsClicked();
       void verticalStacking();
       void showTrackColors();
@@ -131,7 +136,8 @@ class Mixer : public QDockWidget, public Ui::Mixer
       //PartEdit* getPartAtIndex(int index);
       void contextMenuEvent(QContextMenuEvent *event) override;
       MixerDetails* mixerDetails;
-      bool isShowingTrackColors() { return showingTrackColors; };
+      void updateUiOptions();
+      MixerOptions* getOptions() { return options; };
       };
 
 class MixerKeyboardControlFilter : public QObject
@@ -146,7 +152,7 @@ class MixerKeyboardControlFilter : public QObject
       };
 
 class MixerContextMenu : public QObject
-{
+      {
       Q_OBJECT
       Mixer* mixer;
 
@@ -161,7 +167,17 @@ public:
       QAction* overallVolumeRatioMode;
       QAction* overallVolumeFirstMode;
       QAction* showTrackColors;
-};
+      };
+
+      
+class MixerOptions
+      {
+   public:
+      MixerOptions(bool showTrackColors, bool detailsOnTheSide, MixerVolumeMode mode);
+      bool showTrackColors;
+      bool detailsOnTheSide;
+      MixerVolumeMode mode;
+      };
       
 } // namespace Ms
 #endif

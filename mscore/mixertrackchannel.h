@@ -37,9 +37,8 @@
 
 namespace Ms {
 
-class MidiMapping;
 class MixerTrackItem;
-class Mixer;
+class MixerOptions;
 
 //---------------------------------------------------------
 //   MixerTrack
@@ -62,7 +61,7 @@ public slots:
       void stripVolumeSliderMoved(int);
       void takeSelection();
 
-      void updateUiControls(Mixer* mixer); // for showing/hiding color and panning
+      void updateUiControls(MixerOptions* options); // for showing/hiding color and panning
 
       signals:
       void userInteraction(QTreeWidgetItem*);
@@ -71,7 +70,7 @@ protected:
       void propertyChanged(Channel::Prop property) override;      // ChannelListener method
             
 public:
-      explicit MixerTrackChannel(QTreeWidgetItem*, MixerTrackItem*);
+      explicit MixerTrackChannel(QTreeWidgetItem*, MixerTrackItem*, MixerOptions*);
       MixerTrackItem* getMixerTrackItem() { return mixerTrackItem; }
       };
 }
