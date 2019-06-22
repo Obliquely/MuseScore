@@ -93,7 +93,8 @@ Mixer::Mixer(QWidget* parent)
       contextMenu = new MixerContextMenu(this);
 
       // TODO: grab this from a saved preference!
-      options = new MixerOptions(true, true, MixerVolumeMode::Override);
+      //MixerOptions(bool showTrackColors, bool detailsOnTheSide, bool tabbedDetails, MixerVolumeMode mode);
+      options = new MixerOptions(false, true, true, MixerVolumeMode::Override);
 
       // default layout - and we can re-organise in code
       //TODO: implement layout re-org from context menu
@@ -118,29 +119,30 @@ MixerKeyboardControlFilter::MixerKeyboardControlFilter(Mixer* mixer) : mixer(mix
       {
       }
 
-MixerOptions::MixerOptions(bool showTrackColors, bool detailsOnTheSide, MixerVolumeMode mode) :
-      showTrackColors(showTrackColors), detailsOnTheSide(detailsOnTheSide), mode(mode)
+MixerOptions::MixerOptions(bool showTrackColors, bool detailsOnTheSide, bool tabbedDetails, MixerVolumeMode mode) :
+      showTrackColors(showTrackColors), detailsOnTheSide(detailsOnTheSide), tabbedDetails(tabbedDetails), mode(mode)
       {
-
       }
 
 MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
       {
-      detailToSide = new QAction("Show Details Below");
+      detailToSide = new QAction(tr("Show Details Below"));
       detailToSide->setCheckable(true);
       detailToSide->setChecked(true);     // default (for testing)
-      detailBelow = new QAction("Show Details to the Side");
+      detailBelow = new QAction(tr("Show Details to the Side"));
       detailBelow->setCheckable(true);
-      panSliderInMixer = new QAction("Show Pan Slider in Mixer");
-      overallVolumeOverrideMode = new QAction("Overall volume: override");
-      overallVolumeRatioMode = new QAction("Overall volume: ratio");
-      overallVolumeFirstMode = new QAction("Overall volume: first channel");
+      tabbedDetails = new QAction(tr("Tabbed Details (more compact)"));
+      panSliderInMixer = new QAction(tr("Show Pan Slider in Mixer"));
+      overallVolumeOverrideMode = new QAction(tr("Overall volume: override"));
+      overallVolumeRatioMode = new QAction(tr("Overall volume: ratio"));
+      overallVolumeFirstMode = new QAction(tr("Overall volume: first channel"));
       showTrackColors = new QAction(tr("Track Colors"));
       showTrackColors->setCheckable(true);
 
       detailToSide->setStatusTip(tr("Detailed options shown below the mixer"));
       connect(detailToSide, &QAction::triggered, mixer, &Mixer::verticalStacking);
       connect(showTrackColors, SIGNAL(changed()), mixer, SLOT(showTrackColors()));
+      connect(tabbedDetails, SIGNAL(triggered()), mixer, SLOT(tabbedDetails()));
       }
 
 void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
@@ -157,7 +159,8 @@ void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
       geometryGroup->addAction(detailBelow);
       menu.addAction(detailToSide);
       menu.addAction(detailBelow);
-
+      menu.addSeparator();
+      menu.addAction(tabbedDetails);
 
       menu.addSection("Controls");
       menu.addAction(panSliderInMixer);
@@ -172,6 +175,11 @@ void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
 void Mixer::verticalStacking()
       {
       qDebug()<<"Vertical stacking menu item triggered.";
+      }
+
+void Mixer::tabbedDetails()
+      {
+      qDebug()<<"Tabbed Details menu action triggered.";
       }
 
 void Mixer::showTrackColors()
