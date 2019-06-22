@@ -120,8 +120,8 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void currentItemChanged(); // obq
       void synthGainChanged(float val);
       void showDetailsClicked();
-      void verticalStacking();
-      void tabbedDetails();
+      void showDetailsBelow();
+      void showMidiOptions();
       void showTrackColors();
             
    signals:
@@ -163,7 +163,7 @@ public:
       
       QAction* detailToSide;
       QAction* detailBelow;
-      QAction* tabbedDetails;
+      QAction* showMidiOptions;
       QAction* panSliderInMixer;
       QAction* overallVolumeOverrideMode;
       QAction* overallVolumeRatioMode;
@@ -175,10 +175,11 @@ public:
 class MixerOptions
       {
    public:
-      MixerOptions(bool showTrackColors, bool detailsOnTheSide, bool tabbedDetails, MixerVolumeMode mode);
+      MixerOptions(bool showTrackColors, bool detailsOnTheSide, bool showMidiOptions, MixerVolumeMode mode);
+      MixerOptions();
       bool showTrackColors;
       bool detailsOnTheSide;
-      bool tabbedDetails;
+      bool showMidiOptions;
       MixerVolumeMode mode;
       };
       

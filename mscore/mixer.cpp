@@ -72,8 +72,14 @@ char userRangeToReverb(double v) { return (char)qBound(0, (int)(v / 100.0 * 128.
 //---------------------------------------------------------
 
 Mixer::Mixer(QWidget* parent)
-    : QDockWidget("Mixer", parent)
+      : QDockWidget("Mixer", parent)
       {
+
+      // TODO: grab this from a saved preference!
+      //MixerOptions(bool showTrackColors, bool detailsOnTheSide, bool tabbedDetails, MixerVolumeMode mode);
+      // setup options EARLY as later calls in this method assume it's already there
+      options = new MixerOptions(false, true, true, MixerVolumeMode::Override);
+
       setupUi(this);
 
       setWindowFlags(Qt::Tool);
@@ -92,9 +98,7 @@ Mixer::Mixer(QWidget* parent)
       mixerDetails = new MixerDetails(this);
       contextMenu = new MixerContextMenu(this);
 
-      // TODO: grab this from a saved preference!
-      //MixerOptions(bool showTrackColors, bool detailsOnTheSide, bool tabbedDetails, MixerVolumeMode mode);
-      options = new MixerOptions(false, true, true, MixerVolumeMode::Override);
+
 
       // default layout - and we can re-organise in code
       //TODO: implement layout re-org from context menu
@@ -120,7 +124,11 @@ MixerKeyboardControlFilter::MixerKeyboardControlFilter(Mixer* mixer) : mixer(mix
       }
 
 MixerOptions::MixerOptions(bool showTrackColors, bool detailsOnTheSide, bool tabbedDetails, MixerVolumeMode mode) :
-      showTrackColors(showTrackColors), detailsOnTheSide(detailsOnTheSide), tabbedDetails(tabbedDetails), mode(mode)
+      showTrackColors(showTrackColors), detailsOnTheSide(detailsOnTheSide), showMidiOptions(tabbedDetails), mode(mode)
+      {
+      }
+MixerOptions::MixerOptions() :
+      showTrackColors(true), detailsOnTheSide(true), showMidiOptions(true), mode(MixerVolumeMode::Override)
       {
       }
 
@@ -131,7 +139,9 @@ MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
       detailToSide->setChecked(true);     // default (for testing)
       detailBelow = new QAction(tr("Show Details to the Side"));
       detailBelow->setCheckable(true);
-      tabbedDetails = new QAction(tr("Tabbed Details (more compact)"));
+      showMidiOptions = new QAction(tr("Show Midi Options"));
+      showMidiOptions->setCheckable(true);
+      showMidiOptions->setChecked(mixer->getOptions()->showMidiOptions);
       panSliderInMixer = new QAction(tr("Show Pan Slider in Mixer"));
       overallVolumeOverrideMode = new QAction(tr("Overall volume: override"));
       overallVolumeRatioMode = new QAction(tr("Overall volume: ratio"));
@@ -140,9 +150,9 @@ MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
       showTrackColors->setCheckable(true);
 
       detailToSide->setStatusTip(tr("Detailed options shown below the mixer"));
-      connect(detailToSide, &QAction::triggered, mixer, &Mixer::verticalStacking);
+      connect(detailToSide, SIGNAL(triggered()), mixer, SLOT(showDetailsBelow()));
       connect(showTrackColors, SIGNAL(changed()), mixer, SLOT(showTrackColors()));
-      connect(tabbedDetails, SIGNAL(triggered()), mixer, SLOT(tabbedDetails()));
+      connect(showMidiOptions, SIGNAL(changed()), mixer, SLOT(showMidiOptions()));
       }
 
 void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
@@ -160,7 +170,7 @@ void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
       menu.addAction(detailToSide);
       menu.addAction(detailBelow);
       menu.addSeparator();
-      menu.addAction(tabbedDetails);
+      menu.addAction(showMidiOptions);
 
       menu.addSection("Controls");
       menu.addAction(panSliderInMixer);
@@ -172,14 +182,16 @@ void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
       menu.exec(event->globalPos());
 }
 
-void Mixer::verticalStacking()
+void Mixer::showDetailsBelow()
       {
-      qDebug()<<"Vertical stacking menu item triggered.";
+      qDebug()<<"showDetailsBelow toggle -  menu item triggered.";
       }
 
-void Mixer::tabbedDetails()
+void Mixer::showMidiOptions()
       {
-      qDebug()<<"Tabbed Details menu action triggered.";
+      qDebug()<<"Show/Hide Midi toggle - menu action triggered.";
+      options->showMidiOptions = contextMenu->showMidiOptions->isChecked();
+      updateUiOptions();
       }
 
 void Mixer::showTrackColors()

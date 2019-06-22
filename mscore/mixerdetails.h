@@ -43,7 +43,6 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       Mixer* mixer;
       MixerTrackItem* selectedMixerTrackItem = nullptr;
       void setupSlotsAndSignals();
-      QWidget* mutePerVoiceHolder = nullptr;
       QGridLayout* mutePerVoiceGrid;
       QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
 

@@ -36,10 +36,15 @@ namespace Ms {
 //MARK:- Create and setup
 MixerDetails::MixerDetails(Mixer *mixer) :
       QWidget(mixer), mixer(mixer),
-      selectedMixerTrackItem(nullptr),
-      mutePerVoiceHolder(nullptr)
+      selectedMixerTrackItem(nullptr)
       {
       setupUi(this);
+
+      mutePerVoiceGrid = new QGridLayout();
+      mutePerVoiceHolder->setLayout(mutePerVoiceGrid);
+      mutePerVoiceGrid->setContentsMargins(0, 0, 0, 0);
+      mutePerVoiceGrid->setSpacing(7);
+
       setupSlotsAndSignals();
       updateDetails(selectedMixerTrackItem);
       }
@@ -68,6 +73,19 @@ void MixerDetails::updateUiOptions()
       bool showTrackColors = mixer->getOptions()->showTrackColors;
       trackColorLabel->setVisible(showTrackColors);
       labelTrackColor->setVisible(showTrackColors);
+
+      bool showMidiOptions = mixer->getOptions()->showMidiOptions;
+      reverbSlider->setVisible(showMidiOptions);
+      reverbSpinBox->setVisible(showMidiOptions);
+      labelReverb->setVisible(showMidiOptions);
+      chorusSlider->setVisible(showMidiOptions);
+      chorusSpinBox->setVisible(showMidiOptions);
+      labelChorus->setVisible(showMidiOptions);
+      labelMidiPort->setVisible(showMidiOptions);
+      labelMidiChannel->setVisible(showMidiOptions);
+      channelSpinBox->setVisible(showMidiOptions);
+      portSpinBox->setVisible(showMidiOptions);
+
       }
 
 
@@ -266,24 +284,14 @@ void MixerDetails::updateMidiChannel()
 //MARK:- Voice Muting
 void MixerDetails::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
       {
-      if (mutePerVoiceHolder) {
-            // deleteLater() deletes object after the current event loop completes
-            mutePerVoiceHolder->deleteLater();
-            mutePerVoiceHolder = nullptr;
-            }
-
-      Part* part = mixerTrackItem->part();
-
-      //Set up mute per voice buttons
-      mutePerVoiceHolder = new QWidget();
-      mutePerVoiceArea->addWidget(mutePerVoiceHolder);
-
-      mutePerVoiceGrid = new QGridLayout();
-      mutePerVoiceHolder->setLayout(mutePerVoiceGrid);
-      mutePerVoiceGrid->setContentsMargins(0, 0, 0, 0);
-      mutePerVoiceGrid->setSpacing(7);
+      for (QWidget* voiceButton : voiceButtons) {
+            mutePerVoiceGridLayout->removeWidget(voiceButton);
+            voiceButton->deleteLater();
+      }
 
       voiceButtons.clear();
+
+      Part* part = mixerTrackItem->part();
 
       for (int staffIndex = 0; staffIndex < (*part->staves()).length(); ++staffIndex) {
             Staff* staff = (*part->staves())[staffIndex];
@@ -293,6 +301,7 @@ void MixerDetails::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
                                     QString("QPushButton{padding: 4px 8px 4px 8px;}QPushButton:checked{background-color:%1}")
                                     .arg(MScore::selectColor[voice].name()));
                   muteButton->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+                  muteButton->setMaximumWidth(30);
                   muteButton->setText(QString("%1").arg(voice + 1));
                   muteButton->setCheckable(true);
                   muteButton->setChecked(!staff->playbackVoice(voice));
@@ -300,13 +309,15 @@ void MixerDetails::updateMutePerVoice(MixerTrackItem* mixerTrackItem)
                   muteButton->setObjectName(helpfulDescription);
                   muteButton->setToolTip(helpfulDescription);
                   muteButton->setAccessibleName(helpfulDescription);
+                  qDebug()<<"Adding voice mute: "<<helpfulDescription;
 
-                  mutePerVoiceGrid->addWidget(muteButton, staffIndex, voice);
+                  mutePerVoiceGridLayout->addWidget(muteButton, staffIndex, voice);
                   MixerVoiceMuteButtonHandler* handler = new MixerVoiceMuteButtonHandler(this, staffIndex, voice, muteButton);
                   connect(muteButton, SIGNAL(toggled(bool)), handler, SLOT(setVoiceMute(bool)));
                   voiceButtons.append(muteButton);
                   }
             }
+      //mutePerVoiceHolder->adjustSize();
       updateTabOrder();
       }
 
@@ -579,12 +590,17 @@ void MixerDetails::updateTabOrder()
       {
       QList<QWidget*> groupA = {partNameLineEdit, drumkitCheck, patchCombo, volumeSlider, volumeSpinBox, panSlider, panSpinBox};
       QList<QWidget*> groupB = {portSpinBox, channelSpinBox, reverbSlider, reverbSpinBox, chorusSlider, chorusSpinBox};
-      QList<QWidget*> tabOrder = groupA + voiceButtons + groupB;
+      //QList<QWidget*> tabOrder = groupA + voiceButtons + groupB;
+
+      QList<QWidget*> voiceArea = {mutePerVoiceHolder};
+      QList<QWidget*> tabOrder = groupA + voiceArea + groupB;
+
 
       QWidget* current = tabOrder.first();
       while (tabOrder.count() > 1) {
             tabOrder.removeFirst();
             QWidget* next = tabOrder.first();
+            qDebug()<<"Setting tab order. "<<current->objectName()<<" before "<<next->objectName();
             setTabOrder(current, next);
             current = next;
       }
