@@ -86,6 +86,10 @@ void MixerTrackChannel::update()
       Part* part = mixerTrackItem->part();
       Instrument* instrument = mixerTrackItem->instrument();
 
+      QColor channelColor = channel->color();
+      if (colorLabel)
+            colorLabel->setStyleSheet(QString("QLabel{background: %1;padding-top: 2px; padding-bottom: 2px;}").arg(channelColor.name()));
+
       QString tooltip = tr("Part Name: %1\n"
                            "Instrument: %2\n"
                            "Channel: %3\n"

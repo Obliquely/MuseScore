@@ -44,65 +44,71 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void setupSlotsAndSignals();
       QWidget* mutePerVoiceHolder = nullptr;
       QGridLayout* mutePerVoiceGrid;
-      QList<QPushButton*> voiceButtons;
+      QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
 
+      void updateName();
+      void updateTrackColor();
       void updatePatch(MixerTrackItem* mixerTrackItem);
-      void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
       void updateVolume();
       void updatePan();
+      void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
       void updateReverb();
       void updateChorus();
-      void updateName();
       void updateMidiChannel();
 
       void blockDetailsSignals(bool);
+      void updateTabOrder();
             
    public slots:
-      void partNameChanged();
-      // void trackColorChanged(QColor);
-      void volumeSpinBoxEdited(double);
+      void partNameEdited();
+      void drumsetCheckboxToggled(bool);
+      void patchComboEdited(int);
       void volumeSliderMoved(int);
+      void volumeSpinBoxEdited(double);
       void panSliderMoved(int);
       void panSpinBoxEdited(double);
-      void chorusSliderMoved(double);
-      void reverbSliderMoved(double);
-      void drumsetCheckboxToggled(bool);
       void midiChannelOrPortEdited(int);
-      void patchComboEdited(int);
+      void reverbSliderMoved(int);
+      void reverbSpinBoxEdited(double);
+      void chorusSliderMoved(int);
+      void chorusSpinBoxEdited(double);
+      void trackColorEdited(QColor);
 
    public:
       MixerDetails(Mixer *mixer);
       void updateDetails(MixerTrackItem*);
-      void enableDetails(bool);
-      void resetDetails();          // default values (for when not detail selected)
-      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
-      void setVoiceMute(int staffIdx, int voice, bool shouldMute);
-      void resetPanToCentre();
       void propertyChanged(Channel::Prop property) override;
+
+      void enableDetails(bool);
+      void resetDetails(); // apply default (0 or empty) values for when no track is selected
+      void setVoiceMute(int staffIndex, int voiceIndex, bool shouldMute);
+      void resetPanToCentre();
+
+      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
       };
 
 class MixerDetails;
 
-class MixerDetailsVoiceButtonHandler : public QObject
+class MixerVoiceMuteButtonHandler : public QObject
       {
       Q_OBJECT
 
       MixerDetails* mixerDetails;
-      int staff;
-      int voice;
+      int staffIndex;
+      int voiceIndex;
 
    public:
-      MixerDetailsVoiceButtonHandler(MixerDetails* mixerDetails, int staff, int voice, QObject* parent = nullptr)
+      MixerVoiceMuteButtonHandler(MixerDetails* mixerDetails, int staffIndex, int voiceIndex, QObject* parent = nullptr)
             : QObject(parent),
               mixerDetails(mixerDetails),
-              staff(staff),
-              voice(voice)
+              staffIndex(staffIndex),
+              voiceIndex(voiceIndex)
             {}
 
 public slots:
       void setVoiceMute(bool checked)
             {
-            mixerDetails->setVoiceMute(staff, voice, checked);
+            mixerDetails->setVoiceMute(staffIndex, voiceIndex, checked);
             }
    };
 }

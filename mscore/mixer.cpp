@@ -466,12 +466,13 @@ void Mixer::updateTracks()
 
             MixerTrackItem* mixerTrackItem = mixerTrackItemFromPart(part);
 
-            QStringList columns = QStringList(part->partName());  // first column has part name
-            columns.append("");     // second column left blank - occuped by mixerTrackChannel widget
             QTreeWidgetItem* item = new QTreeWidgetItem(mixerTreeWidget);
             item->setText(0, part->partName());
+            item->setToolTip(0, part->partName());
             mixerTreeWidget->addTopLevelItem(item);
-            mixerTreeWidget->setItemWidget(item, 1, new MixerTrackChannel(item, mixerTrackItem));
+
+            MixerTrackChannel* mixerTrackWidget = new MixerTrackChannel(item, mixerTrackItem);
+            mixerTreeWidget->setItemWidget(item, 1, mixerTrackWidget);
 
             //Add per channel tracks
             const InstrumentList* partInstrumentList = part->instruments();
@@ -491,9 +492,10 @@ void Mixer::updateTracks()
                         Channel* channel = instrument->playbackChannel(i, _score->masterScore());
                         //qDebug()<<"        Mixer::updateTracks() - inner loop, inner loop - channel->name()()"<<channel->name();
 
-                        QStringList columns = QStringList(channel->name());
-                        columns.append("");
-                        QTreeWidgetItem* child = new QTreeWidgetItem((QTreeWidget*)0, columns);
+
+                        QTreeWidgetItem* child = new QTreeWidgetItem(0);
+                        child->setText(0, channel->name());
+                        child->setToolTip(0, QString("%1 - %2").arg(part->partName()).arg(channel->name()));
                         item->addChild(child);
 
                         MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
