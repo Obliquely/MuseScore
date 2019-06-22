@@ -90,24 +90,18 @@ Mixer::Mixer(QWidget* parent)
       mixerTreeWidget->setHeaderLabels({tr("Instrument"), tr("Volume")});
       mixerTreeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
       mixerTreeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+
       //TODO: eliminate magic number - ask mixerTrackChannel for a number
       // note also that this will depend if the control is expanded with a pan control (to be implemented)
+      // the ratios / geometry aren't right yet - might need to hand code something that monitors
+      // the stretch - we do want LONGER SLIDERS in some circumstances...
       mixerTreeWidget->header()->setDefaultSectionSize(168);
       mixerTreeWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
+      gridLayout = new QGridLayout(dockWidgetContents);
+
       mixerDetails = new MixerDetails(this);
       contextMenu = new MixerContextMenu(this);
-
-
-
-      // default layout - and we can re-organise in code
-      //TODO: implement layout re-org from context menu
-      gridLayout = new QGridLayout(dockWidgetContents);
-      gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-      gridLayout->addWidget(mixerDetails, 0, 2, 1, 1);
-      gridLayout->addWidget(partOnlyCheckBox, 1, 0, 1, 1);
-      gridLayout->addWidget(showDetailsButton, 1, 1, 1, 1);
-      gridLayout->addWidget(mixerTreeWidget, 0, 0, 1, 2);
 
       keyboardFilter = new MixerKeyboardControlFilter(this);
       this->installEventFilter(keyboardFilter);
@@ -134,11 +128,9 @@ MixerOptions::MixerOptions() :
 
 MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
       {
-      detailToSide = new QAction(tr("Show Details Below"));
+      detailToSide = new QAction(tr("Show Details to the Side"));
       detailToSide->setCheckable(true);
-      detailToSide->setChecked(true);     // default (for testing)
-      detailBelow = new QAction(tr("Show Details to the Side"));
-      detailBelow->setCheckable(true);
+      detailToSide->setChecked(mixer->getOptions()->detailsOnTheSide);
       showMidiOptions = new QAction(tr("Show Midi Options"));
       showMidiOptions->setCheckable(true);
       showMidiOptions->setChecked(mixer->getOptions()->showMidiOptions);
@@ -150,7 +142,7 @@ MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
       showTrackColors->setCheckable(true);
 
       detailToSide->setStatusTip(tr("Detailed options shown below the mixer"));
-      connect(detailToSide, SIGNAL(triggered()), mixer, SLOT(showDetailsBelow()));
+      connect(detailToSide, SIGNAL(changed()), mixer, SLOT(showDetailsBelow()));
       connect(showTrackColors, SIGNAL(changed()), mixer, SLOT(showTrackColors()));
       connect(showMidiOptions, SIGNAL(changed()), mixer, SLOT(showMidiOptions()));
       }
@@ -158,24 +150,14 @@ MixerContextMenu::MixerContextMenu(Mixer* mixer) : mixer(mixer)
 void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
 {
       QMenu menu(mixer);
-      menu.addSection("Geometry");
-
-      QActionGroup* geometryGroup = new QActionGroup(mixer);
-
-      detailToSide->setActionGroup(geometryGroup);
-      detailBelow->setActionGroup(geometryGroup);
-      geometryGroup->setExclusive(true);
-
-      geometryGroup->addAction(detailBelow);
+      menu.addSection(tr("Customize"));
       menu.addAction(detailToSide);
-      menu.addAction(detailBelow);
       menu.addSeparator();
       menu.addAction(showMidiOptions);
-
-      menu.addSection("Controls");
-      menu.addAction(panSliderInMixer);
       menu.addAction(showTrackColors);
-      menu.addSection("Overall volume");
+      menu.addSection(tr("Secondary Slider"));
+      menu.addAction(panSliderInMixer);
+      menu.addSection(tr("Slider Behavior"));
       menu.addAction(overallVolumeRatioMode);
       menu.addAction(overallVolumeFirstMode);
       menu.addAction(overallVolumeFirstMode);
@@ -185,6 +167,8 @@ void MixerContextMenu::contextMenuEvent(QContextMenuEvent *event)
 void Mixer::showDetailsBelow()
       {
       qDebug()<<"showDetailsBelow toggle -  menu item triggered.";
+      options->detailsOnTheSide = contextMenu->detailToSide->isChecked();
+      updateUiOptions();
       }
 
 void Mixer::showMidiOptions()
@@ -202,8 +186,27 @@ void Mixer::showTrackColors()
 
 void Mixer::updateUiOptions()
       {
+
+      //    void addWidget(QWidget *, int row, int column, int rowSpan, int columnSpan, Qt::Alignment = Qt::Alignment());
+
+      if (options->detailsOnTheSide) {
+            gridLayout->addWidget(mixerTreeWidget, 0, 0, 1, 2);   // c0-r0 & c1-r0
+            gridLayout->addWidget(partOnlyCheckBox, 1, 0, 1, 1);  // c0-r1
+            gridLayout->addWidget(showDetailsButton, 1, 1, 1, 1); // c1-r1
+            gridLayout->addWidget(mixerDetails, 0, 2, 1, 1);      // c2-r0
+            }
+      else {
+            gridLayout->addWidget(mixerTreeWidget, 0, 0, 1, 2);
+            gridLayout->addWidget(partOnlyCheckBox, 1, 0, 1, 1);
+            gridLayout->addWidget(showDetailsButton, 1, 1, 1, 1);
+            gridLayout->addWidget(mixerDetails, 2, 0, 1, 2);
+      }
+
+
+      // track colors and what is shown in the details list
       mixerDetails->updateUiOptions();
 
+      // track colors in the main mixer
       for (int topLevelIndex = 0; topLevelIndex < mixerTreeWidget->topLevelItemCount(); topLevelIndex++) {
             QTreeWidgetItem* topLevelItem = mixerTreeWidget->topLevelItem(topLevelIndex);
             MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(topLevelItem, 1));
@@ -213,8 +216,8 @@ void Mixer::updateUiOptions()
                   QTreeWidgetItem* childItem = topLevelItem->child(childIndex);
                   MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(childItem, 1));
                   itemWidget->updateUiControls(options);
+                  }
             }
-      }
       }
 
 void Mixer::contextMenuEvent(QContextMenuEvent *event)
