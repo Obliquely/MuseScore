@@ -85,29 +85,31 @@ class Mixer : public QDockWidget, public Ui::Mixer
       {
       Q_OBJECT
 
-      Score* _score = nullptr;            // playback score
-      Score* _activeScore = nullptr;      // may be a _score itself or its excerpt;
-      MixerKeyboardControlFilter* keyboardFilter;
-      MixerContextMenu* contextMenu;
-      QGridLayout* gridLayout;
-      MixerOptions* options;
+      Score* _score = nullptr;                        // playback score
+      Score* _activeScore = nullptr;                  // may be a _score itself or its excerpt;
+      MixerContextMenu* contextMenu;                  // context menu
+      QGridLayout* gridLayout;                        // main layout - used to show/hide & position details panel
+      MixerOptions* options;                          // UI options, e.g. show/hide track colors
 
       EnablePlayForWidget* enablePlay;
 
-      QSet<Part*> expandedParts;
-      QList<MixerTrack*> trackList;
+      QSet<Part*> expandedParts;                      //TOD: expandedParts - from old mixer code - re-implement
+      QList<MixerTrack*> trackList;                   //TO:  trackLIst - from old mixer code - may re-use
+      int savedSelectionTopLevelIndex;
+      int savedSelectionChildIndex;
 
+      MixerKeyboardControlFilter* keyboardFilter;     // process key presses for the mixer AND the details panel
       virtual void closeEvent(QCloseEvent*) override;
       virtual void showEvent(QShowEvent*) override;
       virtual bool eventFilter(QObject*, QEvent*) override;
       virtual void keyPressEvent(QKeyEvent*) override;
 
-      void setPlaybackScore(Score*);
       void setupSlotsAndSignals();
+      void disableMixer();                            // gray out everything when no score or part is open
+      void setPlaybackScore(Score*);
 
-      void updateTreeSelection(); // go to first item OR disable mixer
+      void updateTreeSelection();                     // go to first item OR disable mixer
 
-      void disableMixer();
       MixerTrackItem* mixerTrackItemFromPart(Part* part);
 
    private slots:
@@ -117,12 +119,15 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void updateTracks();
       void midiPrefsChanged(bool showMidiControls);
       void masterVolumeChanged(double val);
-      void currentItemChanged(); // obq
+      void currentItemChanged();
       void synthGainChanged(float val);
       void showDetailsClicked();
       void showDetailsBelow();
       void showMidiOptions();
       void showTrackColors();
+
+      void saveTreeSelection();
+      void restoreTreeSelection();
             
    signals:
       void closed(bool);
@@ -134,11 +139,12 @@ class Mixer : public QDockWidget, public Ui::Mixer
    public:
       Mixer(QWidget* parent);
       void setScore(Score*);
-      //PartEdit* getPartAtIndex(int index);
-      void contextMenuEvent(QContextMenuEvent *event) override;
-      MixerDetails* mixerDetails;
+      //PartEdit* getPartAtIndex(int index);                      // from old mixer code (appears redundant)
+      void contextMenuEvent(QContextMenuEvent *event) override;   // TODO: contextMenuEvent - does it need to be public?
+      MixerDetails* mixerDetails;                                 // TODO: mixerDetails - does it NEED to be public?
       void updateUiOptions();
       MixerOptions* getOptions() { return options; };
+            
       };
 
 class MixerKeyboardControlFilter : public QObject

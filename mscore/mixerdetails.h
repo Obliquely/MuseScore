@@ -48,15 +48,15 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
 
       void updateName();
       void updateTrackColor();
-      void updatePatch(MixerTrackItem* mixerTrackItem);
+      void updatePatch();
       void updateVolume();
       void updatePan();
-      void updateMutePerVoice(MixerTrackItem* mixerTrackItem);
+      void updateMutePerVoice();
+      void updateMidiChannelAndPort();
       void updateReverb();
       void updateChorus();
-      void updateMidiChannel();
 
-      void blockDetailsSignals(bool);
+      void blockSignals(bool);
       void updateTabOrder();
             
    public slots:
@@ -79,9 +79,8 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void updateDetails(MixerTrackItem*);
       void propertyChanged(Channel::Prop property) override;
 
-      void enableDetails(bool);
-      void resetDetails(); // apply default (0 or empty) values for when no track is selected
-      void setVoiceMute(int staffIndex, int voiceIndex, bool shouldMute);
+      void resetControls(); // apply default (0 or empty) values for when no track is selected
+      void voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool shouldMute);
       void resetPanToCentre();
       void updateUiOptions();
 
@@ -107,9 +106,9 @@ class MixerVoiceMuteButtonHandler : public QObject
             {}
 
 public slots:
-      void setVoiceMute(bool checked)
+      void buttonToggled(bool checked)
             {
-            mixerDetails->setVoiceMute(staffIndex, voiceIndex, checked);
+            mixerDetails->voiceMuteButtonToggled(staffIndex, voiceIndex, checked);
             }
    };
 }
