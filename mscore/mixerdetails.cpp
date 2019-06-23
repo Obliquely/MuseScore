@@ -327,6 +327,7 @@ void MixerDetails::updateChorus()
 // partNameEdited - process editing complete on part name
 void MixerDetails::partNameEdited()
 {
+      qDebug()<<"MixerDetails::partNameEdited";
       if (!selectedMixerTrackItem)
             return;
 
@@ -336,12 +337,14 @@ void MixerDetails::partNameEdited()
             return;
       }
 
+      mixer->saveTreeSelection();
       Score* score = part->score();
       if (score) {
             score->startCmd();
             score->undo(new ChangePart(part, part->instrument(), text));
             score->endCmd();
       }
+      mixer->restoreTreeSelection();
 }
 
 // trackColorEdited
