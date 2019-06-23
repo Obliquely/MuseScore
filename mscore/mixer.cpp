@@ -106,7 +106,9 @@ Mixer::Mixer(QWidget* parent)
       keyboardFilter = new MixerKeyboardControlFilter(this);
       this->installEventFilter(keyboardFilter);
       mixerTreeWidget->installEventFilter(keyboardFilter);
-      
+
+      savedSelectionTopLevelIndex = -1;   // no saved selection
+
       enablePlay = new EnablePlayForWidget(this);
       retranslate(true);
       updateUiOptions();
@@ -116,7 +118,7 @@ Mixer::Mixer(QWidget* parent)
 
 void Mixer::setupSlotsAndSignals()
 {
-      connect(mixerTreeWidget,SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),SLOT(currentItemChanged()));
+      connect(mixerTreeWidget,SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)),SLOT(currentMixerTreeItemChanged()));
       connect(synti,SIGNAL(gainChanged(float)),SLOT(synthGainChanged(float)));
       connect(showDetailsButton,SIGNAL(clicked()),SLOT(showDetailsClicked()));
 }
@@ -473,49 +475,84 @@ void Mixer::changeEvent(QEvent *event)
 
 //MARK:- manage the mixer tree
 
+//---------------------------------------------------------
+//   updateTracks
+//---------------------------------------------------------
+
+void Mixer::updateTracks()
+{
+      qDebug()<<"Mixer::updateTracks()";
+      const QSignalBlocker blockTreeWidgetSignals(mixerTreeWidget);     // block during this method
+
+      mixerTreeWidget->clear();
+      trackList.clear();
+
+      if (!_score) {
+            disableMixer();
+            return;
+      }
+
+      for (Part* localPart : _score->parts()) {
+            Part* part = localPart->masterPart();
+            //qDebug()<<"Mixer::updateTracks() - outer loop - part->name()"<<part->longName();
+
+            MixerTrackItem* mixerTrackItem = mixerTrackItemFromPart(part);
+
+            QTreeWidgetItem* item = new QTreeWidgetItem(mixerTreeWidget);
+            item->setText(0, part->partName());
+            item->setToolTip(0, part->partName());
+            mixerTreeWidget->addTopLevelItem(item);
+
+            MixerTrackChannel* mixerTrackWidget = new MixerTrackChannel(item, mixerTrackItem, options);
+            mixerTreeWidget->setItemWidget(item, 1, mixerTrackWidget);
+
+            //Add per channel tracks
+            const InstrumentList* partInstrumentList = part->instruments();
+
+            // Note sure I understand the code here - will this loop ever iterate more
+            // than once?
+            for (auto partInstrumentListItem = partInstrumentList->begin(); partInstrumentListItem != partInstrumentList->end(); ++partInstrumentListItem) {
+
+                  Instrument* instrument = partInstrumentListItem->second;
+                  //qDebug()<<"    Mixer::updateTracks() - inner loop - instrument->trackName()"<<instrument->trackName();
+
+                  if (instrument->channel().size() <= 1)
+                        continue;
+
+                  // add an item for each channel used by a given instrument
+                  for (int i = 0; i < instrument->channel().size(); ++i) {
+                        Channel* channel = instrument->playbackChannel(i, _score->masterScore());
+                        //qDebug()<<"        Mixer::updateTracks() - inner loop, inner loop - channel->name()()"<<channel->name();
+
+
+                        QTreeWidgetItem* child = new QTreeWidgetItem(0);
+                        child->setText(0, channel->name());
+                        child->setToolTip(0, QString("%1 - %2").arg(part->partName()).arg(channel->name()));
+                        item->addChild(child);
+
+                        MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
+                        mixerTreeWidget->setItemWidget(child, 1, new MixerTrackChannel(child, mixerTrackItem, options));
+                  }
+            }
+      }
+      // TODO: hack - need re-implement remembering expansion state and fix unwanted display bug
+      mixerTreeWidget->expandAll(); // force expansion - to avoid issue with unwanted wigdets displaying when un-expanded
+
+      if (savedSelectionTopLevelIndex == -1 && mixerTreeWidget->topLevelItemCount() > 0) {
+            // if there is no saved selection, i.e. we're not in the middle of
+            // changing a patch, then make sure the first item is selected and
+            // the details pane (if showing) is updated
+            mixerTreeWidget->setCurrentItem(mixerTreeWidget->itemAt(0,0));
+            currentMixerTreeItemChanged();
+      }
+}
+
+
 void Mixer::disableMixer()
       {
       qDebug() << Q_FUNC_INFO;
       mixerDetails->setEnabled(false);
       mixerDetails->resetControls();
-      }
-
-
-//TODO: updateTreeSelection - what's happening? duplicates bits of currentItemChanged()
-void Mixer::updateTreeSelection()
-      {
-      if (mixerTreeWidget->topLevelItemCount() == 0) {
-            qDebug()<<"Mixer::updateTreeSelection - about call disable as topLevelItemCount == 0";
-            disableMixer();
-            return;
-      }
-
-      if (!mixerTreeWidget->currentItem()) {
-            mixerTreeWidget->setCurrentItem(mixerTreeWidget->topLevelItem(0));
-      }
-
-      MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1));
-
-      MixerTrackItem* mixerTrackItem = itemWidget->getMixerTrackItem();
-      if (mixerTrackItem) {
-            mixerDetails->updateDetails(mixerTrackItem);
-      }
-      else {
-            qDebug()<<"**MIXER WARNING** Unexpected missing mixerTrackItem **. Non-fatal.";
-            }
-//older code
-
-//      Part* selPart = 0;
-//      Channel* selChan = 0;
-//
-//      if (_score) {
-//            //If nothing selected, select first available track
-//            if (!_score->parts().isEmpty())
-//            {
-//                  selPart = _score->parts()[0]->masterPart();
-//                  selChan = selPart->instrument(Fraction(0,1))->playbackChannel(0, _score->masterScore());
-//            }
-//      }
       }
 
 
@@ -569,17 +606,21 @@ qDebug()<<"savedSelection ("<<savedSelectionTopLevelIndex<<", "<<savedSelectionC
 
 void Mixer::restoreTreeSelection()
 {
-      if (savedSelectionTopLevelIndex < 0 || mixerTreeWidget->topLevelItemCount() == 0) {
+      int topLevel = savedSelectionTopLevelIndex;
+      savedSelectionTopLevelIndex = -1;   // indicates no selection currently saved
+
+      if (topLevel < 0 || mixerTreeWidget->topLevelItemCount() == 0) {
             qDebug()<<"asked to restore tree selection, but it's not possible (1)";
+
             return;
             }
 
-      if (savedSelectionTopLevelIndex >=  mixerTreeWidget->topLevelItemCount()) {
+      if (topLevel >=  mixerTreeWidget->topLevelItemCount()) {
             qDebug()<<"asked to restore tree selection, but it's not possible (2)";
             return;
             }
 
-      QTreeWidgetItem* itemOrItsParent = mixerTreeWidget->topLevelItem(savedSelectionTopLevelIndex);
+      QTreeWidgetItem* itemOrItsParent = mixerTreeWidget->topLevelItem(topLevel);
 
       if (!itemOrItsParent) {
             qDebug()<<"asked to restore tree selection, but it's not possible (3)";
@@ -588,7 +629,6 @@ void Mixer::restoreTreeSelection()
 
       if (savedSelectionChildIndex == -1) {
             mixerTreeWidget->setCurrentItem(itemOrItsParent);
-            currentItemChanged();
             return;
             }
 
@@ -598,92 +638,21 @@ void Mixer::restoreTreeSelection()
             }
 
       mixerTreeWidget->setCurrentItem(itemOrItsParent->child(savedSelectionChildIndex));
-      currentItemChanged();
 }
 
-//---------------------------------------------------------
-//   updateTracks
-//---------------------------------------------------------
-
-void Mixer::updateTracks()
+// - listen for changes to current item so that the details view can be updated
+// also called directly by updateTracks (while signals are disabled)
+void Mixer::currentMixerTreeItemChanged()
       {
-      qDebug()<<"Mixer::updateTracks()";
-      const QSignalBlocker blockTreeWidgetSignals(mixerTreeWidget);     // block during this method
-
-      mixerTreeWidget->clear();
-      trackList.clear();
-
-      if (!_score) {
-            disableMixer();
+      if (mixerTreeWidget->topLevelItemCount() == 0) {
+            qDebug()<<"Mixer::currentMixerTreeItemChanged called with no items in tree - ignoring)";
             return;
       }
-
-      for (Part* localPart : _score->parts()) {
-            Part* part = localPart->masterPart();
-            //qDebug()<<"Mixer::updateTracks() - outer loop - part->name()"<<part->longName();
-
-            MixerTrackItem* mixerTrackItem = mixerTrackItemFromPart(part);
-
-            QTreeWidgetItem* item = new QTreeWidgetItem(mixerTreeWidget);
-            item->setText(0, part->partName());
-            item->setToolTip(0, part->partName());
-            mixerTreeWidget->addTopLevelItem(item);
-
-            MixerTrackChannel* mixerTrackWidget = new MixerTrackChannel(item, mixerTrackItem, options);
-            mixerTreeWidget->setItemWidget(item, 1, mixerTrackWidget);
-
-            //Add per channel tracks
-            const InstrumentList* partInstrumentList = part->instruments();
-
-            // Note sure I understand the code here - will this loop ever iterate more
-            // than once?
-            for (auto partInstrumentListItem = partInstrumentList->begin(); partInstrumentListItem != partInstrumentList->end(); ++partInstrumentListItem) {
-
-                  Instrument* instrument = partInstrumentListItem->second;
-                  //qDebug()<<"    Mixer::updateTracks() - inner loop - instrument->trackName()"<<instrument->trackName();
-
-                  if (instrument->channel().size() <= 1)
-                        continue;
-
-                  // add an item for each channel used by a given instrument
-                  for (int i = 0; i < instrument->channel().size(); ++i) {
-                        Channel* channel = instrument->playbackChannel(i, _score->masterScore());
-                        //qDebug()<<"        Mixer::updateTracks() - inner loop, inner loop - channel->name()()"<<channel->name();
-
-
-                        QTreeWidgetItem* child = new QTreeWidgetItem(0);
-                        child->setText(0, channel->name());
-                        child->setToolTip(0, QString("%1 - %2").arg(part->partName()).arg(channel->name()));
-                        item->addChild(child);
-
-                        MixerTrackItem* mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
-                        mixerTreeWidget->setItemWidget(child, 1, new MixerTrackChannel(child, mixerTrackItem, options));
-                        }
-                  }
-            }
-            mixerTreeWidget->expandAll(); // force expansion - TODO: hack to avoid issue with unwanted wigdets displaying when un-expanded
-      }
-
-
-void Mixer::currentItemChanged()
-      {
-      // item has changed - so we need to update the details view
-      // we need to recover the mixerTrackItem - it's saved in the widget
-      // this feels like a BAD IDEA - maybe better to subclass
-      // QTreeWidgetItem and add a property to it instead. Wouldn't that make
-      // more sense?
-
-            if (mixerTreeWidget->topLevelItemCount() == 0) {
-                  qDebug()<<"Mixer::currentItemChanged called with no items in tree - ignoring)";
-                  return;
-            }
 
       QWidget* treeItemWidget = mixerTreeWidget->itemWidget(mixerTreeWidget->currentItem(), 1);
       
       if (!treeItemWidget) {
-            qDebug()<<"Mixer::currentItemChanged reports it can't find a MixerTrackChannel widget (slider & mute buttons) for the current selection. So it's disabling the mixer. (What's going on?)";
-            disableMixer();
-            return;
+
             }
 
       MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(treeItemWidget);

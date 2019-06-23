@@ -108,8 +108,6 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void disableMixer();                            // gray out everything when no score or part is open
       void setPlaybackScore(Score*);
 
-      void updateTreeSelection();                     // go to first item OR disable mixer
-
       MixerTrackItem* mixerTrackItemFromPart(Part* part);
 
    private slots:
@@ -119,7 +117,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void updateTracks();
       void midiPrefsChanged(bool showMidiControls);
       void masterVolumeChanged(double val);
-      void currentItemChanged();
+      void currentMixerTreeItemChanged();
       void synthGainChanged(float val);
       void showDetailsClicked();
       void showDetailsBelow();
