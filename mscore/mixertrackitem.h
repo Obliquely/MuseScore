@@ -50,8 +50,8 @@ private:
       Channel* playbackChannel(const Channel* channel);
 
       bool isPart();
-      QList<Channel*> secondaryChannels();
-      QList<Channel*> secondaryChannels(Part* part);
+      QList<Channel*> secondaryPlaybackChannels();
+      QList<Channel*> playbackChannels(Part* part);
 
 public:
       MixerTrackItem(TrackType trackType, Part* part, Instrument* _instr, Channel* _chan);

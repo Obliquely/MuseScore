@@ -200,7 +200,7 @@ void MixerTrackItem::setColor(int valueRgb)
 
       // TODO: setColor - does not respect the "overall" policy - maybe it should
       _part->setColor(valueRgb); //TODO: - not sure this is necessary (or does anything?!)
-      for (Channel* channel: secondaryChannels()) {
+      for (Channel* channel: secondaryPlaybackChannels()) {
             channel->setColor(valueRgb);
             }
       }
@@ -218,7 +218,7 @@ void MixerTrackItem::setMute(bool value)
             return;
             }
 
-      for (Channel* channel: secondaryChannels()) {
+      for (Channel* channel: secondaryPlaybackChannels()) {
             if (value)
                   seq->stopNotes(channel->channel());
             channel->setMute(value);
@@ -238,51 +238,43 @@ void MixerTrackItem::setSolo(bool value)
             channel()->setSolo(value);
             }
       else {
-            for (Channel* channel: secondaryChannels()) {
+            for (Channel* channel: secondaryPlaybackChannels()) {
                   if (value)
                         seq->stopNotes(channel->channel());
                   channel->setSolo(value);
                   }
-      }
+            }
 
       // TODO: duplicated code - look at how to eliminate
-      // NOTE: this is a different case, so simply following the pattern
-      // of all the other setter won't work - here the iteration is
-      // through ALL the primary instruments and all of their
-      // secondaries. It's the same iteration that is used for
+      // NOTE: We have here the same iteration that is used for
       // updateTracks in the mixer. SO definitely still scope for code
-      // reduction but it needs to be done in a different way.
+      // reduction. And this method needs to either live somewhere
+      // else, Mixer maybe, or (maybe AND) be a static/class method.
+      // 
 
       //Go through all channels so that all not being soloed are mute
+
+      // First, count the number of solo tracks
       int numSolo = 0;
-      for (Part* p : _part->score()->parts()) {
-            const InstrumentList* il = p->instruments();
-            for (auto i = il->begin(); i != il->end(); ++i) {
-                  const Instrument* instr = i->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* a = playbackChannel(instrChan);
-                        if (a->solo()) {
+      for (Part* part : _part->score()->parts()) {
+            for ( Channel* channel: playbackChannels(part)) {
+                  if (channel->solo()) {
                               numSolo++;
-                              }
                         }
                   }
             }
 
+      // If there are no solo track, clear soloMute in all cases
+      // else set soloMute for all non-solo tracks
       for (Part* part : _part->score()->parts()) {
-            const InstrumentList* il = part->instruments();
-            for (auto i = il->begin(); i != il->end(); ++i) {
-                  const Instrument* instr = i->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* a = playbackChannel(instrChan);
-                        if (numSolo == 0) {
-                              a->setSoloMute(false);
-                              }
-                        else {
-                              a->setSoloMute(!a->solo());
-                              if (a->soloMute()) {
-                                    seq->stopNotes(a->channel());
-                                    }
-                              }
+            for ( Channel* channel: playbackChannels(part)) {
+                  if (numSolo == 0) {
+                        channel->setSoloMute(false);
+                        }
+                  else {
+                        channel->setSoloMute(!channel->solo());
+                        if (channel->soloMute())
+                              seq->stopNotes(channel->channel());
                         }
                   }
             }
@@ -311,7 +303,7 @@ void MixerTrackItem:: adjustValue(int newValue, ChannelReader reader, ChannelWri
       primaryDiff = newValue - reader(channel());
 
       // update the secondary channels
-      for (Channel* channel: secondaryChannels()) {
+      for (Channel* channel: secondaryPlaybackChannels()) {
 
             switch (mode) {
                   case MixerVolumeMode::Override:
@@ -360,17 +352,16 @@ bool MixerTrackItem::isPart()
 //    that. Maybe overload so no parameter works just as it
 //    is now.
 
-QList<Channel*> MixerTrackItem::secondaryChannels() {
-      return secondaryChannels(_part);
+QList<Channel*> MixerTrackItem::secondaryPlaybackChannels() {
+      if (!isPart()) {
+            return QList<Channel*> {};
+      }
+      return playbackChannels(_part);
 }
 
 
-QList<Channel*> MixerTrackItem::secondaryChannels(Part* part)
+QList<Channel*> MixerTrackItem::playbackChannels(Part* part)
       {
-      if (!isPart()) {
-            return QList<Channel*> {};
-            }
-
       QList<Channel*> channels;
 
       //TODO: duplication between here and in Mixer::updateTracks
