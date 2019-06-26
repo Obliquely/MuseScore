@@ -118,8 +118,25 @@ void MixerTrackItem::finalizeVolume(Channel* channel, int value)
       seq->setController(channel->channel(), CTRL_VOLUME, channel->volume());
       }
 
+      // need to write a general purpose function that applies the
+      // overall SLIDER logic. Give it as a parameter the code
+      // to change whatever property, i.e. volume or reverb or panning
+      // I SUPPOSE that could be done w/o lambda and having, say, an
+      // enum and a switch - but it might still involve code duplication
+      // A SECOND parameter might be some code that RETURNS the current
+      // value - that for the relative mode
+      // IDEA is to write the logic ONCE and to write the code that changes
+      // the value once. 
+
 void MixerTrackItem::setVolume(char value)
       {
+
+
+      auto volumeChange = [this, value](){
+            _channel->setVolume(value);
+            seq->setController(_channel->channel(), CTRL_VOLUME, _channel->volume());
+      };
+
 
       if (!isPart()) {
             if (_channel->volume() == value)
@@ -146,7 +163,7 @@ void MixerTrackItem::setVolume(char value)
             switch (mode) {
                   case MixerVolumeMode::Override:
                         // set primary channel and all secondary channels to the same value
-                        finalizeVolume(channel, value);
+                        volumeChange(); // finalizeVolume(channel, value);
                         break;
 
                   case MixerVolumeMode::Ratio:
