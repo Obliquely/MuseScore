@@ -82,7 +82,7 @@ MidiMapping *MixerTrackItem::midiMap()
 //---------------------------------------------------------
 //   playbackChannel
 //---------------------------------------------------------
-
+//TODO: - suspect this can be eliminated - it's only called in ONE place now
 Channel* MixerTrackItem::playbackChannel(const Channel* channel)
       {
       return _part->masterScore()->playbackChannel(channel);
