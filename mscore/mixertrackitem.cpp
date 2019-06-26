@@ -61,7 +61,7 @@ MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* inst
 
 MidiMapping *MixerTrackItem::midiMap()
       {
-      return _part->masterScore()->midiMapping(chan()->channel());
+      return _part->masterScore()->midiMapping(channel()->channel());
       }
 
 //---------------------------------------------------------
@@ -85,107 +85,92 @@ int MixerTrackItem::color()
 
 char MixerTrackItem::getVolume()
       {
-      return chan()->volume();
+      return channel()->volume();
       }
 
 char MixerTrackItem::getPan()
       {
-      return chan()->pan();
+      return channel()->pan();
       }
 
 bool MixerTrackItem::getMute()
       {
-      return chan()->mute();
+      return channel()->mute();
       }
 
 bool MixerTrackItem::getSolo()
       {
-      return chan()->solo();
+      return channel()->solo();
       }
 
 // MixerTrackItem settters - when a change is made to underlying channel a propertyChange()
 // will be sent to any registered listeners
 
-void MixerTrackItem::finalizeVolume(Channel* channel, int value)
+template <class ChannelWriter, class ChannelReader>
+void MixerTrackItem:: adjustValue(int newValue, ChannelReader reader, ChannelWriter writer)
       {
-      if (channel->volume() == value)
+
+      if (!isPart()) {
+            // only one channel, the easy case - just make a direct adjustment
+            writer(newValue, _channel);
             return;
+            }
 
-      value = (value > 127) ? 127 : value;
-      value = (value < 0) ? 0 : value;
+      // multiple channels and the OVERALL value has been changed
+      // make adjustments depending on the OVERALL mode
 
-      channel->setVolume(value);
-      seq->setController(channel->channel(), CTRL_VOLUME, channel->volume());
+      MixerVolumeMode mode = Mixer::getOptions()->mode();
+      int primaryDiff = 0;
+      bool upperClip = false;
+      bool lowerClip = false;
+
+      primaryDiff = newValue - reader(channel());
+
+      // update the secondary channels
+      for (Channel* channel: secondaryChannels()) {
+
+            switch (mode) {
+                  case MixerVolumeMode::Override:
+                        // all secondary channels just get newValue
+                        writer(newValue, channel);
+                        break;
+
+                  case MixerVolumeMode::Ratio: {
+                        // secondary channels get same increase / decrease as primary value
+                        int oldValue = reader(channel);
+                        int relativeValue = oldValue + primaryDiff;
+                        upperClip = relativeValue > 127;
+                        lowerClip = relativeValue < 0;
+                        writer(max(0, min(127, relativeValue)), channel);
+                        break;
+                        }
+
+                  case MixerVolumeMode::PrimaryInstrument:
+                        // secondary channels are not touched
+                        break;
+                  }
+            }
+
+            if (upperClip || lowerClip) {
+                  //TODO: clipping - scope to explore different behaviors here - but for now NO OP
+            }
+
+      writer(newValue, channel());
       }
-
-      // need to write a general purpose function that applies the
-      // overall SLIDER logic. Give it as a parameter the code
-      // to change whatever property, i.e. volume or reverb or panning
-      // I SUPPOSE that could be done w/o lambda and having, say, an
-      // enum and a switch - but it might still involve code duplication
-      // A SECOND parameter might be some code that RETURNS the current
-      // value - that for the relative mode
-      // IDEA is to write the logic ONCE and to write the code that changes
-      // the value once. 
 
 void MixerTrackItem::setVolume(char value)
       {
 
+      auto writer = [](int value, Channel* channel){
+            channel->setVolume(value);
+            seq->setController(channel->channel(), CTRL_VOLUME, channel->volume()); };
 
-      auto volumeChange = [this, value](){
-            _channel->setVolume(value);
-            seq->setController(_channel->channel(), CTRL_VOLUME, _channel->volume());
-      };
+      auto reader = [](Channel* channel) -> int {
+            return channel->volume(); };
 
-
-      if (!isPart()) {
-            if (_channel->volume() == value)
-                  return;
-            finalizeVolume(_channel, value);
-            return;
+      adjustValue(value, reader, writer);
       }
 
-      // case where we're operating a slider "manages" some sub-channels
-      // test for different policies as to how the secondary channels
-      // respond to changes made by the slider for the primary channel
-
-      //TODO: can't put a brake on the slider, but there could be a
-      // spring back if we hit a ceiling - so after we let go of the slider
-      // it could return to the point where the limit was hit
-
-      MixerVolumeMode mode = Mixer::getOptions()->mode();
-      bool primaryChannel = true;
-      int primaryDiff = 0;
-      for (Channel* channel: subChannels()) {
-            if (primaryChannel)
-                  primaryDiff = value - double(channel->volume());
-
-            switch (mode) {
-                  case MixerVolumeMode::Override:
-                        // set primary channel and all secondary channels to the same value
-                        volumeChange(); // finalizeVolume(channel, value);
-                        break;
-
-                  case MixerVolumeMode::Ratio:
-                        // adjust the secondary channels by the same amount, but starting where
-                        // they are already at - not a RATIO at all!!
-                        if (primaryChannel)
-                              finalizeVolume(channel, value);
-                        else {
-                              int oldValue = channel->volume();
-                              finalizeVolume(channel, oldValue + primaryDiff);
-                              }
-                        break;
-
-                  case MixerVolumeMode::PrimaryInstrument:
-                        // adjust ONLY the primary channel
-                        if (primaryChannel)
-                              finalizeVolume(channel, value);
-                        break;
-                  }
-            primaryChannel = false;
-            }
-      }
 
 //---------------------------------------------------------
 //   setPan
@@ -385,18 +370,22 @@ bool MixerTrackItem::isPart()
       }
 
 
-QList<Channel*> MixerTrackItem::subChannels()
+QList<Channel*> MixerTrackItem::secondaryChannels()
       {
       if (!isPart()) {
-            return QList<Channel*> { _channel };
+            return QList<Channel*> {};
             }
 
       QList<Channel*> channels;
 
       //TODO: duplication between here and in Mixer::updateTracks
+      // InstrumentList is of the type map<const int, Instrument*>
+
       const InstrumentList* instrumentList = _part->instruments();
-      for (auto item = instrumentList->begin(); item != instrumentList->end(); ++item) {
-            Instrument* instrument = item->second;
+
+      for (auto mapIterator = instrumentList->begin(); mapIterator != instrumentList->end(); ++mapIterator) {
+            Instrument* instrument = mapIterator->second;
+
             for (const Channel* instrumentChannel: instrument->channel()) {
                   Channel* channel = playbackChannel(instrumentChannel);
                   channels.append(channel);
