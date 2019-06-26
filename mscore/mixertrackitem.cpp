@@ -23,6 +23,21 @@
 #include "libmscore/part.h"
 #include "seq.h"
 
+/* refactoring using closures to reduce the high level of code duplication here */
+
+/* I THINK this could be / should be a sub class of TreeWidgetItem - that's a model
+ class and so is - not clear they need to be separated. In addition, this class can
+ almost certainly generate children automatically. This will help with updateTracks.
+
+ Still not very clear on how make EXPAND work. The old approach has a SET of expanded
+ parts. Need to undertand what happens to items in that set when, say, instruments are
+ deleted. Do they stay in the set. And whatever is in the set, are they preserved when
+ the user moves from score to score... Don't yet understand the data structures at play
+ here.
+
+ */
+
+
 /*
  A MixerTrackItem object:
  EITHER (1) represents a channel that is one sound source for an instrument that
