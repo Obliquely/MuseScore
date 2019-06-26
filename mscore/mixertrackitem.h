@@ -51,6 +51,7 @@ private:
 
       bool isPart();
       QList<Channel*> secondaryChannels();
+      QList<Channel*> secondaryChannels(Part* part);
 
 public:
       MixerTrackItem(TrackType trackType, Part* part, Instrument* _instr, Channel* _chan);

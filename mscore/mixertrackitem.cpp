@@ -121,15 +121,184 @@ bool MixerTrackItem::getSolo()
 // MixerTrackItem settters - when a change is made to underlying channel a propertyChange()
 // will be sent to any registered listeners
 
+
+
+void MixerTrackItem::setVolume(char value)
+      {
+
+      auto writer = [](int value, Channel* channel){
+            channel->setVolume(value);
+            seq->setController(channel->channel(), CTRL_VOLUME, channel->volume()); };
+
+      auto reader = [](Channel* channel) -> int {
+            return channel->volume(); };
+
+      adjustValue(value, reader, writer);
+      }
+
+
+//---------------------------------------------------------
+//   setPan
+//---------------------------------------------------------
+
+void MixerTrackItem::setPan(char value)
+      {
+      auto writer = [](int value, Channel* channel){
+            channel->setPan(value);
+            seq->setController(channel->channel(), CTRL_PANPOT, channel->pan()); };
+
+      auto reader = [](Channel* channel) -> int {
+            return channel->pan(); };
+
+      adjustValue(value, reader, writer);
+      }
+
+//---------------------------------------------------------
+//   setChorus
+//---------------------------------------------------------
+
+void MixerTrackItem::setChorus(char value)
+      {
+      auto writer = [](int value, Channel* channel){
+            channel->setChorus(value);
+            seq->setController(channel->channel(), CTRL_CHORUS_SEND, channel->chorus()); };
+
+      auto reader = [](Channel* channel) -> int {
+            return channel->chorus(); };
+
+      adjustValue(value, reader, writer);
+      }
+
+//---------------------------------------------------------
+//   setReverb
+//---------------------------------------------------------
+
+void MixerTrackItem::setReverb(char value)
+      {
+      auto writer = [](int value, Channel* channel){
+            channel->setReverb(value);
+            seq->setController(channel->channel(), CTRL_REVERB_SEND, channel->reverb()); };
+
+      auto reader = [](Channel* channel) -> int {
+            return channel->reverb(); };
+
+      adjustValue(value, reader, writer);
+      }
+
+
+
+//---------------------------------------------------------
+//   setColor
+//---------------------------------------------------------
+
+void MixerTrackItem::setColor(int valueRgb)
+      {
+      if (!isPart()) {
+            channel()->setColor(valueRgb);
+            return;
+            }
+
+      // TODO: setColor - does not respect the "overall" policy - maybe it should
+      _part->setColor(valueRgb); //TODO: - not sure this is necessary (or does anything?!)
+      for (Channel* channel: secondaryChannels()) {
+            channel->setColor(valueRgb);
+            }
+      }
+
+//---------------------------------------------------------
+//   setMute
+//---------------------------------------------------------
+
+void MixerTrackItem::setMute(bool value)
+      {
+      if (!isPart()) {
+            if (value)
+                  seq->stopNotes(_channel->channel());
+            channel()->setMute(value);
+            return;
+            }
+
+      for (Channel* channel: secondaryChannels()) {
+            if (value)
+                  seq->stopNotes(channel->channel());
+            channel->setMute(value);
+            }
+      }
+
+//---------------------------------------------------------
+//   setSolo
+//---------------------------------------------------------
+
+void MixerTrackItem::setSolo(bool value)
+      {
+
+      if (!isPart()) {
+            if (value)
+                  seq->stopNotes(_channel->channel());
+            channel()->setSolo(value);
+            }
+      else {
+            for (Channel* channel: secondaryChannels()) {
+                  if (value)
+                        seq->stopNotes(channel->channel());
+                  channel->setSolo(value);
+                  }
+      }
+
+      // TODO: duplicated code - look at how to eliminate
+      // NOTE: this is a different case, so simply following the pattern
+      // of all the other setter won't work - here the iteration is
+      // through ALL the primary instruments and all of their
+      // secondaries. It's the same iteration that is used for
+      // updateTracks in the mixer. SO definitely still scope for code
+      // reduction but it needs to be done in a different way.
+
+      //Go through all channels so that all not being soloed are mute
+      int numSolo = 0;
+      for (Part* p : _part->score()->parts()) {
+            const InstrumentList* il = p->instruments();
+            for (auto i = il->begin(); i != il->end(); ++i) {
+                  const Instrument* instr = i->second;
+                  for (const Channel* instrChan: instr->channel()) {
+                        Channel* a = playbackChannel(instrChan);
+                        if (a->solo()) {
+                              numSolo++;
+                              }
+                        }
+                  }
+            }
+
+      for (Part* part : _part->score()->parts()) {
+            const InstrumentList* il = part->instruments();
+            for (auto i = il->begin(); i != il->end(); ++i) {
+                  const Instrument* instr = i->second;
+                  for (const Channel* instrChan: instr->channel()) {
+                        Channel* a = playbackChannel(instrChan);
+                        if (numSolo == 0) {
+                              a->setSoloMute(false);
+                              }
+                        else {
+                              a->setSoloMute(!a->solo());
+                              if (a->soloMute()) {
+                                    seq->stopNotes(a->channel());
+                                    }
+                              }
+                        }
+                  }
+            }
+      }
+
+//MARK:- helper methods
+
 template <class ChannelWriter, class ChannelReader>
 void MixerTrackItem:: adjustValue(int newValue, ChannelReader reader, ChannelWriter writer)
-      {
+{
 
       if (!isPart()) {
             // only one channel, the easy case - just make a direct adjustment
             writer(newValue, _channel);
             return;
-            }
+      }
 
       // multiple channels and the OVERALL value has been changed
       // make adjustments depending on the OVERALL mode
@@ -158,226 +327,20 @@ void MixerTrackItem:: adjustValue(int newValue, ChannelReader reader, ChannelWri
                         lowerClip = relativeValue < 0;
                         writer(max(0, min(127, relativeValue)), channel);
                         break;
-                        }
+                  }
 
                   case MixerVolumeMode::PrimaryInstrument:
                         // secondary channels are not touched
                         break;
-                  }
             }
+      }
 
-            if (upperClip || lowerClip) {
-                  //TODO: clipping - scope to explore different behaviors here - but for now NO OP
-            }
+      if (upperClip || lowerClip) {
+            //TODO: clipping - scope to explore different behaviors here - but for now NO OP
+      }
 
       writer(newValue, channel());
-      }
-
-void MixerTrackItem::setVolume(char value)
-      {
-
-      auto writer = [](int value, Channel* channel){
-            channel->setVolume(value);
-            seq->setController(channel->channel(), CTRL_VOLUME, channel->volume()); };
-
-      auto reader = [](Channel* channel) -> int {
-            return channel->volume(); };
-
-      adjustValue(value, reader, writer);
-      }
-
-
-//---------------------------------------------------------
-//   setPan
-//---------------------------------------------------------
-
-void MixerTrackItem::setPan(char value)
-      {
-      //      char v = (char)qBound(0, (int)((value + 180.0) / 360.0 * 128.0), 127);
-
-      if (_trackType == TrackType::PART) {
-            const InstrumentList* il = _part->instruments();
-            for (auto it = il->begin(); it != il->end(); ++it) {
-                  Instrument* instr = it->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* chan = playbackChannel(instrChan);
-                        if (chan->pan() != value) {
-                              chan->setPan(value);
-                              seq->setController(chan->channel(), CTRL_PANPOT, chan->pan());
-                              }
-                        }
-                  }
-            }
-      else {
-            if (_channel->pan() != value) {
-                  _channel->setPan(value);
-                  seq->setController(_channel->channel(), CTRL_PANPOT, _channel->pan());
-                  }
-            }
-      }
-
-//---------------------------------------------------------
-//   setChorus
-//---------------------------------------------------------
-
-void MixerTrackItem::setChorus(char value)
-      {
-      //      char v = (char)qBound(0, (int)(value * 128.0 / 100.0), 127);
-
-      if (_trackType == TrackType::PART) {
-            const InstrumentList* il = _part->instruments();
-            for (auto it = il->begin(); it != il->end(); ++it) {
-                  Instrument* instr = it->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* chan = playbackChannel(instrChan);
-                        if (chan->chorus() != value) {
-                              chan->setChorus(value);
-                              seq->setController(chan->channel(), CTRL_CHORUS_SEND, chan->chorus());
-                              }
-                        }
-                  }
-            }
-      else {
-            if (_channel->chorus() != value) {
-                  _channel->setChorus(value);
-                  seq->setController(_channel->channel(), CTRL_CHORUS_SEND, _channel->chorus());
-                  }
-            }
-      }
-
-//---------------------------------------------------------
-//   setReverb
-//---------------------------------------------------------
-
-void MixerTrackItem::setReverb(char value)
-      {
-      //      char v = (char)qBound(0, (int)(value * 128.0 / 100.0), 127);
-
-      if (_trackType == TrackType::PART) {
-            const InstrumentList* il = _part->instruments();
-            for (auto it = il->begin(); it != il->end(); ++it) {
-                  Instrument* instr = it->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* chan = playbackChannel(instrChan);
-                        if (chan->reverb() != value) {
-                              chan->setReverb(value);
-                              seq->setController(chan->channel(), CTRL_REVERB_SEND, chan->reverb());
-                              }
-                        }
-                  }
-            }
-      else {
-            if (_channel->reverb() != value) {
-                  _channel->setReverb(value);
-                  seq->setController(_channel->channel(), CTRL_REVERB_SEND, _channel->reverb());
-                  }
-            }
-      }
-
-//---------------------------------------------------------
-//   setColor
-//---------------------------------------------------------
-
-void MixerTrackItem::setColor(int valueRgb)
-      {
-      if (_trackType == TrackType::PART) {
-            _part->setColor(valueRgb);
-
-            const InstrumentList* il = _part->instruments();
-            for (auto it = il->begin(); it != il->end(); ++it) {
-                  Instrument* instr = it->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* chan = playbackChannel(instrChan);
-                        chan->setColor(valueRgb);
-                        }
-                  }
-            }
-      else {
-            _channel->setColor(valueRgb);
-            }
-      }
-
-//---------------------------------------------------------
-//   setMute
-//---------------------------------------------------------
-
-void MixerTrackItem::setMute(bool value)
-      {
-      if (_trackType == TrackType::PART) {
-            const InstrumentList* il = _part->instruments();
-            for (auto it = il->begin(); it != il->end(); ++it) {
-                  Instrument* instr = it->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* chan = playbackChannel(instrChan);
-                        if (value)
-                              seq->stopNotes(chan->channel());
-                        chan->setMute(value);
-                        }
-                  }
-            }
-      else {
-            if (value)
-                  seq->stopNotes(_channel->channel());
-            _channel->setMute(value);
-            }
-      }
-
-//---------------------------------------------------------
-//   setSolo
-//---------------------------------------------------------
-
-void MixerTrackItem::setSolo(bool value)
-      {
-      if (_trackType == TrackType::PART) {
-            const InstrumentList* il = _part->instruments();
-            for (auto it = il->begin(); it != il->end(); ++it) {
-                  Instrument* instr = it->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* chan = playbackChannel(instrChan);
-                        chan->setSolo(value);
-                        }
-                  }
-            }
-      else {
-            _channel->setSolo(value);
-            }
-
-      //Go through all channels so that all not being soloed are mute
-      int numSolo = 0;
-      for (Part* p : _part->score()->parts()) {
-            const InstrumentList* il = p->instruments();
-            for (auto i = il->begin(); i != il->end(); ++i) {
-                  const Instrument* instr = i->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* a = playbackChannel(instrChan);
-                        if (a->solo()) {
-                              numSolo++;
-                              }
-                        }
-                  }
-            }
-
-      for (Part* p : _part->score()->parts()) {
-            const InstrumentList* il = p->instruments();
-            for (auto i = il->begin(); i != il->end(); ++i) {
-                  const Instrument* instr = i->second;
-                  for (const Channel* instrChan: instr->channel()) {
-                        Channel* a = playbackChannel(instrChan);
-                        if (numSolo == 0) {
-                              a->setSoloMute(false);
-                              }
-                        else {
-                              a->setSoloMute(!a->solo());
-                              if (a->soloMute()) {
-                                    seq->stopNotes(a->channel());
-                                    }
-                              }
-                        }
-                  }
-            }
-      }
-
-//MARK:- helper methods
+}
 
 bool MixerTrackItem::isPart()
       {
@@ -385,7 +348,24 @@ bool MixerTrackItem::isPart()
       }
 
 
-QList<Channel*> MixerTrackItem::secondaryChannels()
+//TODO: opportunity for reducing code duplication
+//NOTE: the OUTER LOOP:
+//      for (Part* p : _part->score()->parts()) {
+//            const InstrumentList* il = p->instruments();
+//    is used TWICE in the solo and ONCE in updateTracks
+//
+//    But it uses the same code as in secondaryChannels()
+//    So secondaryChannels need to be parameterised to take,
+//    say, a part and then return the secondaryChannels for
+//    that. Maybe overload so no parameter works just as it
+//    is now.
+
+QList<Channel*> MixerTrackItem::secondaryChannels() {
+      return secondaryChannels(_part);
+}
+
+
+QList<Channel*> MixerTrackItem::secondaryChannels(Part* part)
       {
       if (!isPart()) {
             return QList<Channel*> {};
@@ -396,7 +376,7 @@ QList<Channel*> MixerTrackItem::secondaryChannels()
       //TODO: duplication between here and in Mixer::updateTracks
       // InstrumentList is of the type map<const int, Instrument*>
 
-      const InstrumentList* instrumentList = _part->instruments();
+      const InstrumentList* instrumentList = part->instruments();
 
       for (auto mapIterator = instrumentList->begin(); mapIterator != instrumentList->end(); ++mapIterator) {
             Instrument* instrument = mapIterator->second;
