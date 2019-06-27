@@ -91,13 +91,12 @@ public:
    when changes are signalled from outwith the mixer
 */
 
-class MixerTreeWidgetItem : QTreeWidgetItem
+class MixerTreeWidgetItem : public QTreeWidgetItem
       {
    public:
       MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* parent);
       MixerTreeWidgetItem(Channel* channel, Instrument* instrument, Part* part);
       MixerTrackItem* mixerTrackItem;
-      
       };
 
 }

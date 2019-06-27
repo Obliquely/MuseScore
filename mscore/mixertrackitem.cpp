@@ -400,18 +400,23 @@ QList<Channel*> MixerTrackItem::playbackChannels(Part* part)
       }
 
 //MARK:- MixerTreeWidgetItem class
-      
+
+// Don't like the way in which I'm passing so many different vars through here. Doesn't
+// feel like good design. At the moment just mirroring the original code though.
+// Don't yet fully undertand the parts / instuments data structure, so just replicating
+// what the old mixer code did. It does feel as if there should be a class that is
+// a comprehensive descriptor and that captures all the gubbins being passed back and
+// forth.
+
 MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* treeWidget)
       {
       mixerTrackItem = new MixerTrackItem(part, score);
       setText(0, part->partName());
       setToolTip(0, part->partName());
-      treeWidget->addTopLevelItem(this);
-      
-      MixerTrackChannel* mixerTrackChannelWidget = new MixerTrackChannel(this, mixerTrackItem);
-      treeWidget->setItemWidget(this, 1, mixerTrackChannelWidget);
-      
+
+      // check for secondary channels and add MixerTreeWidgetItem children if required
       const InstrumentList* partInstrumentList = part->instruments(); //Add per channel tracks
+      
       // partInstrumentList is of type: map<const int, Instrument*>
       for (auto partInstrumentListItem = partInstrumentList->begin(); partInstrumentListItem != partInstrumentList->end(); ++partInstrumentListItem) {
             
@@ -421,9 +426,9 @@ MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* 
             
             for (int i = 0; i < instrument->channel().size(); ++i) {
                   Channel* channel = instrument->playbackChannel(i, score->masterScore());
-                  QTreeWidgetItem* child = new MixerTreeWidgetItem(channel, instrument, part);
-                  this->addChild(child);
-                  treeWidget->setItemWidget(child, 1, new MixerTrackChannel(child, mixerTrackItem));
+                  MixerTreeWidgetItem* child = new MixerTreeWidgetItem(channel, instrument, part);
+                  addChild(child);
+                  treeWidget->setItemWidget(child, 1, new MixerTrackChannel(child));
                   }
             }
       }
