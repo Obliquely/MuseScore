@@ -616,8 +616,6 @@ void Mixer::updateTracks()
             //Add per channel tracks
             const InstrumentList* partInstrumentList = part->instruments();
 
-            // Note sure I understand the code here - will this loop ever iterate more
-            // than once?
             // partInstrumentList is of type: map<const int, Instrument*> 
             for (auto partInstrumentListItem = partInstrumentList->begin(); partInstrumentListItem != partInstrumentList->end(); ++partInstrumentListItem) {
 
