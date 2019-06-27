@@ -162,7 +162,6 @@ MixerMasterChannel::MixerMasterChannel()
       setupUi(this);
       setupAdditionalUi();
       setupSlotsAndSignals();
-      update();
       }
 
 
@@ -203,20 +202,7 @@ void MixerMasterChannel::updateUiControls()
       colorLabel->setVisible(false);
       }
 
-void MixerMasterChannel::update()
-      {
-      const QSignalBlocker blockVolumeSignals(volumeSlider);
-      const QSignalBlocker blockMuteSignals(muteButton);
-      const QSignalBlocker blockSoloSignals(soloButton);
-
-      volumeSlider->setValue(50);
-      volumeSlider->setToolTip(tr("Master Volume: %1").arg(QString::number(volumeSlider->value())));
-
-      muteButton->setChecked(true);
-      soloButton->setChecked(true);
-      }
-
-
+      
 void MixerMasterChannel::volumeChanged(float synthGain)
       {
       const QSignalBlocker blockSignals(volumeSlider); // block during this method
