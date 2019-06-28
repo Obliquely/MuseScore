@@ -259,37 +259,53 @@ void MixerVolumeSlider::setMaxLogValue(double val)
             _maxValue = val;
       }
 
-void MixerVolumeSlider::setValue(double val)
+void MixerVolumeSlider::setLogValue(double val)
 {
-      double oldValue = _value;
+      double oldValue = _logValue;
 
       if (_log) {
             if (val == 0.0f)
-                  _value = _minValue;
+                  _logValue = _minValue;
             else {
-                  _value = fast_log10(val) * 20.0f;
-                  if (_value < _minValue)
-                        _value = _minValue;
+                  _logValue = fast_log10(val) * 20.0f;
+                  if (_logValue < _minValue)
+                        _logValue = _minValue;
             }
       }
       else
-            _value = val;
+            _logValue = val;
 
-      if (oldValue != _value)
-           // emit valueChanged(val, __id);
+      if (oldValue != _logValue)
+           emit valueChanged(_logValue, 0);
 
-      update();
+     qDebug()<<"MixerVolumeSlider::setLogValue - and update the slider - or is that already done??";
 }
 
+void MixerVolumeSlider::setValue(int value)
+{
+      qDebug()<<"MixerVolumeSlider:setValue( int "<<value<<")";
+      QSlider::setValue(value);     // call the superclass
+      setLogValue(double(value));
+}
+
+      
+void MixerVolumeSlider::sliderChange(QAbstractSlider::SliderChange change)
+{
+      qDebug()<<"MixerVolumeSlider:sliderChange "<<change;
+      QSlider::sliderChange(change);      // call the superclass
+      // do I need to call the superclass - I'd think I would
+      //emit valueChanged(value(), 0);
+      //®QSlider::event(event);
+}
 
 
 //---------------------------------------------------------
 //   value
 //---------------------------------------------------------
 
-double MixerVolumeSlider::value() const
+double MixerVolumeSlider::logValue() const
 {
-      return _log ? pow(10.0, _value*0.05f) : _value;
+      return _log ? pow(10.0, _logValue*0.05f) : _logValue;
 }
 
 

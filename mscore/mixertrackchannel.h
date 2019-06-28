@@ -96,19 +96,29 @@ class MixerMasterChannel : public QWidget, public Ui::MixerTrackChannel
 
 class MixerVolumeSlider : public QSlider
       {
-
+      Q_OBJECT
       bool _log = true;
 
-      double _value;
+      double _logValue;
       double _minValue, _maxValue;
 
       void setMinLogValue(double val);
       void setMaxLogValue(double val);
-      void setLogRange(double min, double max); // { setMinLogValue(min); setMaxLogValue(max); };
 
-      void setValue(double);
-      double value() const;
+      void setLogValue(double);
+      double logValue() const;
+      void setValue(int);
 
+   public:
+      MixerVolumeSlider(QWidget* parent) : QSlider(parent)
+            {
+                  // any extra initialisation?
+            }
+
+      void setLogRange(double min, double max) { setMinLogValue(min); setMaxLogValue(max); };
+      void sliderChange(QAbstractSlider::SliderChange change) override;
+      signals:
+      void valueChanged(double, int); // int is not used - for compatibility
       };
 
 }
