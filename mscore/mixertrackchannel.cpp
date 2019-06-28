@@ -237,4 +237,60 @@ void MixerMasterChannel::masterVolumeSliderMoved(int value)
       synti->setGain(newGain);
       }
 
+
+void MixerVolumeSlider::setMinLogValue(double val)
+      {
+      if (_log) {
+            if (val == 0.0f)
+                  _minValue = -100;
+            else
+                  _minValue = fast_log10(val) * 20.0f;
+      }
+      else
+            _minValue = val;
+      }
+
+void MixerVolumeSlider::setMaxLogValue(double val)
+      {
+      if (_log) {
+            _maxValue = fast_log10(val) * 20.0f;
+      }
+      else
+            _maxValue = val;
+      }
+
+void MixerVolumeSlider::setValue(double val)
+{
+      double oldValue = _value;
+
+      if (_log) {
+            if (val == 0.0f)
+                  _value = _minValue;
+            else {
+                  _value = fast_log10(val) * 20.0f;
+                  if (_value < _minValue)
+                        _value = _minValue;
+            }
+      }
+      else
+            _value = val;
+
+      if (oldValue != _value)
+           // emit valueChanged(val, __id);
+
+      update();
+}
+
+
+
+//---------------------------------------------------------
+//   value
+//---------------------------------------------------------
+
+double MixerVolumeSlider::value() const
+{
+      return _log ? pow(10.0, _value*0.05f) : _value;
+}
+
+
 }
