@@ -170,7 +170,7 @@ void MixerMasterChannel::setupSlotsAndSignals()
       connect(volumeSlider, SIGNAL(valueChanged(int)), SLOT(masterVolumeSliderMoved(int)));
       }
 
-#define MIXER_MASTER_VOLUME_STEPS 500 // maximum number of discrete steps for master volume control
+#define MIXER_MASTER_VOLUME_STEPS 100 // maximum number of discrete steps for master volume control
 
 void MixerMasterChannel::setupAdditionalUi()
       {
@@ -208,10 +208,9 @@ void MixerMasterChannel::updateUiControls()
       
 void MixerMasterChannel::volumeChanged(float synthGain)
       {
+      qDebug()<<"MixerMasterChannel: synthGain = "<<synthGain<<"  NO OP - not syncing slider just now";
       const QSignalBlocker blockSignals(volumeSlider); // block during this method
-      float sliderPosition = synthGain * MIXER_MASTER_VOLUME_STEPS / 10.0;
-      qDebug()<<"Not implemented yet: synthGain = "<<synthGain<<" current calculation"<<sliderPosition<<" in a range 0 to "<<MIXER_MASTER_VOLUME_STEPS;
-      volumeSlider->setValue(int(sliderPosition));
+      //volumeSlider->setValue(int(sliderPosition));
       }
 
 
@@ -237,76 +236,75 @@ void MixerMasterChannel::masterVolumeSliderMoved(int value)
       synti->setGain(newGain);
       }
 
+#define MIXER_VOLUME_SLIDER_STEPS 80
+MixerVolumeSlider::MixerVolumeSlider(QWidget* parent) : QSlider(parent)
+      {
+      setMinimum(-60);
+      setMaximum(20);
+      }
 
 void MixerVolumeSlider::setMinLogValue(double val)
       {
-      if (_log) {
-            if (val == 0.0f)
-                  _minValue = -100;
-            else
-                  _minValue = fast_log10(val) * 20.0f;
-      }
+      if (val == 0.0f)
+            _minValue = -100;
       else
-            _minValue = val;
+            _minValue = fast_log10(val) * 20.0f;
+
+      qDebug()<<"MixerVolumeSlider::setMinLogValue() - minValue = "<<_minValue;
       }
 
 void MixerVolumeSlider::setMaxLogValue(double val)
       {
-      if (_log) {
-            _maxValue = fast_log10(val) * 20.0f;
-      }
-      else
-            _maxValue = val;
+      _maxValue = fast_log10(val) * 20.0f;
+
+      qDebug()<<"MixerVolumeSlider::setMaxLogValue() - maxValue = "<<_maxValue;
+
       }
 
-void MixerVolumeSlider::setLogValue(double val)
+void MixerVolumeSlider::setDoubleValue(double newValue)
 {
-      double oldValue = _logValue;
+      double positionValue;
 
-      if (_log) {
-            if (val == 0.0f)
-                  _logValue = _minValue;
-            else {
-                  _logValue = fast_log10(val) * 20.0f;
-                  if (_logValue < _minValue)
-                        _logValue = _minValue;
+      if (newValue == 0.0f)
+            positionValue = _minValue;
+      else {
+            positionValue = fast_log10(newValue) * 20.0f;
+            if (positionValue < _minValue)
+                  positionValue = _minValue;
             }
-      }
-      else
-            _logValue = val;
 
-      if (oldValue != _logValue)
-           emit valueChanged(_logValue, 0);
+      setValue(int(positionValue));
 
-     qDebug()<<"MixerVolumeSlider::setLogValue - and update the slider - or is that already done??";
+      emit doubleValueChanged(newValue);
+      qDebug()<<"MixerVolumeSlider:setDoubleValue( double "<<newValue<<"). positionValue = "<<positionValue<<"  int value() = "<<value();
 }
 
-void MixerVolumeSlider::setValue(int value)
+double MixerVolumeSlider::doubleValue() const
 {
-      qDebug()<<"MixerVolumeSlider:setValue( int "<<value<<")";
-      QSlider::setValue(value);     // call the superclass
-      setLogValue(double(value));
+      return pow(10.0, _positionValue*0.05f);
 }
+
+void MixerVolumeSlider::setValue(int newValue)
+      {
+//      QSlider::setValue(newValue);     // call the superclass
+//      qDebug()<<"MixerVolumeSlider:setValue( int "<<newValue<<")";
+//      //setDoubleValue(value);
+      }
 
       
 void MixerVolumeSlider::sliderChange(QAbstractSlider::SliderChange change)
-{
-      qDebug()<<"MixerVolumeSlider:sliderChange "<<change;
-      QSlider::sliderChange(change);      // call the superclass
-      // do I need to call the superclass - I'd think I would
-      //emit valueChanged(value(), 0);
-      //®QSlider::event(event);
-}
+      {
+      if (change == QAbstractSlider::SliderValueChange)  {
+
+            double newPositionValue = double(value());
+            double newDoubleValue = pow(10.0, newPositionValue*0.05f);
+            qDebug()<<"MixerVolumeSlider:sliderChange newPositionValue = "<<newPositionValue<<" (the int value = "<<value()<<")";
+            setDoubleValue(newDoubleValue);
+            }
+      QSlider::sliderChange(change);
+      }
 
 
-//---------------------------------------------------------
-//   value
-//---------------------------------------------------------
-
-double MixerVolumeSlider::logValue() const
-{
-      return _log ? pow(10.0, _logValue*0.05f) : _logValue;
-}
 
 
 }
