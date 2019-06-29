@@ -118,7 +118,7 @@ class Part final : public ScoreElement {
       void setPartName(const QString& s)       { _partName = s; }
       int color() const { return _color; }
       void setColor(int value) { _color = value; }
-      bool expanded() const { return _expanded; }
+      bool isExpanded() const { return _expanded; }
       void setExpanded(bool expanded) { _expanded = expanded; }
 
       QVariant getProperty(Pid) const override;

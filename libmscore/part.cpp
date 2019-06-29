@@ -123,6 +123,7 @@ bool Part::readProperties(XmlReader& e)
             _show = e.readInt();
       else if (tag == "expanded")
             _expanded = e.readBool();
+      else
             return false;
       return true;
       }
