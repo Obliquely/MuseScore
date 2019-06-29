@@ -53,13 +53,12 @@ void GainSlider::setDoubleValue(double newValue)
                   positionValue = _minValue;
       }
 
-      // update the position. This is for the case when the
-      // method invoked as a SLOT rather than by sliderChange()
-      if (value() != int(positionValue))
+      // Update the position. This is for the case when the
+      // method is externally rather by the call in sliderChange()
+      if (value() != int(positionValue)) {
             QSlider::setValue(int(positionValue + 0.5));
-
-      emit doubleValueChanged(newValue);
-      qDebug()<<"GainSlider:setDoubleValue( double "<<newValue<<"). positionValue = "<<positionValue<<"  int value() = "<<value();
+            emit doubleValueChanged(newValue);
+            }
 }
 
 double GainSlider::doubleValue() const
@@ -73,7 +72,6 @@ void GainSlider::sliderChange(QAbstractSlider::SliderChange change)
       if (change == QAbstractSlider::SliderValueChange)  {
             double newPositionValue = double(value());
             double newDoubleValue = pow(10.0, newPositionValue*0.05f);
-            qDebug()<<"GainSlider:sliderChange newPositionValue = "<<newPositionValue<<" (the int value = "<<value()<<")";
             setDoubleValue(newDoubleValue);
       }
       QSlider::sliderChange(change);
