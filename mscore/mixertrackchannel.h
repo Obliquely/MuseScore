@@ -103,6 +103,7 @@ class MixerVolumeSlider : public QSlider
 
       void setMinLogValue(double min);
       void setMaxLogValue(double max);
+      void setLogRange(double min, double max) { setMinLogValue(min); setMaxLogValue(max); };
 
    public:
       MixerVolumeSlider(QWidget* parent);
@@ -110,9 +111,6 @@ class MixerVolumeSlider : public QSlider
       double doubleValue() const;
       void setDoubleValue(double);
 
-      void setValue(int);
-
-      void setLogRange(double min, double max) { setMinLogValue(min); setMaxLogValue(max); };
       void sliderChange(QAbstractSlider::SliderChange change) override;
 
       signals:

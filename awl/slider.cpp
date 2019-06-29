@@ -195,8 +195,6 @@ void Slider::mouseMoveEvent(QMouseEvent* ev)
 
 void Slider::paintEvent(QPaintEvent* /*ev*/)
       {
-            qDebug()<<"Slder::paintEvent _value = "<<_value;
-
       int h   = height();
       int w   = width();
       int kw  = _sliderSize.width();

@@ -241,6 +241,7 @@ MixerVolumeSlider::MixerVolumeSlider(QWidget* parent) : QSlider(parent)
       {
       setMinimum(-60);
       setMaximum(20);
+      setLogRange(0.0f, 10.0f);
       }
 
 void MixerVolumeSlider::setMinLogValue(double val)
@@ -249,16 +250,11 @@ void MixerVolumeSlider::setMinLogValue(double val)
             _minValue = -100;
       else
             _minValue = fast_log10(val) * 20.0f;
-
-      qDebug()<<"MixerVolumeSlider::setMinLogValue() - minValue = "<<_minValue;
       }
 
 void MixerVolumeSlider::setMaxLogValue(double val)
       {
       _maxValue = fast_log10(val) * 20.0f;
-
-      qDebug()<<"MixerVolumeSlider::setMaxLogValue() - maxValue = "<<_maxValue;
-
       }
 
 void MixerVolumeSlider::setDoubleValue(double newValue)
@@ -273,7 +269,10 @@ void MixerVolumeSlider::setDoubleValue(double newValue)
                   positionValue = _minValue;
             }
 
-      setValue(int(positionValue));
+      // update the position. This is for the case when the
+      // method invoked as a SLOT rather than by sliderChange()
+      if (value() != int(positionValue))
+            QSlider::setValue(int(positionValue));
 
       emit doubleValueChanged(newValue);
       qDebug()<<"MixerVolumeSlider:setDoubleValue( double "<<newValue<<"). positionValue = "<<positionValue<<"  int value() = "<<value();
@@ -283,13 +282,6 @@ double MixerVolumeSlider::doubleValue() const
 {
       return pow(10.0, _positionValue*0.05f);
 }
-
-void MixerVolumeSlider::setValue(int newValue)
-      {
-//      QSlider::setValue(newValue);     // call the superclass
-//      qDebug()<<"MixerVolumeSlider:setValue( int "<<newValue<<")";
-//      //setDoubleValue(value);
-      }
 
       
 void MixerVolumeSlider::sliderChange(QAbstractSlider::SliderChange change)

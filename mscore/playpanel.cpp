@@ -69,8 +69,6 @@ PlayPanel::PlayPanel(QWidget* parent)
       mgainSlider->setDclickValue2(seq->metronomeGain() - 10.75f);
 
 
-      logSlider->setLogRange(-60.0, 20.0);
-
       connect(logSlider, SIGNAL(doubleValueChanged(double)), SLOT(volumeChanged(double)));
 
 
