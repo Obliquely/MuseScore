@@ -243,7 +243,7 @@ void MixerDetails::updatePan()
 QPushButton* MixerDetails::makeMuteButton(int staff, int voice) {
 
       QPushButton* muteButton = new QPushButton;
-      muteButton->setStyleSheet(QString("QPushButton{padding: 2px 4px 2px 4px;}QPushButton:checked{background-color:%1}")
+      muteButton->setStyleSheet(QString("QPushButton{padding: 2px 4px 2px 4px;}QPushButton:checked{background-color:%1; color: white;}")
                                 .arg(MScore::selectColor[voice].name()));
       muteButton->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
       muteButton->setMaximumWidth(20);
