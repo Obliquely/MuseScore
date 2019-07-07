@@ -21,14 +21,11 @@
 #define __MIXERDETAILS_H__
 
 #include "ui_mixerdetails.h"
-#include "libmscore/instrument.h"
+#include "libmscore/instrument.h"   // needed for ChannelListener
 #include "mixertrackitem.h"
 #include "mixer.h"
 
-#include <functional>
-#include <QPushButton>
 
-class Mixer;
 
 namespace Ms {
 
