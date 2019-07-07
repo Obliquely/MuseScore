@@ -28,7 +28,7 @@ class Instrument;
 class Channel;
 class MidiMapping;
 class MixerTrackItem;
-class MidiPatch;
+struct MidiPatch;
 
 //---------------------------------------------------------
 //   MixerTrackItem

@@ -266,8 +266,6 @@ void MixerDetails::updateChorus()
 
 //MARK:- Methods to respond to user initiated changes
 
-
-
 //  patchChanged - process signal from patchCombo
 void MixerDetails::patchComboEdited(int comboIndex)
       {
