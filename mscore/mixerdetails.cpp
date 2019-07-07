@@ -240,7 +240,7 @@ void MixerDetails::updateMutePerVoice()
 
 void MixerDetails::updateMidiChannelAndPort()
       {
-      //TODO: midi code moved - needs to be tested
+      //TODO: midi code moved - needs more testing
       portSpinBox->setValue(selectedMixerTrackItem->getMidiPort());
       channelSpinBox->setValue(selectedMixerTrackItem->getMidiChannel());
 //      Part* part = selectedMixerTrackItem->part();
@@ -280,17 +280,14 @@ void MixerDetails::patchComboEdited(int comboIndex)
       }
 
 // drumkitToggled - process signal from drumkitCheck
-void MixerDetails::drumsetCheckboxToggled(bool drumsetSelected)
+void MixerDetails::drumsetCheckboxToggled(bool useDrumset)
       {
-            //TODO: pull patchComboEdited details into MixerTrackItem
-
       if (!selectedMixerTrackItem)
             return;
 
       blockSignals(true);
       mixer->saveTreeSelection();
-
-
+      selectedMixerTrackItem->setUseDrumset(useDrumset);
       mixer->restoreTreeSelection();
       blockSignals(false);
       }
@@ -406,7 +403,7 @@ void MixerDetails::voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool s
 // or channelSpinBox, i.e. MIDI port or channel change
 void MixerDetails::midiChannelOrPortEdited(int)
       {
-      //TODO: midi code moved - needs to be tested
+      //TODO: midi code moved - needs more testing
       if (!selectedMixerTrackItem)
             return;
 

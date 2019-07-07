@@ -29,9 +29,6 @@
 
 namespace Ms {
 
-//---------------------------------------------------------
-//   MixerDetailsVoiceButtonHandler
-//---------------------------------------------------------
 
 class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelListener
       {
@@ -80,6 +77,7 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
 
       MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
       };
+
 
 class MixerDetails;
 
