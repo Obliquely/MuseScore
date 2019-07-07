@@ -44,7 +44,7 @@ MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* 
 
       // make the row editable - but the tree itself will only allow editing in column 0
 
-       //The default value for flags is Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled.
+      // note: use of QFlag constructor is required to avoid errrors when compiler is strict
       Qt::ItemFlags itemFlags = QFlag(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
       setFlags(itemFlags);
 

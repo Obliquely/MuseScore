@@ -225,6 +225,9 @@
        <property name="toolTip">
         <string>Volume</string>
        </property>
+       <property name="maximum">
+        <number>127</number>
+       </property>
       </widget>
      </item>
     </layout>
@@ -328,6 +331,12 @@
        </property>
        <property name="toolTip">
         <string>Pan</string>
+       </property>
+       <property name="minimum">
+        <number>-63</number>
+       </property>
+       <property name="maximum">
+        <number>63</number>
        </property>
       </widget>
      </item>
@@ -540,6 +549,9 @@
        <property name="toolTip">
         <string>MIDI OUT reverb</string>
        </property>
+       <property name="maximum">
+        <number>127</number>
+       </property>
       </widget>
      </item>
     </layout>
@@ -631,6 +643,9 @@
        </property>
        <property name="toolTip">
         <string>MIDI OUT chorus</string>
+       </property>
+       <property name="maximum">
+        <number>127</number>
        </property>
       </widget>
      </item>

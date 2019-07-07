@@ -187,6 +187,12 @@ void MixerDetails::updatePatch()
       
       //Populate patch combo
       patchCombo->clear();
+
+      // getPatchInfo() loops through all synthesisers and returns
+      // the patches appends the patchInfo() they return
+
+            
+
       const QList<MidiPatch*>& pl = synti->getPatchInfo();
       int patchIndex = 0;
 
@@ -509,9 +515,9 @@ void MixerDetails::voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool s
 
 // midiChannelChanged - process signal from either portSpinBox
 // or channelSpinBox, i.e. MIDI port or channel change
-      //TODO: midi code moved - needs to be tested
 void MixerDetails::midiChannelOrPortEdited(int)
       {
+      //TODO: midi code moved - needs to be tested
       if (!selectedMixerTrackItem)
             return;
 

@@ -216,16 +216,16 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="colorLabel">
+    <widget class="QLabel" name="colorChooser">
      <property name="minimumSize">
       <size>
-       <width>8</width>
+       <width>12</width>
        <height>16</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>4</width>
+       <width>12</width>
        <height>16</height>
       </size>
      </property>
