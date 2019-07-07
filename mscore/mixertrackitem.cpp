@@ -157,9 +157,9 @@ bool MixerTrackItem::isCurrentPatch(const MidiPatch* patch)
             bool verbose = false;
 
             if (verbose) {
-                  return patchName.append(QString(" %1; Synth: %2; Bank: %3; Prog: %4; SynthID: %5")
-                  .arg(patch->drum ? "🥁" : "🎶")
+                  return patchName.append(QString(" %1 %2; Bank: %3; Prog: %4; SF: %5")
                   .arg(patch->synti)
+                  .arg(patch->drum ? "🥁" : "🎶")
                   .arg(patch->bank)
                   .arg(patch->prog)
                   .arg(patch->sfid));
