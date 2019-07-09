@@ -196,7 +196,55 @@ void MixerTreeWidget::itemChanged(QTreeWidgetItem* treeWidgetItem, int column)
       restoreTreeSelection();
       }
 
+      
+void MixerTreeWidget::resetAll()
+      {
+      resetAllSettingVolume(64);
+      }
+ 
 
+// a different approach would be to ask the SCORE/EXCERPT to do this
+// or to build a model, rather than relying on the TreeWidget's default
+// model and apply the operation there - but it's marginal
+void MixerTreeWidget::resetAllSettingVolume(int volume)
+      {
+      //TODO: write the traverse the tree code once and then
+      // get the traverse as an array to which we apply operations
+      // but THIS may be the only case, in which cas, it's OK
+      
+      for (int itemIndex = 0; itemIndex < topLevelItemCount(); itemIndex++) {
+            MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(topLevelItem(itemIndex));
+            item->mixerTrackItem()->resetWithVolume(volume);
+            for (int itemIndex = 0; itemIndex < item->childCount(); itemIndex++) {
+                  MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(topLevelItem(itemIndex));
+                  item->mixerTrackItem()->resetWithVolume(volume);
+                  }
+            }
+      }
+
+      
+bool MixerTreeWidget::anyToExpand()
+      {
+      // if any item has children and is not expanded
+      for (int itemIndex = 0; itemIndex < topLevelItemCount(); itemIndex++) {
+            QTreeWidgetItem* item = topLevelItem(itemIndex);
+            if (item->childCount() > 0 && !item->isExpanded())
+                  return true;
+            }
+      return false;
+      }
+      
+      
+bool MixerTreeWidget::anyToCollapse()
+      {
+      // if any items have children and are expanded
+      for (int itemIndex = 0; itemIndex < topLevelItemCount(); itemIndex++) {
+            QTreeWidgetItem* item = topLevelItem(itemIndex);
+            if (item->childCount() > 0 && item->isExpanded())
+                  return true;
+            }
+      return false;
+      }
 
 
 void MixerTreeWidget::itemCollapsedOrExpanded(QTreeWidgetItem* item) {

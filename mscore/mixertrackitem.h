@@ -109,6 +109,8 @@ public:
       void changePatch(int itemIndex, QComboBox* patchCombo);
       bool getUseDrumset();
       void setUseDrumset(bool useDrumset);
+      
+      void resetWithVolume(int volume);
             
       };
 

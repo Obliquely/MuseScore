@@ -36,7 +36,12 @@ class MixerTreeWidget : public QTreeWidget
       void setupSlotsAndSignals();
       QTreeWidget* masterChannelTreeWidget;
       void populateTree(Score* score);
-
+      
+      bool anyToExpand();     // used to turn on / off expand all menu
+      bool anyToCollapse();   // used to turn on / off collapse all menu
+      void resetAll();
+      void resetAllSettingVolume(int volume);
+      void resetItem(int volume);
 
 private slots:
       void adjustHeaderWidths();

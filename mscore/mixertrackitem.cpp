@@ -496,6 +496,18 @@ void MixerTrackItem::setSolo(bool soloOn)
             }
       }
 
+      
+//MARK:: - reset
+      
+void MixerTrackItem::resetWithVolume(int volume)
+      {
+      setVolume(volume);
+      setPan(0);
+      setChorus(0);
+      setReverb(0);
+      setSolo(false);
+      setMute(false);
+      }
 
 //MARK:- voice muting
 void MixerTrackItem::toggleMutedVoice(int staffIndex, int voiceIndex, bool shouldMute)
