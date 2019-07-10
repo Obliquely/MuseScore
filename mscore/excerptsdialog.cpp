@@ -35,6 +35,7 @@ ExcerptItem::ExcerptItem(Excerpt* e, QListWidget* parent)
       {
       _excerpt = e;
       setText(e->title());
+      setFlags(flags() | Qt::ItemIsEditable);
       }
 
 //---------------------------------------------------------
@@ -117,13 +118,19 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
             instrumentList->addItem(item);
             }
 
-      connect(newButton, SIGNAL(clicked()), SLOT(newClicked()));
+      instrumentList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+      connect(newEmptyPartButton, SIGNAL(clicked()), SLOT(newClicked()));
+      connect(newPartForInstrumentButton, SIGNAL(clicked()), SLOT(newForInstrumentClicked()));
+
       connect(newAllButton, SIGNAL(clicked()), SLOT(newAllClicked()));
       connect(deleteButton, SIGNAL(clicked()), SLOT(deleteClicked()));
       connect(moveUpButton, SIGNAL(clicked()), SLOT(moveUpClicked()));
       connect(moveDownButton, SIGNAL(clicked()), SLOT(moveDownClicked()));
       connect(addButton, SIGNAL(clicked()), SLOT(addButtonClicked()));
       connect(removeButton, SIGNAL(clicked()), SLOT(removeButtonClicked()));
+
+      connect(excerptList, SIGNAL(itemChanged(QListWidgetItem*)), SLOT(titleChanged(QListWidgetItem*)));
 
       connect(excerptList, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
          SLOT(excerptChanged(QListWidgetItem*, QListWidgetItem*)));
@@ -132,7 +139,6 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
       connect(partList, SIGNAL(itemClicked(QTreeWidgetItem*,int)), SLOT(partClicked(QTreeWidgetItem*,int)));
       connect(instrumentList, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
               SLOT(addButtonClicked()));
-      connect(title, SIGNAL(textChanged(const QString&)), SLOT(titleChanged(const QString&)));
 
       moveUpButton->setIcon(*icons[int(Icons::arrowUp_ICON)]);
       moveDownButton->setIcon(*icons[int(Icons::arrowDown_ICON)]);
@@ -173,26 +179,46 @@ void MuseScore::startExcerptsDialog()
 
 void ExcerptsDialog::newClicked()
       {
-      QString name = createName("Part");
-      Excerpt* e   = new Excerpt(score);
-      e->setTitle(name);
-      ExcerptItem* ei = new ExcerptItem(e);
-      excerptList->addItem(ei);
-      excerptList->selectionModel()->clearSelection();
-      excerptList->setCurrentItem(ei, QItemSelectionModel::SelectCurrent);
-      for (int i = 0; i < excerptList->count(); ++i) {
-            ExcerptItem* eii = (ExcerptItem*)excerptList->item(i);
-            if (eii->excerpt()->title() != eii->text()) {
-                  // if except score not created yet, change the UI title
-                  // if already created, change back(see createName) the excerpt title
-                  if (!eii->excerpt()->partScore())
-                        eii->setText(eii->excerpt()->title());
-                  else
-                        eii->excerpt()->setTitle(eii->text());
-                  }
-            }
+      makeNewExcerpt();
       }
 
+
+void ExcerptsDialog::makeNewExcerpt()
+      {
+      QString name = createName("Part");
+            Excerpt* e   = new Excerpt(score);
+            e->setTitle(name);
+            ExcerptItem* ei = new ExcerptItem(e);
+            excerptList->addItem(ei);
+            excerptList->selectionModel()->clearSelection();
+            excerptList->setCurrentItem(ei, QItemSelectionModel::SelectCurrent);
+            for (int i = 0; i < excerptList->count(); ++i) {
+                  ExcerptItem* eii = (ExcerptItem*)excerptList->item(i);
+                  if (eii->excerpt()->title() != eii->text()) {
+                        // if except score not created yet, change the UI title
+                        // if already created, change back(see createName) the excerpt title
+                        if (!eii->excerpt()->partScore())
+                              eii->setText(eii->excerpt()->title());
+                        else
+                              eii->excerpt()->setTitle(eii->text());
+                        }
+                  }
+      }
+
+void ExcerptsDialog::newForInstrumentClicked()
+      {
+      qDebug()<<"newForInstrumentClicked";
+
+      makeNewExcerpt(); // will create a new excerpt / part
+
+      // find selected instrument
+      QString nameSuggestion = addSelectedInstrumentToCurrentExcerpt();
+
+      instrumentList->selectionModel()->clearSelection();
+      Excerpt* cur = ((ExcerptItem*)(excerptList->currentItem()))->excerpt();
+      cur->setTitle(nameSuggestion);
+      excerptList->currentItem()->setText(nameSuggestion);
+      }
 //---------------------------------------------------------
 //   newAllClicked
 //---------------------------------------------------------
@@ -266,10 +292,17 @@ void ExcerptsDialog::moveDownClicked()
 
 void ExcerptsDialog::addButtonClicked()
       {
+      addSelectedInstrumentToCurrentExcerpt();
+      }
+
+QString ExcerptsDialog::addSelectedInstrumentToCurrentExcerpt()
+      {
       if (!excerptList->currentItem() || !partList->isEnabled())
-            return;
+            return QString("");
 
       Excerpt* cur = ((ExcerptItem*)(excerptList->currentItem()))->excerpt();
+
+      QList<QString> instrumentNames;
 
       for (QListWidgetItem* i : instrumentList->selectedItems()) {
             InstrumentItem* item = static_cast<InstrumentItem*>(i);
@@ -277,7 +310,9 @@ void ExcerptsDialog::addButtonClicked()
             if (it == 0)
                   continue;
             PartItem* pi = new PartItem(it->part(), 0);
-            pi->setText(0, pi->part()->name());
+            QString instrumentName = pi->part()->name();
+            pi->setText(0, instrumentName);
+            instrumentNames.append(instrumentName);
             cur->parts().append(pi->part());
             partList->addTopLevelItem(pi);
             for (Staff* s : *pi->part()->staves()) {
@@ -291,6 +326,18 @@ void ExcerptsDialog::addButtonClicked()
 
       cur->setTracks(mapTracks());
       partList->resizeColumnToContents(0);
+
+      if (instrumentNames.count() == 0)
+            return "<PART>";
+
+      if (instrumentNames.count() == 1)
+            return instrumentNames.first();
+
+      if (instrumentNames.count() == 2)
+            return QString("%1 & %2, etc.").arg(instrumentNames.first()).arg(instrumentNames.last());
+
+      return QString(tr("%1 & %2, etc.")).arg(instrumentNames.first()).arg(instrumentNames.last());
+
       }
 
 //---------------------------------------------------------
@@ -320,11 +367,16 @@ void ExcerptsDialog::removeButtonClicked()
 
 void ExcerptsDialog::excerptChanged(QListWidgetItem* cur, QListWidgetItem*)
       {
+
       bool b = true;
       if (cur) {
             ExcerptItem* curItem = static_cast<ExcerptItem*>(cur);
             Excerpt* e = curItem->excerpt();
             title->setText(curItem->text());
+
+            detailsGroupBox->setTitle(QString(tr("Details: %1").arg(curItem->text())));
+
+
             b = e->partScore() == 0;
 
             // set selection:
@@ -349,7 +401,6 @@ void ExcerptsDialog::excerptChanged(QListWidgetItem* cur, QListWidgetItem*)
             partList->clear();
             b = false;
             }
-      instrumentList->setEnabled(b);
       title->setEnabled(true);
       addButton->setEnabled(b);
       removeButton->setEnabled(b);
@@ -370,9 +421,13 @@ void ExcerptsDialog::partDoubleClicked(QTreeWidgetItem* item, int)
       {
       if (!item->parent()) { // top level items are PartItem
             PartItem* pi = (PartItem*)item;
-            QString s = pi->part()->partName();
-            title->setText(s);
-            titleChanged(s);
+            QString instrumentName = pi->part()->partName();
+            title->setText(instrumentName);
+            ExcerptItem* selectedPart = static_cast<ExcerptItem*>(excerptList->currentItem());
+            selectedPart->setText(instrumentName);
+            selectedPart->excerpt()->setTitle(instrumentName);
+            //titleChanged(s);
+            qDebug()<<"Double click on the instrument name in part details sets the title to the name of that instrument. proposed new title is:"<<instrumentName;
             }
       }
 
@@ -403,13 +458,12 @@ void ExcerptsDialog::doubleClickedInstrument(QTreeWidgetItem*)
 //   titleChanged
 //---------------------------------------------------------
 
-void ExcerptsDialog::titleChanged(const QString& s)
+void ExcerptsDialog::titleChanged(QListWidgetItem* item)
       {
-      ExcerptItem* cur = static_cast<ExcerptItem*>(excerptList->currentItem());
+      ExcerptItem* cur = static_cast<ExcerptItem*>(item);
       if (cur == 0)
             return;
-      cur->excerpt()->setTitle(s);
-      cur->setText(s);
+      cur->excerpt()->setTitle(item->text());
       }
 
 //---------------------------------------------------------

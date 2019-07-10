@@ -93,10 +93,13 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       QString createName(const QString&);
 
       virtual void accept();
+      void makeNewExcerpt();
+      QString addSelectedInstrumentToCurrentExcerpt(); // returns a suggested name for the part
 
    private slots:
       void deleteClicked();
       void newClicked();
+      void newForInstrumentClicked();
       void newAllClicked();
       void moveUpClicked();
       void moveDownClicked();
@@ -104,7 +107,7 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       void partDoubleClicked(QTreeWidgetItem*, int);
       void partClicked(QTreeWidgetItem*, int);
       void createExcerptClicked(QListWidgetItem*);
-      void titleChanged(const QString&);
+      void titleChanged(QListWidgetItem*);
       ExcerptItem* isInPartsList(Excerpt* e);
 
       QMultiMap<int, int> mapTracks();
