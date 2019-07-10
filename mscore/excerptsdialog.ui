@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>777</width>
+    <width>828</width>
     <height>685</height>
    </rect>
   </property>
@@ -26,16 +26,10 @@
    <string>Parts</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_4">
-   <item row="4" column="0">
-    <widget class="QLineEdit" name="title">
-     <property name="maximumSize">
-      <size>
-       <width>120</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Part title (remove)</string>
+   <item row="4" column="3">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
@@ -192,6 +186,93 @@
      </layout>
     </widget>
    </item>
+   <item row="0" column="0" colspan="4">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Instruments</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QListWidget" name="instrumentList">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="accessibleName">
+         <string>Part list</string>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QPushButton" name="newPartForInstrumentButton">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Create new part using the selected instrument(s)</string>
+          </property>
+          <property name="text">
+           <string>Create Part for Instrument(s)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="addButton">
+          <property name="toolTip">
+           <string>Add the selected instrument(s) to the currently selected part</string>
+          </property>
+          <property name="accessibleDescription">
+           <string>Add instrument</string>
+          </property>
+          <property name="text">
+           <string notr="true">Add Instrument(s) to Part</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="newAllButton">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Create a new part for every instrument</string>
+          </property>
+          <property name="text">
+           <string>Auto Create</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item row="3" column="1" colspan="3">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
@@ -203,7 +284,7 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Details: &lt;Part Name&gt;</string>
+        <string>Details: Something &amp; Something Else</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -291,95 +372,17 @@
      </item>
     </layout>
    </item>
-   <item row="4" column="3">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="4" column="0">
+    <widget class="QLineEdit" name="title">
+     <property name="maximumSize">
+      <size>
+       <width>120</width>
+       <height>16777215</height>
+      </size>
      </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="4">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="title">
-      <string>Instruments</string>
+     <property name="text">
+      <string>Part title (remove)</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QListWidget" name="instrumentList">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="accessibleName">
-         <string>Part list</string>
-        </property>
-        <property name="alternatingRowColors">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QPushButton" name="newPartForInstrumentButton">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Create new part using the selected instrument(s)</string>
-          </property>
-          <property name="text">
-           <string>Create Part for Instrument</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="addButton">
-          <property name="accessibleDescription">
-           <string>Add instrument</string>
-          </property>
-          <property name="text">
-           <string notr="true">Add to Part</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_5">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="newAllButton">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Create a new part for every instrument</string>
-          </property>
-          <property name="text">
-           <string>Auto Create</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
     </widget>
    </item>
   </layout>

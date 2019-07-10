@@ -40,6 +40,7 @@ class ExcerptItem : public QListWidgetItem {
    public:
       ExcerptItem(Excerpt*, QListWidget* parent = 0);
       Excerpt* excerpt() { return _excerpt; }
+      bool isEditable();
       };
 
 //---------------------------------------------------------
@@ -95,7 +96,8 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       virtual void accept();
       void makeNewExcerpt();
       QString addSelectedInstrumentToCurrentExcerpt(); // returns a suggested name for the part
-
+      ExcerptItem* selectedExcerpt();
+      
    private slots:
       void deleteClicked();
       void newClicked();
@@ -108,6 +110,8 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       void partClicked(QTreeWidgetItem*, int);
       void createExcerptClicked(QListWidgetItem*);
       void titleChanged(QListWidgetItem*);
+      void instrumentListSelectionChanged();
+
       ExcerptItem* isInPartsList(Excerpt* e);
 
       QMultiMap<int, int> mapTracks();
