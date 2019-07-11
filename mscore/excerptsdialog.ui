@@ -55,6 +55,9 @@
 All parts can be moved and renamed. Note:
 only new parts can be edited.</string>
         </property>
+        <property name="accessibleName">
+         <string>Created Parts</string>
+        </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::SingleSelection</enum>
         </property>
@@ -194,7 +197,7 @@ only new parts can be edited.</string>
    <item row="0" column="0" colspan="4">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Instruments in Score</string>
+      <string>Instruments and Voices in the Score</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
@@ -206,10 +209,10 @@ only new parts can be edited.</string>
          </sizepolicy>
         </property>
         <property name="accessibleName">
-         <string>Part list</string>
+         <string>Instruments in Score</string>
         </property>
         <property name="alternatingRowColors">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -306,6 +309,9 @@ only new parts can be edited.</string>
           <property name="toolTip">
            <string>Add or remove instruments from a part 
 and select which voices are included.</string>
+          </property>
+          <property name="accessibleName">
+           <string>Configuration for part</string>
           </property>
           <attribute name="headerStretchLastSection">
            <bool>false</bool>
