@@ -53,6 +53,7 @@ class PartItem : public QTreeWidgetItem {
    public:
       PartItem(Part*, QTreeWidget* parent = 0);
       Part* part() const                    { return _part;   }
+      void setEditable(bool editable);
       };
 
 //---------------------------------------------------------
@@ -111,13 +112,13 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       void createExcerptClicked(QListWidgetItem*);
       void titleChanged(QListWidgetItem*);
       void instrumentListSelectionChanged();
+      void doubleClickedInstrument(QListWidgetItem*);
 
       ExcerptItem* isInPartsList(Excerpt* e);
 
       QMultiMap<int, int> mapTracks();
       void assignTracks(QMultiMap<int, int> );
 
-      void doubleClickedInstrument(QTreeWidgetItem*);
       void addButtonClicked();
       void removeButtonClicked();
 

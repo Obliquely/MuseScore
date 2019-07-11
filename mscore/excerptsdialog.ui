@@ -50,6 +50,11 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="toolTip">
+         <string>New parts and previously created parts.
+All parts can be moved and renamed. Note:
+only new parts can be edited.</string>
+        </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::SingleSelection</enum>
         </property>
@@ -189,7 +194,7 @@
    <item row="0" column="0" colspan="4">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Instruments</string>
+      <string>Instruments in Score</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
@@ -284,7 +289,7 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Details: Something &amp; Something Else</string>
+        <string>Configuration: Something &amp;&amp; Something Else</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -297,6 +302,10 @@
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Add or remove instruments from a part 
+and select which voices are included.</string>
           </property>
           <attribute name="headerStretchLastSection">
            <bool>false</bool>
@@ -372,21 +381,21 @@
      </item>
     </layout>
    </item>
-   <item row="4" column="0">
-    <widget class="QLineEdit" name="title">
-     <property name="maximumSize">
-      <size>
-       <width>120</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Part title (remove)</string>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>instrumentList</tabstop>
+  <tabstop>newPartForInstrumentButton</tabstop>
+  <tabstop>addButton</tabstop>
+  <tabstop>newAllButton</tabstop>
+  <tabstop>excerptList</tabstop>
+  <tabstop>newEmptyPartButton</tabstop>
+  <tabstop>deleteButton</tabstop>
+  <tabstop>moveUpButton</tabstop>
+  <tabstop>moveDownButton</tabstop>
+  <tabstop>partList</tabstop>
+  <tabstop>removeButton</tabstop>
+ </tabstops>
  <resources>
   <include location="musescore.qrc"/>
  </resources>

@@ -43,7 +43,7 @@ ExcerptItem::ExcerptItem(Excerpt* e, QListWidget* parent)
       if (isEditable())
             icon.addFile(QString::fromUtf8(":/data/icons/edit.svg"), QSize(12,12), QIcon::Normal, QIcon::Off);
       else
-            icon.addFile(QString::fromUtf8(":/data/icons/window-close.svg"), QSize(12,12), QIcon::Normal, QIcon::Off);
+            icon.addFile(QString::fromUtf8(":/data/icons/document.svg"), QSize(12,12), QIcon::Normal, QIcon::Off);
 
       setIcon(icon);
       }
@@ -62,9 +62,19 @@ bool ExcerptItem::isEditable()
 PartItem::PartItem(Part* p, QTreeWidget* parent)
    : QTreeWidgetItem(parent)
       {
-      setFlags(Qt::ItemFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable));
+      setEditable(true);
       _part   = p;
       setText(0, p->partName().replace("/", "_"));
+      }
+
+void PartItem::setEditable(bool editable)
+      {
+      if (!editable) {
+            setFlags(Qt::ItemFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable));
+            return;
+            }
+
+      setFlags(Qt::ItemFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable));
       }
 
 //MARK:- InstrumentItem class (subclass of QListWidgetItem)
@@ -143,6 +153,13 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
             }
 
       instrumentList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+      excerptList->setIconSize(QSize(12, 12));
+
+      partList->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+      partList->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+      partList->header()->setSectionResizeMode(2, QHeaderView::Fixed);
+      partList->header()->setSectionResizeMode(3, QHeaderView::Fixed);
+      partList->header()->setSectionResizeMode(4, QHeaderView::Fixed);
 
       connect(newEmptyPartButton, SIGNAL(clicked()), SLOT(newClicked()));
       connect(newPartForInstrumentButton, SIGNAL(clicked()), SLOT(newForInstrumentClicked()));
@@ -162,7 +179,7 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
          SLOT(partDoubleClicked(QTreeWidgetItem*, int)));
       connect(partList, SIGNAL(itemClicked(QTreeWidgetItem*,int)), SLOT(partClicked(QTreeWidgetItem*,int)));
       connect(instrumentList, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
-              SLOT(addButtonClicked()));
+              SLOT(doubleClickedInstrument(QListWidgetItem*)));
       connect(instrumentList, SIGNAL(itemSelectionChanged()), SLOT(instrumentListSelectionChanged()));
 
 
@@ -203,22 +220,24 @@ void MuseScore::startExcerptsDialog()
 
 ExcerptItem* ExcerptsDialog::selectedExcerpt()
       {
-      if (excerptList->selectedItems().count() == 0)
+      if (excerptList->selectedItems().count() == 0) {
+            qDebug()<<"returning nullptr from selectedExcerpt";
             return nullptr;
+       }
 
       return static_cast<ExcerptItem*>(excerptList->selectedItems().first());
       }
 
 void ExcerptsDialog::instrumentListSelectionChanged()
       {
-      // selection has just changed - disabled buttons if nothing selected
+      // selection has just changed - disable buttons if nothing selected
 
       bool someSelection = instrumentList->selectedItems().count();
 
       QListWidgetItem* cur = excerptList->currentItem();
       if (!cur)
 
-      addButton->setEnabled(selectedExcerpt()->isEditable());
+      addButton->setEnabled(selectedExcerpt() ? selectedExcerpt()->isEditable() : false);
       newPartForInstrumentButton->setEnabled(someSelection);
       }
 
@@ -430,44 +449,45 @@ void ExcerptsDialog::excerptChanged(QListWidgetItem* currentItem, QListWidgetIte
       if (currentItem) {
             ExcerptItem* curItem = static_cast<ExcerptItem*>(currentItem);
             Excerpt* excerpt = curItem->excerpt();
-            title->setText(curItem->text());
 
             // the & character has a special meaning in QWidget titles
             QString adjustedTitle = curItem->text().replace("&", "&&");
-
-            QString locked = "";
-            if (!curItem->isEditable())
-                  locked = tr(" (Non-Editable)");
-
-            QString groupBoxTitle = QString(tr("Details: %1%2")).arg(adjustedTitle).arg(locked);
+            QString groupBoxTitle = QString(tr("Details: %1")).arg(adjustedTitle);
             detailsGroupBox->setTitle(groupBoxTitle);
-
 
             currentItemIsEditable = curItem->isEditable();
 
             // set selection:
-            QList<Part*>& pl = excerpt->parts();
+            QList<Part*>& partListForExcerpt = excerpt->parts();
             QMultiMap<int, int> tracks = excerpt->tracks();
+
+            // display the details (instruments added, staves selected) for the part
+            // and enable or disable according to whether the part is editable
             partList->clear();
-            for (Part* p: pl) {
-                  PartItem* pi = new PartItem(p, partList);
-                  partList->addTopLevelItem(pi);
-                  for (Staff* s : *p->staves()) {
-                        StaffItem* sli = new StaffItem(pi);
-                        sli->setStaff(s);
-                        sli->setDisabled(!currentItemIsEditable);
+            for (Part* partWithinExcerpt: partListForExcerpt) {
+                  PartItem* partItem = new PartItem(partWithinExcerpt, partList);
+                  partItem->setEditable(currentItemIsEditable);
+
+                  partList->addTopLevelItem(partItem);
+
+                  int staffIndex = 1;
+                  for (Staff* staff : *partWithinExcerpt->staves()) {
+                        StaffItem* staffItem = new StaffItem(partItem);
+                        staffItem->setStaff(staff);
+                        staffItem->setDisabled(!currentItemIsEditable);
+                        staffItem->setText(0, tr("Staff %1").arg(staffIndex));
+                        staffIndex++;
                         }
-                  pi->setText(0, p->partName());
-                  partList->setItemExpanded(pi, false);
+                  partItem->setText(0, partWithinExcerpt->partName());
+                  partList->setItemExpanded(partItem, false);
                   }
             assignTracks(tracks);
             }
       else {
-            title->setText("");
+            detailsGroupBox->setTitle(tr("Details:"));
             partList->clear();
             currentItemIsEditable = false;
             }
-      title->setEnabled(true);
       addButton->setEnabled(currentItemIsEditable);
       removeButton->setEnabled(currentItemIsEditable);
 
@@ -488,11 +508,9 @@ void ExcerptsDialog::partDoubleClicked(QTreeWidgetItem* item, int)
       if (!item->parent()) { // top level items are PartItem
             PartItem* pi = (PartItem*)item;
             QString instrumentName = pi->part()->partName();
-            title->setText(instrumentName);
             ExcerptItem* selectedPart = static_cast<ExcerptItem*>(excerptList->currentItem());
             selectedPart->setText(instrumentName);
             selectedPart->excerpt()->setTitle(instrumentName);
-            //titleChanged(s);
             qDebug()<<"Double click on the instrument name in part details sets the title to the name of that instrument. proposed new title is:"<<instrumentName;
             }
       }
@@ -515,9 +533,11 @@ void ExcerptsDialog::partClicked(QTreeWidgetItem*, int)
 //   doubleClickedInstrument
 //---------------------------------------------------------
 
-void ExcerptsDialog::doubleClickedInstrument(QTreeWidgetItem*)
+void ExcerptsDialog::doubleClickedInstrument(QListWidgetItem*)
       {
-      addButtonClicked();
+      qDebug()<<"doubleClickedInstrument on tree";
+      if (selectedExcerpt() ? selectedExcerpt()->isEditable() : false)
+            addButtonClicked();
       }
 
 //---------------------------------------------------------
@@ -629,7 +649,6 @@ ExcerptItem* ExcerptsDialog::isInPartsList(Excerpt* e)
 void ExcerptsDialog::createExcerptClicked(QListWidgetItem* cur)
       {
       Excerpt* e = static_cast<ExcerptItem*>(cur)->excerpt();
-      e->setTitle(title->text());
       if (e->partScore())
             return;
       if (e->parts().isEmpty()) {
@@ -653,7 +672,6 @@ void ExcerptsDialog::createExcerptClicked(QListWidgetItem* cur)
             }
 
       partList->setEnabled(false);
-      title->setEnabled(false);
       }
 
 //---------------------------------------------------------
