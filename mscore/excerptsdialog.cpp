@@ -153,6 +153,7 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
             }
 
       instrumentList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
       excerptList->setIconSize(QSize(12, 12));
 
       partList->header()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -182,6 +183,7 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
               SLOT(doubleClickedInstrument(QListWidgetItem*)));
       connect(instrumentList, SIGNAL(itemSelectionChanged()), SLOT(instrumentListSelectionChanged()));
 
+      connect(qApp, SIGNAL(focusChanged(QWidget*, QWidget*)), this, SLOT(focusChanged(QWidget*, QWidget*)));
 
       moveUpButton->setIcon(*icons[int(Icons::arrowUp_ICON)]);
       moveDownButton->setIcon(*icons[int(Icons::arrowDown_ICON)]);
@@ -218,8 +220,24 @@ void MuseScore::startExcerptsDialog()
 
 //MARK:- Processing other misc signals / enabling & disabling
 
+void ExcerptsDialog::focusChanged(QWidget* oldWidget, QWidget* newWidget)
+      {
+      qDebug()<<"focusChanged()";
+
+//      if (newWidget == instrumentList) {
+//            qDebug()<<"focusChanged() - leaving instrumentList so clearing selection";
+//
+//            instrumentList->selectionModel()->clearSelection();
+//            //oh dear - this won't work because it means we could never use the buttons
+//            // would check boxes be better - don't think so - too fussy / intrusive
+//            // maybe remove this method altogether
+//       }
+
+      }
+
 ExcerptItem* ExcerptsDialog::selectedExcerpt()
       {
+      
       if (excerptList->selectedItems().count() == 0) {
             qDebug()<<"returning nullptr from selectedExcerpt";
             return nullptr;
@@ -231,11 +249,8 @@ ExcerptItem* ExcerptsDialog::selectedExcerpt()
 void ExcerptsDialog::instrumentListSelectionChanged()
       {
       // selection has just changed - disable buttons if nothing selected
-
+      qDebug()<<"instrumentListSelectionChanged()";
       bool someSelection = instrumentList->selectedItems().count();
-
-      QListWidgetItem* cur = excerptList->currentItem();
-      if (!cur)
 
       addButton->setEnabled(selectedExcerpt() ? selectedExcerpt()->isEditable() : false);
       newPartForInstrumentButton->setEnabled(someSelection);
@@ -404,18 +419,41 @@ QString ExcerptsDialog::addSelectedInstrumentToCurrentExcerpt()
       cur->setTracks(mapTracks());
       partList->resizeColumnToContents(0);
 
-      if (instrumentNames.count() == 0)
-            return "<PART>";
-
-      if (instrumentNames.count() == 1)
-            return instrumentNames.first();
-
-      if (instrumentNames.count() == 2)
-            return QString("%1 & %2").arg(instrumentNames.first()).arg(instrumentNames.last());
-
-      return QString(tr("%1 & %2, etc.")).arg(instrumentNames.first()).arg(instrumentNames.last());
-
+      return excerptNameFromListOfNames(instrumentNames);
       }
+
+QString ExcerptsDialog::excerptNameFromListOfNames(QList<QString> names)
+      {
+      //TODO: check whether name is already used and add a number to differentiate?
+      // can MuseScore cope with two names being the same? Even if it can, it's
+      // classier to add some differentiator to let the user know. In existing code
+      // there's no check for changing the title to something already used, i.e. user
+      // can force two names the same if they want in old code.
+
+      QString candidateName = "Part";
+
+      if (names.count() == 0)
+            qDebug()<<"ExcerptsDialog::excerptNameFromListOfNames() - empty list of names. Using \"Part\"";
+      else if (names.count() == 1)
+            candidateName = names.first();
+      else if (names.count() == 2)
+            candidateName = QString(tr("%1 & %2")).arg(names.first()).arg(names.last());
+      else
+            candidateName = QString(tr("%1, %2 etc.")).arg(names[0]).arg(names[1]);
+
+//      int nameCount = 1;
+//      for (int listIndex; listIndex < excerptList->count(); listIndex++) {
+//            // need to check if there's a suffix already and if there is
+//            // ensure nameCount is at least is at least one higher than that
+//            // suffix and then set aside the suffix before doing the comparison
+//            // smart thing to do would be to use a regular expression
+
+              // or take a different approach and manage in the item itself
+//            }
+
+      return candidateName;
+      }
+
 
 //---------------------------------------------------------
 //   removeButtonClicked
@@ -452,7 +490,7 @@ void ExcerptsDialog::excerptChanged(QListWidgetItem* currentItem, QListWidgetIte
 
             // the & character has a special meaning in QWidget titles
             QString adjustedTitle = curItem->text().replace("&", "&&");
-            QString groupBoxTitle = QString(tr("Details: %1")).arg(adjustedTitle);
+            QString groupBoxTitle = QString(tr("Instruments in: %1")).arg(adjustedTitle);
             detailsGroupBox->setTitle(groupBoxTitle);
 
             currentItemIsEditable = curItem->isEditable();
@@ -484,7 +522,7 @@ void ExcerptsDialog::excerptChanged(QListWidgetItem* currentItem, QListWidgetIte
             assignTracks(tracks);
             }
       else {
-            detailsGroupBox->setTitle(tr("Details:"));
+            detailsGroupBox->setTitle(tr("Instruments in:"));
             partList->clear();
             currentItemIsEditable = false;
             }
@@ -535,7 +573,6 @@ void ExcerptsDialog::partClicked(QTreeWidgetItem*, int)
 
 void ExcerptsDialog::doubleClickedInstrument(QListWidgetItem*)
       {
-      qDebug()<<"doubleClickedInstrument on tree";
       if (selectedExcerpt() ? selectedExcerpt()->isEditable() : false)
             addButtonClicked();
       }

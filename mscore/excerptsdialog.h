@@ -98,6 +98,7 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       void makeNewExcerpt();
       QString addSelectedInstrumentToCurrentExcerpt(); // returns a suggested name for the part
       ExcerptItem* selectedExcerpt();
+      QString excerptNameFromListOfNames(QList<QString>);
       
    private slots:
       void deleteClicked();
@@ -113,6 +114,7 @@ class ExcerptsDialog : public QDialog, private Ui::ExcerptsDialog {
       void titleChanged(QListWidgetItem*);
       void instrumentListSelectionChanged();
       void doubleClickedInstrument(QListWidgetItem*);
+      void focusChanged(QWidget* oldWidget, QWidget* newWidget);
 
       ExcerptItem* isInPartsList(Excerpt* e);
 

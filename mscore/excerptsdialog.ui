@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>828</width>
-    <height>685</height>
+    <width>796</width>
+    <height>525</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -197,7 +197,7 @@ only new parts can be edited.</string>
    <item row="0" column="0" colspan="4">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Instruments and Voices in the Score</string>
+      <string>Instruments in the Score</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
@@ -272,7 +272,7 @@ only new parts can be edited.</string>
            <string>Create a new part for every instrument</string>
           </property>
           <property name="text">
-           <string>Auto Create</string>
+           <string>Auto Create Parts</string>
           </property>
          </widget>
         </item>
@@ -292,7 +292,7 @@ only new parts can be edited.</string>
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Configuration: Something &amp;&amp; Something Else</string>
+        <string>Instruments in: Something &amp;&amp; Something Else</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
