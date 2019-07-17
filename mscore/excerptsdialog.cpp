@@ -183,8 +183,6 @@ ExcerptsDialog::ExcerptsDialog(MasterScore* s, QWidget* parent)
               SLOT(doubleClickedInstrument(QListWidgetItem*)));
       connect(instrumentList, SIGNAL(itemSelectionChanged()), SLOT(instrumentListSelectionChanged()));
 
-      connect(qApp, SIGNAL(focusChanged(QWidget*, QWidget*)), this, SLOT(focusChanged(QWidget*, QWidget*)));
-
       moveUpButton->setIcon(*icons[int(Icons::arrowUp_ICON)]);
       moveDownButton->setIcon(*icons[int(Icons::arrowDown_ICON)]);
       
@@ -220,20 +218,6 @@ void MuseScore::startExcerptsDialog()
 
 //MARK:- Processing other misc signals / enabling & disabling
 
-void ExcerptsDialog::focusChanged(QWidget* oldWidget, QWidget* newWidget)
-      {
-      qDebug()<<"focusChanged()";
-
-//      if (newWidget == instrumentList) {
-//            qDebug()<<"focusChanged() - leaving instrumentList so clearing selection";
-//
-//            instrumentList->selectionModel()->clearSelection();
-//            //oh dear - this won't work because it means we could never use the buttons
-//            // would check boxes be better - don't think so - too fussy / intrusive
-//            // maybe remove this method altogether
-//       }
-
-      }
 
 ExcerptItem* ExcerptsDialog::selectedExcerpt()
       {
@@ -767,17 +751,23 @@ void ExcerptsDialog::accept()
 
             int position = 0;  // Actual order position in score
             bool found = false;
-
+            Excerpt* foundExcerpt;
             // Looks for the excerpt and its position.
             foreach(Excerpt* e, score->excerpts()) {
                   if (((ExcerptItem*)cur)->excerpt() == ExcerptItem(e).excerpt()) {
                         found = true;
+                        foundExcerpt = ExcerptItem(e).excerpt();
                         break;
                         }
                   position++;
                   }
             if ((found) && (position != j))
                   score->undo(new SwapExcerpt(score, j, position));
+            else if (found && cur->text() != foundExcerpt->title()) {
+                  score->undo(new ChangeExcerptTitle(foundExcerpt, cur->text()));
+                  qDebug()<<"change of name, but not order - new code attemptng to fix";
+                  score->setExcerptsChanged(true);
+                  }
             }
       score->endCmd();
       QDialog::accept();
